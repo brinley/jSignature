@@ -18,7 +18,7 @@ $(document).ready(function() {
 function importImg(sig)
 {
 	sig.children("img.imported").remove();
-	$("<img class='imported'></img").attr("src",sig.jSignature('export')).appendTo(sig);
+	$("<img class='imported'></img").attr("src",sig.jSignature('getData')).appendTo(sig);
 }
 </script>
 
@@ -81,9 +81,9 @@ $(document).ready(function() {
 	<td>Empties and resets the canvas.</td>
 </tr>
 <tr>
-	<td>export</td>
-	<td>.jSignature("export")</td>
-	<td>Converts the canvas into a base64 encoded data url which can be saved as a string in any database during a form post or submit.</td>
+	<td>getData</td>
+	<td>.jSignature("getData")</td>
+	<td>Converts the canvas into a base64 encoded data string which can be saved as a string in any database during a form post or submit.</td>
 </tr>
 </table>
 
@@ -121,7 +121,7 @@ $(document).ready(function() {
 	<td>1</td>
 </tr>
 <tr>
-	<td>class</td>
+	<td>cssclass</td>
 	<td>Defines a custom class for the canvas.</td>
 	<td>None</td>
 </tr>
@@ -133,7 +133,7 @@ $("#signature1").jSignature();
 </pre>
 <div id="signature1"></div>
 <button type="button" onclick="$('#signature1').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature1').jSignature('export'))">Export</button>
+<button type="button" onclick="alert($('#signature1').jSignature('getData'))">Export</button>
 <button type="button" onclick="importImg($('#signature1'))">Import</button>
 
 <h2>Example 2 - Custom colours</h2>
@@ -142,7 +142,7 @@ $("#signature2").jSignature({color:"#f00"});
 </pre>
 <div id="signature2"></div>
 <button type="button" onclick="$('#signature2').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature2').jSignature('export'))">Export</button>
+<button type="button" onclick="alert($('#signature2').jSignature('getData'))">Export</button>
 <button type="button" onclick="importImg($('#signature2'))">Import</button>
 
 <h2>Example 3 - Custom line width</h2>
@@ -151,7 +151,7 @@ $("#signature3").jSignature({color:"#00f",lineWidth:5});
 </pre>
 <div id="signature3"></div>
 <button type="button" onclick="$('#signature3').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature3').jSignature('export'))">Export</button>
+<button type="button" onclick="alert($('#signature3').jSignature('getData'))">Export</button>
 <button type="button" onclick="importImg($('#signature3'))">Import</button>
 
 <h2>Example 4 - Custom dimensions</h2>
@@ -160,7 +160,7 @@ $("#signature4").jSignature({width:300,height:200});
 </pre>
 <div id="signature4"></div>
 <button type="button" onclick="$('#signature4').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature4').jSignature('export'))">Export</button>
+<button type="button" onclick="alert($('#signature4').jSignature('getData'))">Export</button>
 <button type="button" onclick="importImg($('#signature4'))">Import</button>
 
 <h2>Example 5 - Custom background</h2>
@@ -169,7 +169,7 @@ $("#signature5").jSignature({color:"#00f",bgcolor:"#0f0"});
 </pre>
 <div id="signature5"></div>
 <button type="button" onclick="$('#signature5').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature5').jSignature('export'))">Export</button>
+<button type="button" onclick="alert($('#signature5').jSignature('getData'))">Export</button>
 <button type="button" onclick="importImg($('#signature5'))">Import</button>
 
 </body>

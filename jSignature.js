@@ -9,6 +9,12 @@
 (function($) {
 	var methods = {
 		init : function( options ) {
+			if(!document.createElement('canvas').getContext)
+			{
+				alert("Oops, you need a newer browser to use this.");
+				return;
+			}
+
 			var settings = {
 				'width' : '250',
 				'height' : '150',
@@ -30,8 +36,8 @@
 					ctx.strokeStyle = settings.color;
 					
 					// Add custom class if defined
-					if(settings.class&&$.trim(settings.class)!="") {
-						$(canvas).addClass(settings.class);
+					if(settings.cssclass&&$.trim(settings.cssclass)!="") {
+						$(canvas).addClass(settings.cssclass);
 					}
 					var x;
 					var y;
@@ -71,10 +77,6 @@
 					}
 					
 				}
-				else
-				{
-					alert("Oops you need a newer browser to use this.")
-				}
 			});
 		},
 		clear : function( ) {
@@ -87,11 +89,11 @@
 			ctx.lineWidth=lineWidth;
 			return $(this);
 		},
-		export : function( ) { 
+		getData : function( ) { 
 			var canvas=$(this).children("canvas");
 			if(canvas.length) return canvas[0].toDataURL();
 			else return;
-		},
+		}
 	};
 	
 	$.fn.jSignature = function(method) {
