@@ -40,8 +40,8 @@
 
 					canvas.ontouchstart = canvas.onmousedown = function(e) {
 						var first = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
-						x = first.clientX - this.offsetLeft + $(window).scrollLeft();
-						y = first.clientY - this.offsetTop + $(window).scrollTop();
+						x = first.clientX - $(this).offset().left + $(window).scrollLeft();
+						y = first.clientY - $(this).offset().top + $(window).scrollTop();
 						ctx.moveTo(x, y);
 					}
 
@@ -63,8 +63,8 @@
 							x = e.clientX;
 							y = e.clientY;
 						}
-						x -= this.offsetLeft - $(window).scrollLeft();
-						y -= this.offsetTop - $(window).scrollTop();
+						x -= $(this).offset().left - $(window).scrollLeft();
+						y -= $(this).offset().top - $(window).scrollTop();
 						ctx.lineTo(x, y);
 						ctx.stroke();
 						ctx.moveTo(x, y);

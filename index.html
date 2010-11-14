@@ -35,10 +35,20 @@ a signature either via a mouse, your finger on touch enabled devices or a pen in
 is currently in alpha and is very much just a concept so it may not be ready for production.
 </p>
 <p>
+Note: This plugin requires a browser that supports HTML Canvas.
+</p>
+<p>
 Please report any bugs or suggestion to <a href="https://github.com/brinley/jSignature/issues">https://github.com/brinley/jSignature/issues</a>
 </p>
 <p>
 Released under the MIT License <<a href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a>> 
+</p>
+
+<h1>To Dos</h1>
+<p>
+<ol>
+	<li>Support non-canvas browsers with flash, using something like http://www.azarask.in/blog/post/flash-canvas/</li>
+</ol>
 </p>
 
 <h1>Usage</h1>
@@ -119,7 +129,7 @@ $(document).ready(function() {
 
 <h2>Basic example with default options</h2>
 <pre>
-	$("#signature1").jSignature();
+$("#signature1").jSignature();
 </pre>
 <div id="signature1"></div>
 <button type="button" onclick="$('#signature1').jSignature('clear')">Clear</button>
