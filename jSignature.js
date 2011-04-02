@@ -1,5 +1,5 @@
 /**
- * jSignature v1.0a
+ * jSignature v1.1a
  * 
  * Copyright (c) 2010 Brinley Ang 
  * http://www.unbolt.net
@@ -93,6 +93,16 @@
 			var canvas=$(this).children("canvas");
 			if(canvas.length) return canvas[0].toDataURL();
 			else return;
+		},
+		importData : function( dataurl ) {
+			var img=new Image();
+			var cv=$(this).children("canvas")[0];
+			img.src=dataurl;
+			img.onload=function() {
+				var dw=(img.width<cv.width)?img.width:cv.width;
+				var dh=(img.height<cv.height)?img.height:cv.height;
+				cv.getContext("2d").drawImage(img,0,0,dw,dh);
+			}
 		}
 	};
 	
