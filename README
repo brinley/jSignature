@@ -1,5 +1,5 @@
-jSignature v1.0a
-Copyright (c) 2010 Brinley Ang http://www.unbolt.net
+jSignature v1.1a
+Copyright (c) 2011 Brinley Ang http://www.unbolt.net
  
 jSignature is a plugin for jQuery which simplifies the creation of a field that allows a user to enter 
 a signature either via a mouse, your finger on touch enabled devices or a pen input device. 
