@@ -33,7 +33,7 @@
 				if (canvas && canvas.getContext) {
 					var ctx = canvas.getContext("2d");
 					ctx.lineWidth=settings.lineWidth;
-					ctx.strokeStyle = settings.color;
+					ctx.strokeStyle = ctx.fillStyle = settings.color;
 					
 					// Add custom class if defined
 					if(settings.cssclass&&$.trim(settings.cssclass)!="") {
@@ -42,9 +42,9 @@
 					var x;
 					var y;
 
-					ctx.beginPath();
 
 					canvas.ontouchstart = canvas.onmousedown = function(e) {
+						ctx.beginPath();
 						var first = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
 						x = first.clientX - $(this).offset().left + $(window).scrollLeft();
 						y = first.clientY - $(this).offset().top + $(window).scrollTop();
@@ -52,8 +52,10 @@
 					}
 
 					canvas.ontouchend = canvas.onmouseup = function(e) {
+						ctx.fillRect(x, y, (settings.lineWidth<2?2:settings.lineWidth), (settings.lineWidth<2?2:settings.lineWidth));
 						x = null;
 						y = null;
+						ctx.closePath();
 					}
 
 					canvas.onmousemove = canvas.ontouchmove = function(e) {
