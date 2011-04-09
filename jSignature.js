@@ -41,10 +41,11 @@
 					}
 					var x;
 					var y;
-
+					var hasMoved;
 
 					canvas.ontouchstart = canvas.onmousedown = function(e) {
 						ctx.beginPath();
+						hasMoved=false;
 						var first = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
 						x = first.clientX - $(this).offset().left + $(window).scrollLeft();
 						y = first.clientY - $(this).offset().top + $(window).scrollTop();
@@ -52,7 +53,10 @@
 					}
 
 					canvas.ontouchend = canvas.onmouseup = function(e) {
-						ctx.fillRect(x, y, (settings.lineWidth<2?2:settings.lineWidth), (settings.lineWidth<2?2:settings.lineWidth));
+						if(!hasMoved)
+						{
+							ctx.fillRect(x, y, (settings.lineWidth<2?2:settings.lineWidth), (settings.lineWidth<2?2:settings.lineWidth));
+						}
 						x = null;
 						y = null;
 						ctx.closePath();
@@ -62,6 +66,7 @@
 						if (x == null || y == null) {
 							return;
 						}
+						hasMoved=true;
 						if(e.changedTouches&&e.changedTouches.length>0) {
 							var first = e.changedTouches[0];
 							x = first.pageX;
