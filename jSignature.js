@@ -91,9 +91,11 @@
 			var ctx=canvas[0].getContext("2d");
 			var color=ctx.strokeStyle;
 			var lineWidth=ctx.lineWidth;
-			canvas.attr("width",$(canvas).attr("width"));
+			var w = $(canvas).attr("width");
+			canvas.attr("width",0).attr("width",w);
 			ctx.strokeStyle=color;
 			ctx.lineWidth=lineWidth;
+			ctx.beginPath();
 			return $(this);
 		},
 		getData : function( ) { 
