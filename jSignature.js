@@ -54,7 +54,7 @@
 						y = (first.screenY != first.clientY ? first.clientY : first.screenY) - $(this).offset().top + (first.pageY != first.clientY ? $(window).scrollTop() : 0);
 						ctx.moveTo(x, y);
 						if( $.isFunction( settings.mousedown ) ) {
-							settings.mouseup();
+							settings.mousedown();
 						}
 					}
 
