@@ -4,9 +4,6 @@
 <script language="JavaScript" type="text/javascript" src="jSignature.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-	// Prevent default for touch devices
-	document.ontouchmove = function(e){ e.preventDefault(); }
-	
 	$("#signature1").jSignature();
 	$("#signature2").jSignature({color:"#f00"});
 	$("#signature3").jSignature({color:"#00f",lineWidth:5});
@@ -65,8 +62,6 @@ The setup is quite straight forward, simply include jQuery and jSignature.js. At
 
 &lt;script type="text/javascript"&gt;
 $(document).ready(function() {
-	// Prevent default for touch devices
-	document.ontouchmove = function(e){ e.preventDefault(); }
 	$("#signature").jSignature({color:"#00f",lineWidth:5});
 });
 &lt;/script&gt;
@@ -133,6 +128,19 @@ $(document).ready(function() {
 <tr>
 	<td>cssclass</td>
 	<td>Defines a custom class for the canvas.</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>mousedown</td>
+	<td>
+		Defines a JavaScript function that gets called on mousedown or touchstart event. <br/>
+		Example usage: $("#signature").jSignature({ color:"#00f", lineWidth:5, mousedown: function(){ alert("Do something here"); } });
+	</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>mouseup</td>
+	<td>Defines a JavaScript function that gets called on mouseup or touchend event. See example usage for mousedown.</td>
 	<td>None</td>
 </tr>
 </table>

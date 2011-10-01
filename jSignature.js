@@ -47,15 +47,23 @@
 						ctx.beginPath();
 						hasMoved=false;
 						var first = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
-						x = first.clientX - $(this).offset().left + $(window).scrollLeft();
-						y = first.clientY - $(this).offset().top + $(window).scrollTop();
+						// Mobile Device Quirks
+						// Android: clientY == screenY
+						// IOS 4.3: clientY == pageY
+						x = (first.screenX != first.clientX ? first.clientX : first.screenX) - $(this).offset().left + (first.pageY != first.clientY ? $(window).scrollLeft() : 0);
+						y = (first.screenY != first.clientY ? first.clientY : first.screenY) - $(this).offset().top + (first.pageY != first.clientY ? $(window).scrollTop() : 0);
 						ctx.moveTo(x, y);
+						if( $.isFunction( settings.mousedown ) ) {
+							settings.mouseup();
+						}
 					}
 
 					canvas.ontouchend = canvas.onmouseup = function(e) {
-						if(!hasMoved)
-						{
+						if(!hasMoved) {
 							ctx.fillRect(x, y, (settings.lineWidth<2?2:settings.lineWidth), (settings.lineWidth<2?2:settings.lineWidth));
+						}
+						if( $.isFunction( settings.mouseup ) ) {
+							settings.mouseup();
 						}
 						x = null;
 						y = null;
@@ -69,8 +77,8 @@
 						hasMoved=true;
 						if(e.changedTouches&&e.changedTouches.length>0) {
 							var first = e.changedTouches[0];
-							x = first.pageX;
-							y = first.pageY;
+							x = first.pageX - $(window).scrollLeft();
+							y = first.pageY - $(window).scrollTop();
 						}
 						else {
 							x = e.clientX;
@@ -79,10 +87,11 @@
 						x -= $(this).offset().left - $(window).scrollLeft();
 						y -= $(this).offset().top - $(window).scrollTop();
 						ctx.lineTo(x, y);
-						ctx.stroke();
 						ctx.moveTo(x, y);
+						ctx.stroke();
+						e.stopPropagation();
+						e.preventDefault();
 					}
-					
 				}
 			});
 		},
