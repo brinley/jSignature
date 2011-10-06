@@ -80,6 +80,7 @@
 						// shifts - adjustment values in viewport pixels drived from position of canvas on the page
 						, shiftX
 						, shiftY
+						, dotShift = parseInt( settings.lineWidth / 2 )
 						, x , y
 						, drawEnd = function() {
 							clearTimeout(timer)
@@ -110,7 +111,7 @@
 						}
 						, drawStart = function(e) {
 							setXY(e)
-							ctx.fillRect(x, y, settings.lineWidth, settings.lineWidth)
+							ctx.fillRect(x - dotShift, y - dotShift, settings.lineWidth, settings.lineWidth)
 						}
 						, drawMove = function(e) {
 							if (x != null && y != null) {
