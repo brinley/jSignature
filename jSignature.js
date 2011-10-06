@@ -54,7 +54,8 @@
 				}
 				
 				
-				var canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"'></canvas>").appendTo($parent)[0]
+				var $canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"'></canvas>") 
+					, canvas = $canvas.appendTo($parent)[0]
 
 				canvas.onselectstart = function(e){e.preventDefault(); e.stopPropagation(); return false;}
 				
@@ -76,7 +77,42 @@
 //						$(canvas).addClass(settings.cssclass)
 //					}
 					
-					var timer = null
+					/*
+					 * About data structure:
+					 * We don't store / deal with "pictures" this signature capture code captures "vectors"
+					 * 
+					 * We don't store bitmaps. We store "strokes" as arrays of arrays.
+					 * 
+					 * Stroke = mousedown + mousemoved * n (+ mouseup but we don't record that as that was the "end / lack of movement" indicator)
+					 * 
+					 * Vectors = not classical vectors where numbers indicated shift relative last position. Our vectors are actually coordinates against top left of canvas.
+					 * 			we could calc the classical vectors, but keeping the the actual coordinates allows us (through Math.max / min) 
+					 * 			to calc the size of resulting drawing very quickly. If we want classical vectors later, we can always get them in backend code.
+					 * 
+					 * So, the data structure:
+					 * 
+					 * var data = [
+					 * 	{ // stroke starts
+					 * 		x : [101, 98, 57, 43] // x points
+					 * 		, y : [1, 23, 65, 87] // y points
+					 * 	} // stroke ends
+					 * 	, { // stroke starts
+					 * 		x : [55, 56, 57, 58] // x points
+					 * 		, y : [101, 97, 54, 4] // y points
+					 * 	} // stroke ends
+					 * 	, { // stroke consisting of just a dot
+					 * 		x : [53] // x points
+					 * 		, y : [151] // y points
+					 * 	} // stroke ends
+					 * ]
+					 * 
+					 * we don't care or store stroke width (it's canvas-size-relative), color, shadow values. These can be added / changed on whim post-capture.
+					 * 
+					 */
+					
+					var data = []
+						, stroke
+						, timer = null
 						// shifts - adjustment values in viewport pixels drived from position of canvas on the page
 						, shiftX
 						, shiftY
@@ -112,9 +148,13 @@
 						, drawStart = function(e) {
 							setXY(e)
 							ctx.fillRect(x - dotShift, y - dotShift, settings.lineWidth, settings.lineWidth)
+							stroke = {'x':[x], 'y':[y]}
+							data.push(stroke)
 						}
 						, drawMove = function(e) {
 							if (x != null && y != null) {
+								stroke.x.push(x)
+								stroke.y.push(y)
 								ctx.beginPath()
 								ctx.moveTo(x, y)
 								setXY(e)
@@ -145,6 +185,7 @@
 						canvas.onmousemove = drawMove
 						drawStart(e)
 					}
+					$canvas.data('signaturedata', data)
 				}
 			})
 		},
@@ -160,10 +201,18 @@
 			ctx.beginPath()
 			return $(this)
 		},
-		getData : function( ) { 
-			var canvas=$(this).children("canvas")
-			if(canvas.length) return canvas[0].toDataURL()
-			else return
+		getData : function(formattype) {
+			var canvas=$(this).children('canvas').get(0)
+			if (canvas){
+				switch (formattype) {
+					case 'image':
+						return canvas.toDataURL()
+					default:
+						return $(canvas).data('signaturedata')
+				}
+			} else {
+				return
+			}
 		}
 //		importData : function( dataurl ) {
 //			var img=new Image()
