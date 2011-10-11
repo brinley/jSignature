@@ -276,6 +276,8 @@
 				drawStart(e)
 			}
 			$canvas.data('signature.clear', resetCanvas)
+			// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
+			$(document).bind('mouseup.jSignature', drawEnd)
 			
 			resetCanvas()
 			drawEnd()
