@@ -244,6 +244,37 @@
 					shiftX = tos.left * -1
 					shiftY = tos.top * -1
 				}
+				, getDataStats = function(){
+					var strokecnt = strokes.length - 1
+						, stroke
+						, pointid
+						, pointcnt
+						, x, y
+						, maxX = Number.NEGATIVE_INFINITY
+						, maxY = Number.NEGATIVE_INFINITY
+						, minX = Number.POSITIVE_INFINITY
+						, minY = Number.POSITIVE_INFINITY
+					for(strokeid = 0; strokeid < strokecnt; strokeid++){
+						stroke = strokes[strokeid]
+						pointcnt = stroke.length - 1
+						// basicDot(stroke.x[0], stroke.y[0])
+						for(pointid = 0; pointid < pointcnt; pointid++){
+							x = stroke.x[pointid]
+							y = stroke.y[pointid]
+							if (x > maxX){
+								maxX = x
+							} else if (x < minX) {
+								minX = x
+							}
+							if (y > maxY){
+								maxY = y
+							} else if (y < minY) {
+								minY = y
+							}
+						}
+					}
+					return {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
+				}
 				, renderStrokes = function(strokes){
 					// used for rendering signature strokes passed from external sources.
 					if (strokes.length){
@@ -255,7 +286,9 @@
 							stroke = strokes[strokeid]
 							pointcnt = stroke.length
 							basicDot(stroke.x[0], stroke.y[0])
-							//for(pointid = 1; strokeid < strokecnt; strokeid++){
+							for(pointid = 1; strokeid < strokecnt; strokeid++){
+								
+							}
 						}
 					}
 				}
