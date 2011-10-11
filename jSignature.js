@@ -119,6 +119,7 @@
 					$canvas.data('signature.data', data)
 				}
 				, lineCurveThreshold = settings.lineWidth * 3
+				, fatFingerCompensation = 0 // in pixels. Usually a x5 multiple of line width enabled auto on touch.
 				, data
 				, stroke
 				, timer = null
@@ -140,8 +141,8 @@
 					// Windows: Chrome, FF, IE9, Safari
 					// None of that scroll shift calc vs screenXY other sigs do is needed.
 					var newx = Math.round(first.pageX + shiftX)
-						, newy = Math.round(first.pageY + shiftY)
-					if (newx == x && newy == y){
+						, newy = Math.round(first.pageY + shiftY) + fatFingerCompensation
+					if (newx === x && newy === y){
 						return false
 					} else {
 						// kick done-drawing timer down the line
@@ -261,6 +262,7 @@
 
 			canvas.ontouchstart = function(e) {
 				canvas.onmousedown = null
+				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
 				setStartValues()
 				canvas.ontouchstart = drawStart
 				canvas.ontouchend = drawEnd
