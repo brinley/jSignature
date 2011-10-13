@@ -6,7 +6,8 @@
  * 
  * Released under the MIT License <http://www.opensource.org/licenses/mit-license.php> 
  */
-(function($) { var methods = {
+(function($) { 
+var apinamespace = 'jSignature' , methods = {
 	init : function( options ) {
 		if(!document.createElement('canvas').getContext)
 		{
@@ -53,7 +54,7 @@
 				}
 			}
 			
-			var $canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"' class='jSignature'></canvas>") 
+			var $canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"' class='"+apinamespace+"'></canvas>") 
 				, canvas = $canvas.appendTo($parent).get(0)
 
 			if (!canvas || !canvas.getContext) {
@@ -115,7 +116,7 @@
 					ctx.shadowBlur = 0
 					
 					data = []
-					$canvas.data('signature.data', data)
+					$canvas.data(apinamespace+'.data', data)
 				}
 				, lineCurveThreshold = settings.lineWidth * 3
 				, fatFingerCompensation = 0 // in pixels. Usually a x5 multiple of line width enabled auto on touch.
@@ -310,7 +311,9 @@
 							}
 							drawEndBase()
 						}
+						return true
 					}
+					return false
 				}
 
 			canvas.ontouchstart = function(e) {
@@ -334,18 +337,22 @@
 			/*
 			 * API EXPOSED THROUGH jQuery.data() on Canvas element.
 			 */
-			//  $canvas.data('signature.data', data) is set every time we reset canvas. See drawStart too..
-			$canvas.data('signature.settings', settings)
-			$canvas.data('signature.clear', resetCanvas)
-			$canvas.data('signature.setData', renderStrokes)
+			//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
+			$canvas.data(apinamespace+'.settings', settings)
+			$canvas.data(apinamespace+'.clear', resetCanvas)
+			$canvas.data(apinamespace+'.setData', renderStrokes)
 			
 			// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
-			$(document).bind('mouseup.jSignature', drawEndHandler)
+			$(document).bind('mouseup.'+apinamespace, drawEndHandler)
+			// it is bettr than
+			// $canvas.bind('mouseout', drawEndHandler)
+			// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
 			
-			if (settings.data){
-				renderStrokes(settings.data)
+			if (settings.data && renderStrokes(settings.data)){
+				// renderStrokes returns true on succssful render
+				// false when fails
 			} else {
-				resetCanvas()				
+				resetCanvas()		
 			}
 
 			drawEndBase()
@@ -354,7 +361,7 @@
 	, clear : function( ) {
 		var $this = $(this)
 		try {
-			$this.children('canvas').data('signature.clear')()
+			$this.children('canvas').data(apinamespace+'.clear')()
 		} catch (ex) {
 			// pass
 		}
@@ -369,20 +376,20 @@
 				case 'image':
 					return canvas.toDataURL()
 				default:
-					return $(canvas).data('signature.data')
+					return $(canvas).data(apinamespace+'.data')
 			}
 		}
 	}
 	, setData : function(data, formattype) {
-		var canvas=$(this).children('canvas.jSignature').get(0)
-		if (!canvas){
-			return
+		var $canvas=$(this).children('canvas.'+apinamespace)
+		if (!canvas.length){
+			return false
 		} else {
 			switch (formattype) {
-				case 'image':
-					return canvas.toDataURL()
+				case 'example_format_value':
+					return false
 				default:
-					return $(canvas).data('signature.data')
+					return $canvas.data(apinamespace+'.setData')(data)
 			}
 		}
 	}
@@ -398,13 +405,13 @@
 //		}
 }
 
-$.fn.jSignature = function(method) {
+$.fn[apinamespace] = function(method) {
 	if ( methods[method] ) {
 		return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
 	} else if ( typeof method === 'object' || ! method ) {
 		return methods.init.apply( this, arguments )
 	} else {
-		$.error( 'Method ' +  method + ' does not exist on jQuery.jSignature' )
+		$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
 	}    
 }
 })(jQuery)
