@@ -1,5 +1,8 @@
 /**
- * jSignature v1.2
+ * jSignature v2
+ *
+ * Copyright 2011 Willow Systems Corp
+ * http://willow-systems.com
  * 
  * Copyright (c) 2010 Brinley Ang 
  * http://www.unbolt.net
