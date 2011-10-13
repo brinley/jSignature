@@ -23,14 +23,12 @@ var apinamespace = 'jSignature' , methods = {
 			,'lineWidth' : 0
 			,'bgcolor': '#fff'
 		}
-
 		if (options) {
 			$.extend(settings, options)
 		}
 		
 		return this.each( function() {
-
-
+			
 			var $parent = $(this)
 			
 			if (settings.width == 'max' || settings.height == 'max'){
@@ -304,10 +302,13 @@ var apinamespace = 'jSignature' , methods = {
 							, pointcnt
 						for(var strokeid = 0; strokeid < strokecnt; strokeid++){
 							stroke = strokes[strokeid]
-							pointcnt = stroke.length
+							pointcnt = stroke.x.length
 							drawStartBase(stroke.x[0], stroke.y[0])
 							for(pointid = 1; pointid < pointcnt; pointid++){
-								drawMoveBase(stroke.x[pointid], stroke.y[pointid])
+								drawMoveBase(
+									stroke.x[pointid-1], stroke.y[pointid-1]
+									, stroke.x[pointid], stroke.y[pointid]
+								)
 							}
 							drawEndBase()
 						}
@@ -359,37 +360,41 @@ var apinamespace = 'jSignature' , methods = {
 		}) // end Each
 	}
 	, clear : function( ) {
-		var $this = $(this)
 		try {
-			$this.children('canvas').data(apinamespace+'.clear')()
+			this.children('canvas.'+apinamespace).data(apinamespace+'.clear')()
 		} catch (ex) {
 			// pass
 		}
-		return $this
+		return this
 	}
 	, getData : function(formattype) {
-		var canvas=$(this).children('canvas').get(0)
-		if (!canvas){
+		var $canvas=this.children('canvas.'+apinamespace)
+		if (!$canvas.length){
 			return
 		} else {
 			switch (formattype) {
 				case 'image':
-					return canvas.toDataURL()
+					return $canvas.get(0).toDataURL()
 				default:
-					return $(canvas).data(apinamespace+'.data')
+					return $canvas.data(apinamespace+'.data')
 			}
 		}
 	}
 	, setData : function(data, formattype) {
-		var $canvas=$(this).children('canvas.'+apinamespace)
-		if (!canvas.length){
-			return false
+		var $canvas=this.children('canvas.'+apinamespace)
+		if (!$canvas.length){
+			return this
 		} else {
 			switch (formattype) {
 				case 'example_format_value':
-					return false
+					throw new Error("This format type is not implemented yet.")
+					// return this
 				default:
-					return $canvas.data(apinamespace+'.setData')(data)
+					if ( $canvas.data(apinamespace+'.setData')(data) ) {
+						return this
+					} else {
+						throw new Error("Call to "+apinamespace+".setData failed.")
+					}
 			}
 		}
 	}
@@ -412,6 +417,6 @@ $.fn[apinamespace] = function(method) {
 		return methods.init.apply( this, arguments )
 	} else {
 		$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
-	}    
+	}
 }
 })(jQuery)
