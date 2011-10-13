@@ -53,9 +53,8 @@
 				}
 			}
 			
-			var $canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"'></canvas>") 
+			var $canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"' class='jSignature'></canvas>") 
 				, canvas = $canvas.appendTo($parent).get(0)
-			$canvas.data('signature.settings', settings)
 
 			if (!canvas || !canvas.getContext) {
 				return
@@ -128,10 +127,13 @@
 				, shiftY
 				, dotShift = Math.round(settings.lineWidth / 2) * -1
 				, x , y, vectorx, vectory
-				, drawEnd = function() {
-					clearTimeout(timer)
+				, drawEndBase = function(){
 					x = y = null
 					vectorx = vectory = 0
+				}
+				, drawEndHandler = function() {
+					clearTimeout(timer)
+					drawEndBase()
 				}
 				, setXY = function(e) {
 					e.preventDefault()
@@ -148,7 +150,7 @@
 						// kick done-drawing timer down the line
 						clearTimeout(timer)
 						timer = setTimeout(
-							drawEnd
+							drawEndHandler
 							, 750 // no moving = done with the stroke.
 						)
 						x = newx
@@ -204,39 +206,48 @@
 						, 'y': y 
 					}
 				}
-				, drawStart = function(e) {
-					setXY(e)
+				, drawStartBase = function(x, y) {
 					basicDot(x, y)
 					stroke = {'x':[x], 'y':[y]}
 					data.push(stroke)
 				}
-				, drawMove = function(e) {
+				, drawStartHandler = function(e) {
+					setXY(e)
+					drawStartBase(x, y)
+				}
+				, drawMoveBase = function(startx, starty, endx, endy){
+					var newvectorx = endx - startx
+						, newvectorxm = Math.abs(newvectorx)
+						, newvectory = endy - starty
+						, newvectorym = Math.abs(newvectory)
+						// stroke, vectorx, vectory are used from global scope.
+						
+					stroke.x.push(endx)
+					stroke.y.push(endy)
+
+					if (newvectorxm < lineCurveThreshold && newvectorym < lineCurveThreshold ){
+						basicLine(startx, starty, endx, endy)
+					} else {
+						var cp = getCP1(vectorx, vectory, newvectorxm, newvectorym)
+						basicCurve(
+							startx, starty
+							, endx, endy
+							, startx + cp.x, starty + cp.y
+							, endx, endy
+						)
+					}
+					vectorx = newvectorx
+					vectory = newvectory
+				}
+				, drawMoveHandler = function(e) {
 					if (x == null || y == null) {
+						e.preventDefault()
 						return
 					}
-					
 					var startx = x
 						, starty = y
 					if( setXY(e) ){
-						stroke.x.push(x)
-						stroke.y.push(y)
-						var newvectorx = x - startx
-							, newvectorxm = Math.abs(newvectorx)
-							, newvectory = y - starty
-							, newvectorym = Math.abs(newvectory)
-						if (newvectorxm < lineCurveThreshold && newvectorym < lineCurveThreshold ){
-							basicLine(startx, starty, x, y)
-						} else {
-							var cp = getCP1(vectorx, vectory, newvectorxm, newvectorym)
-							basicCurve(
-								startx, starty
-								, x, y
-								, startx + cp.x, starty + cp.y
-								, x, y
-							)
-						}
-						vectorx = newvectorx
-						vectory = newvectory
+						drawMoveBase(startx, starty, x, y)
 					}
 				}
 				, setStartValues = function(){
@@ -256,7 +267,7 @@
 						, minY = Number.POSITIVE_INFINITY
 					for(strokeid = 0; strokeid < strokecnt; strokeid++){
 						stroke = strokes[strokeid]
-						pointcnt = stroke.length - 1
+						pointcnt = stroke.length
 						// basicDot(stroke.x[0], stroke.y[0])
 						for(pointid = 0; pointid < pointcnt; pointid++){
 							x = stroke.x[pointid]
@@ -277,6 +288,14 @@
 				}
 				, renderStrokes = function(strokes){
 					// used for rendering signature strokes passed from external sources.
+					/*
+					 * Plan:
+					 * - make sure canvas is big enough to draw the sig
+					 *   - get image size stats
+					 *   - resize canvas if needed (or TODO: scale down the sig)
+					 * - Iterate over strokes, render. 
+					 */
+					resetCanvas()
 					if (strokes.length){
 						var strokecnt = strokes.length
 							, stroke
@@ -285,10 +304,11 @@
 						for(var strokeid = 0; strokeid < strokecnt; strokeid++){
 							stroke = strokes[strokeid]
 							pointcnt = stroke.length
-							basicDot(stroke.x[0], stroke.y[0])
-							for(pointid = 1; strokeid < strokecnt; strokeid++){
-								
+							drawStartBase(stroke.x[0], stroke.y[0])
+							for(pointid = 1; pointid < pointcnt; pointid++){
+								drawMoveBase(stroke.x[pointid], stroke.y[pointid])
 							}
+							drawEndBase()
 						}
 					}
 				}
@@ -297,31 +317,44 @@
 				canvas.onmousedown = null
 				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
 				setStartValues()
-				canvas.ontouchstart = drawStart
-				canvas.ontouchend = drawEnd
-				canvas.ontouchmove = drawMove
-				drawStart(e)
+				canvas.ontouchstart = drawStartHandler
+				canvas.ontouchend = drawEndHandler
+				canvas.ontouchmove = drawMoveHandler
+				drawStartHandler(e)
 			}
 			canvas.onmousedown = function(e) {
 				canvas.ontouchstart = null
 				setStartValues()
-				canvas.onmousedown = drawStart
-				canvas.onmouseup = drawEnd
-				canvas.onmousemove = drawMove
-				drawStart(e)
+				canvas.onmousedown = drawStartHandler
+				canvas.onmouseup = drawEndHandler
+				canvas.onmousemove = drawMoveHandler
+				drawStartHandler(e)
 			}
-			$canvas.data('signature.clear', resetCanvas)
-			// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
-			$(document).bind('mouseup.jSignature', drawEnd)
 			
-			resetCanvas()
+			/*
+			 * API EXPOSED THROUGH jQuery.data() on Canvas element.
+			 */
+			//  $canvas.data('signature.data', data) is set every time we reset canvas. See drawStart too..
+			$canvas.data('signature.settings', settings)
+			$canvas.data('signature.clear', resetCanvas)
+			$canvas.data('signature.setData', renderStrokes)
+			
+			// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
+			$(document).bind('mouseup.jSignature', drawEndHandler)
+			
+			if (settings.data){
+				renderStrokes(settings.data)
+			} else {
+				resetCanvas()				
+			}
+
 			drawEnd()
-		})
+		}) // end Each
 	}
 	, clear : function( ) {
 		var $this = $(this)
 		try {
-			$this.children('canvas').data('signature.clear')()				
+			$this.children('canvas').data('signature.clear')()
 		} catch (ex) {
 			// pass
 		}
@@ -329,6 +362,19 @@
 	}
 	, getData : function(formattype) {
 		var canvas=$(this).children('canvas').get(0)
+		if (!canvas){
+			return
+		} else {
+			switch (formattype) {
+				case 'image':
+					return canvas.toDataURL()
+				default:
+					return $(canvas).data('signature.data')
+			}
+		}
+	}
+	, setData : function(data, formattype) {
+		var canvas=$(this).children('canvas.jSignature').get(0)
 		if (!canvas){
 			return
 		} else {
