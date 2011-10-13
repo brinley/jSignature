@@ -348,7 +348,7 @@
 				resetCanvas()				
 			}
 
-			drawEnd()
+			drawEndBase()
 		}) // end Each
 	}
 	, clear : function( ) {
