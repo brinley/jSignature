@@ -17,8 +17,9 @@ def build(bld):
     served_folder_prefix = "./release/"
     todeploy = [
         ["js/libs/jquery-1.6.2.min.js", "js/libs/jquery.js"]
-        , ["js/business_logic.js", r"js/business_logic.js", 'cache busting']
-        , ["jSignature.js", r"js/libs/jquery.jSignature.js", 'cache busting']
+        , ["js/libs/excanvas.min.js", "js/libs/excanvas.js"]
+        , ["js/business_logic.js", "js/business_logic.js", 'cache busting']
+        , ["jSignature.js", "js/libs/jquery.jSignature.js", 'cache busting']
         , ["index.html", "index.html"] # item immediately following cache busting item(s) gets edited for all the busted names.
         ]
 

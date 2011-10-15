@@ -6,11 +6,6 @@ $(document).ready(function() {
 			, settings = $sigdiv.jSignature('clear').children('canvas.jSignature').data('jSignature.settings')
 		settings.color = 'red'
 		$sigdiv.jSignature('setData', data)
-	}).appendTo($sigdiv);
+	}).appendTo($('#tools'));
+	
 })
-
-function importImg(sig)
-{
-	sig.children("img.imported").remove();
-	$("<img class='imported'></img").attr("src",sig.jSignature('getData')).appendTo(sig);
-}

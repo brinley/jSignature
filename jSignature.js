@@ -47,20 +47,44 @@ var apinamespace = 'jSignature'
 				settings.lineWidth = lineWidth
 			}
 		}
-		
-		var $canvas = $("<canvas width='"+settings.width+"' height='"+settings.height+"' class='"+apinamespace+"'></canvas>") 
-			, canvas = $canvas.appendTo($parent).get(0)
 
-		if (!canvas || !canvas.getContext) {
-			return
+		var small_screen = parseInt(settings.width) < 1000? true : false
+		
+		var $canvas = $parent.find('canvas')
+			, canvas
+		if (!$canvas.length){
+			canvas = document.createElement('canvas')
+			//canvas.setAttribute("width", settings.width)
+			//canvas.setAttribute("height", 200)
+			canvas.width = settings.width
+			canvas.height = settings.height
+			$canvas = $(canvas)
+			$canvas.appendTo($parent)
+		} else {
+			canvas = $canvas.get(0)
 		}
 
-		canvas.onselectstart = function(e){e.preventDefault(); e.stopPropagation(); return false;}
+		$canvas.addClass(apinamespace)
+		
+		var canvas_emulator = false
+		if (!canvas.getContext && typeof G_vmlCanvasManager != 'undefined'){
+			canvas = G_vmlCanvasManager.initElement(canvas)
+			canvas_emulator = true
+		}
+		
+		if (!canvas.getContext){
+			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")
+			alert("Old or broken browser detected. Canvas element does not support 2d context. Signature capture logic cannot proceed.")			
+		}
 
-//				// Add custom class if defined
-//				if(settings.cssclass && $.trim(settings.cssclass)!="") {
-//					$(canvas).addClass(settings.cssclass)
-//				}
+		// normally select preventer would be short, but
+		// vml-based Canvas emulator on IE does NOT provide value for Event. Hence this convoluted line.
+		canvas.onselectstart = function(e){if(e && e.preventDefault){e.preventDefault()}; if(e && e.stopPropagation){e.stopPropagation()}; return false;}
+
+		// Add custom class if defined
+		if(settings.cssclass && $.trim(settings.cssclass) != "") {
+			$canvas.addClass(settings.cssclass)
+		}
 
 		/*
 		 * About data structure:
@@ -104,10 +128,12 @@ var apinamespace = 'jSignature'
 				ctx.lineCap = ctx.lineJoin = "round"
 				ctx.fillStyle = "rgba(0,0,0,0)"
 
-				ctx.shadowColor = ctx.strokeStyle
-				ctx.shadowOffsetX = settings.lineWidth * 0.5
-				ctx.shadowOffsetY = settings.lineWidth * -0.6
-				ctx.shadowBlur = 0
+				if (!canvas_emulator && !small_screen){
+					ctx.shadowColor = ctx.strokeStyle
+					ctx.shadowOffsetX = settings.lineWidth * 0.5
+					ctx.shadowOffsetY = settings.lineWidth * -0.6
+					ctx.shadowBlur = 0					
+				}
 				
 				data = []
 				$canvas.data(apinamespace+'.data', data)
@@ -251,7 +277,7 @@ var apinamespace = 'jSignature'
 				shiftY = tos.top * -1
 			}
 			, getDataStats = function(){
-				var strokecnt = strokes.length - 1
+				var strokecnt = strokes.length
 					, stroke
 					, pointid
 					, pointcnt
@@ -313,22 +339,33 @@ var apinamespace = 'jSignature'
 				return false
 			}
 
-		canvas.ontouchstart = function(e) {
-			canvas.onmousedown = null
-			fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
-			setStartValues()
-			canvas.ontouchstart = drawStartHandler
-			canvas.ontouchend = drawEndHandler
-			canvas.ontouchmove = drawMoveHandler
-			drawStartHandler(e)
-		}
-		canvas.onmousedown = function(e) {
-			canvas.ontouchstart = null
-			setStartValues()
-			canvas.onmousedown = drawStartHandler
-			canvas.onmouseup = drawEndHandler
-			canvas.onmousemove = drawMoveHandler
-			drawStartHandler(e)
+		if (canvas_emulator){
+			$canvas.bind('mousedown.'+apinamespace, function(e){
+				setStartValues()
+				$canvas.unbind('mousedown.'+apinamespace)
+				$canvas.bind('mousedown.'+apinamespace, drawStartHandler)
+				$canvas.bind('mouseup.'+apinamespace, drawEndHandler)
+				drawStartHandler(e)
+				$canvas.bind('mousemove.'+apinamespace, drawMoveHandler)
+			})
+		} else {
+			canvas.ontouchstart = function(e) {
+				canvas.onmousedown = null
+				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
+				setStartValues()
+				canvas.ontouchstart = drawStartHandler
+				canvas.ontouchend = drawEndHandler
+				canvas.ontouchmove = drawMoveHandler
+				drawStartHandler(e)
+			}
+			canvas.onmousedown = function(e) {
+				canvas.ontouchstart = null
+				setStartValues()
+				canvas.onmousedown = drawStartHandler
+				canvas.onmouseup = drawEndHandler
+				canvas.onmousemove = drawMoveHandler
+				drawStartHandler(e)
+			}
 		}
 		
 		/*
@@ -356,13 +393,7 @@ var apinamespace = 'jSignature'
 	}
 	, methods = {
 		init : function( options ) {
-			if(!document.createElement('canvas').getContext)
-			{
-				alert("Oops, you need a newer browser to use this.")
-				return
-			}
-	
-			return this.each( function() {console.log("options", options); initBase.call(this, options)} ) // end Each
+			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
 		, clear : function( ) {
 			try {
@@ -403,16 +434,6 @@ var apinamespace = 'jSignature'
 				}
 			}
 		}
-		//		importData : function( dataurl ) {
-		//			var img=new Image()
-		//			var cv=$(this).children("canvas")[0]
-		//			img.src=dataurl
-		//			img.onload=function() {
-		//				var dw=(img.width < cv.width) ? img.width : cv.width
-		//				var dh=(img.height < cv.height) ? img.height : cv.height
-		//				cv.getContext("2d").drawImage(img,0,0,dw,dh)
-		//			}
-		//		}
 	} // end of methods dclaration.
 
 $.fn[apinamespace] = function(method) {
