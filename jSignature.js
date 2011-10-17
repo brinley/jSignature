@@ -32,15 +32,15 @@ var apinamespace = 'jSignature'
 			var pw = $parent.width()
 				, ph = $parent.height()
 			if ((pw / settings.sizeRatio) > ph) {
-				ph = parseInt(pw/settings.sizeRatio)
+				ph = parseInt(pw/settings.sizeRatio, 10)
 			}
 			settings.width = pw
 			settings.height = ph					
 		}
 		
 		if (settings.lineWidth == 0){
-			var width = parseInt(settings.width)
-				, lineWidth = parseInt( width / 300 ) // +1 pixel for every extra 300px of width.
+			var width = parseInt(settings.width, 10)
+				, lineWidth = parseInt( width / 300 , 10) // +1 pixel for every extra 300px of width.
 			if (lineWidth < 2) {
 			    settings.lineWidth = 2 
 			} else {
@@ -48,14 +48,12 @@ var apinamespace = 'jSignature'
 			}
 		}
 
-		var small_screen = parseInt(settings.width) < 1000? true : false
+		var small_screen = parseInt(settings.width, 10) < 1000? true : false
 		
 		var $canvas = $parent.find('canvas')
 			, canvas
 		if (!$canvas.length){
 			canvas = document.createElement('canvas')
-			//canvas.setAttribute("width", settings.width)
-			//canvas.setAttribute("height", 200)
 			canvas.width = settings.width
 			canvas.height = settings.height
 			$canvas = $(canvas)
@@ -63,14 +61,31 @@ var apinamespace = 'jSignature'
 		} else {
 			canvas = $canvas.get(0)
 		}
-
 		$canvas.addClass(apinamespace)
 		
 		var canvas_emulator = false
-		if (!canvas.getContext && typeof G_vmlCanvasManager != 'undefined'){
-			canvas = G_vmlCanvasManager.initElement(canvas)
-			canvas_emulator = true
+			, zoom = 1
+		if (!canvas.getContext){
+			if (typeof FlashCanvas != "undefined") {
+				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. It matches pixel-to-pixel to screen instead.
+				// all x, y coords need to be scaled from pagezoom to Flash window.
+				// since we are targeting ONLY IE with FlashCanvas, we will test the zoom only the IE8, IE7 way
+				if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
+					zoom = window.screen.deviceXDPI / window.screen.logicalXDPI
+				}
+				canvas = FlashCanvas.initElement(canvas)
+				// We effectively abbuse the brokenness of FlashCanvas and force the flash rendering surface to
+				// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
+				if (zoom != 1){
+					$canvas.children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
+				}
+				canvas_emulator = true
+			} else if ( typeof G_vmlCanvasManager != 'undefined'){
+				canvas = G_vmlCanvasManager.initElement(canvas)
+				canvas_emulator = true
+			}
 		}
+
 		
 		if (!canvas.getContext){
 			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")
@@ -121,17 +136,19 @@ var apinamespace = 'jSignature'
 		
 		var ctx = canvas.getContext("2d")
 			, resetCanvas = function(){
-				ctx.clearRect(0, 0, canvas.width, canvas.height)
+				ctx.clearRect(0, 0, canvas.width * zoom + 30, canvas.height * zoom + 30)
 				
-				ctx.lineWidth = parseInt(settings.lineWidth)
+				ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
 				ctx.strokeStyle = settings.color
 				ctx.lineCap = ctx.lineJoin = "round"
+				ctx.fillStyle = "rgba(255,255,255,255)"
+				ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
 				ctx.fillStyle = "rgba(0,0,0,0)"
 
 				if (!canvas_emulator && !small_screen){
 					ctx.shadowColor = ctx.strokeStyle
-					ctx.shadowOffsetX = settings.lineWidth * 0.5
-					ctx.shadowOffsetY = settings.lineWidth * -0.6
+					ctx.shadowOffsetX = ctx.lineWidth * 0.5
+					ctx.shadowOffsetY = ctx.lineWidth * -0.6
 					ctx.shadowBlur = 0					
 				}
 				
@@ -163,8 +180,9 @@ var apinamespace = 'jSignature'
 				// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
 				// Windows: Chrome, FF, IE9, Safari
 				// None of that scroll shift calc vs screenXY other sigs do is needed.
-				var newx = Math.round(first.pageX + shiftX)
-					, newy = Math.round(first.pageY + shiftY) + fatFingerCompensation
+				// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
+				var newx = Math.round((first.pageX + shiftX) * zoom)
+					, newy = Math.round((first.pageY + shiftY) * zoom) + fatFingerCompensation
 				if (newx === x && newy === y){
 					return false
 				} else {
