@@ -10,6 +10,43 @@
  * Released under the MIT License <http://www.opensource.org/licenses/mit-license.php> 
  */
 (function($) { 
+
+function Vector(x,y){
+	this.x = x
+	this.y = y
+	this.getReverse = function(){
+		return new Vector(
+			this.x * -1
+			, this.y * -1
+		)
+	}
+	this._length = null
+	this.getLength = function(){
+		if (!this._length){
+			this._length = Math.sqrt( Math.pow(this.x, 2) + Math.pow(this.y, 2) )
+		}
+		return this._length
+	}
+}
+
+function Point(x,y){
+	this.x = x
+	this.y = y
+	
+	this.getVectorToCoordinates = function (x, y) {
+		return new Vector(x - this.x, y - this.y)
+	}
+	this.getVectorFromCoordinates = function (x, y) {
+		return this.getVectorToCoordinates(x, y).getReverse()
+	}
+	this.getVectorToPoint = function (point) {
+		return new Vector(x - this.x, y - this.y)
+	}
+	this.getVectorFromPoint = function (point) {
+		return this.getVectorToPoint(point).getReverse()
+	}
+}
+
 var apinamespace = 'jSignature'
 	, initBase = function(options) {
 		
