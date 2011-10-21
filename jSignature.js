@@ -217,25 +217,30 @@ var apinamespace = 'jSignature'
 			, polarity = function (e){
 				return Math.round(e / Math.abs(e))
 			}
-			, getCP1 = function(vectorx, vectory, boundx, boundy){
+			, hypotenuse = function(x, y){
+				return Math.round( Math.sqrt( Math.pow(x, 2) + Math.pow(y, 2) ) )
+			}
+			, getCP1 = function(vectorx, vectory, maxlen){
 				var x, y
-					, tan = Math.min(
-						Math.min(boundx, boundy)
-						, Math.max(boundx / 2, boundy / 2)
-					)
+					, oldvectorlen = hypotenuse(vectorx, vectory)
+					, newvectorlen = Math.min( oldvectorlen, maxlen / 2 ) // in besier curve, len of CP1 vector should be up to half the length of whole line, if we want the end of curve to come in at 0 degrees deviation from underlying (smoothed) line.
 				
-				if (vectorx === 0 && vectory === 0){
+				if (newvectorlen == oldvectorlen){
+					// this is optimization for cases when drawing speed accellerates (and next stroke is longer than prior)
+					x = vectorx
+					y = vectory
+				} else if (vectorx === 0 && vectory === 0){
 					x = 0
 					y = 0
 				} else if (vectorx === 0){
 					x = 0
-					y = tan * polarity(vectory)
-				} else if(vectory === 0) {
-					x = tan * polarity(vectorx)
+					y = newvectorlen * polarity(vectory)
+				} else if(vectory === 0){
+					x = newvectorlen * polarity(vectorx)
 					y = 0
 				} else {
 					var proportion = Math.abs(vectory / vectorx)
-					x = Math.sqrt(Math.pow(tan, 2) / (1 + Math.pow(proportion, 2)))
+					x = Math.sqrt(Math.pow(newvectorlen, 2) / (1 + Math.pow(proportion, 2)))
 					y = proportion * x
 					x = x * polarity(vectorx)
 					y = y * polarity(vectory)
@@ -256,23 +261,23 @@ var apinamespace = 'jSignature'
 			}
 			, drawMoveBase = function(startx, starty, endx, endy){
 				var newvectorx = endx - startx
-					, newvectorxm = Math.abs(newvectorx)
 					, newvectory = endy - starty
-					, newvectorym = Math.abs(newvectory)
+					, new_length = hypotenuse(newvectorx, newvectory)
 					// stroke, vectorx, vectory are used from global scope.
 					
 				stroke.x.push(endx)
 				stroke.y.push(endy)
 
-				if (newvectorxm < lineCurveThreshold && newvectorym < lineCurveThreshold ){
+				if (new_length < lineCurveThreshold){
 					basicLine(startx, starty, endx, endy)
 				} else {
-					var cp = getCP1(vectorx, vectory, newvectorxm, newvectorym)
+					// here we still use vector x, y of OLD, previous line. From global scope and limit it to run of current line
+					var cp = getCP1(vectorx, vectory, new_length)
 					basicCurve(
 						startx, starty
 						, endx, endy
 						, startx + cp.x, starty + cp.y
-						, endx, endy
+						, startx + newvectorx / 2 , starty + newvectory / 2
 					)
 				}
 				vectorx = newvectorx
