@@ -14,11 +14,10 @@
 function Vector(x,y){
 	this.x = x
 	this.y = y
-	this.getReverse = function(){
-		return new Vector(
-			this.x * -1
-			, this.y * -1
-		)
+	this.reverse = function(){
+		this.x = this.x * -1
+		this.y = this.y * -1
+		return this
 	}
 	this._length = null
 	this.getLength = function(){
@@ -26,6 +25,30 @@ function Vector(x,y){
 			this._length = Math.sqrt( Math.pow(this.x, 2) + Math.pow(this.y, 2) )
 		}
 		return this._length
+	}
+	
+	var polarity = function (e){
+		return Math.round(e / Math.abs(e))
+	}
+	this.resizeTo = function(length){
+		// proportionally changes x,y such that the hypotenuse (vector length) is = new length
+		if (this.x === 0 && this.y === 0){
+			this._length = 0
+		} else if (this.x === 0){
+			this._length = length
+			this.y = length * polarity(this.y)
+		} else if(this.y === 0){
+			this._length = length
+			this.x = length * polarity(this.x)
+		} else {
+			var proportion = Math.abs(this.y / this.x)
+				, x = Math.sqrt(Math.pow(length, 2) / (1 + Math.pow(proportion, 2)))
+				, y = proportion * x
+			this._length = length
+			this.x = x * polarity(this.x)
+			this.y = y * polarity(this.y)
+		}
+		return this
 	}
 }
 
@@ -37,13 +60,13 @@ function Point(x,y){
 		return new Vector(x - this.x, y - this.y)
 	}
 	this.getVectorFromCoordinates = function (x, y) {
-		return this.getVectorToCoordinates(x, y).getReverse()
+		return this.getVectorToCoordinates(x, y).reverse()
 	}
 	this.getVectorToPoint = function (point) {
-		return new Vector(x - this.x, y - this.y)
+		return new Vector(point.x - this.x, point.y - this.y)
 	}
 	this.getVectorFromPoint = function (point) {
-		return this.getVectorToPoint(point).getReverse()
+		return this.getVectorToPoint(point).reverse()
 	}
 }
 
@@ -92,12 +115,12 @@ function DataEngine(storageObject){
 	this._stroke = null
 	this.startStroke = function(point){
 		if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
-			console.log("in SD.start", point.x, point.y)
 			this._stroke = {'x':[point.x], 'y':[point.y]}
 			this._storageObject.push(this._stroke)
 			this._lastPoint = point
 			this.inStroke = true
-			var fn = this.startStrokeFn // 'this' does not work same inside setTimeout(
+			// 'this' does not work same inside setTimeout(
+			var fn = this.startStrokeFn
 			setTimeout(
 				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
 				function() {fn(point)}
@@ -110,14 +133,15 @@ function DataEngine(storageObject){
 	}
 	this.addToStroke = function(point){
 		if (this.inStroke && point && typeof(point.x) == "number" && typeof(point.y) == "number" && !(this._lastPoint.x === point.x && this._lastPoint.y === point.y)){
-			console.log("in SD.move", point.x, point.y)
+			var positionInStroke = this._stroke.x.length
 			this._stroke.x.push(point.x)
 			this._stroke.y.push(point.y)
 			this._lastPoint = point
-			var fn = this.addToStrokeFn // 'this' does not work same inside setTimeout(
+			var stroke = this._stroke
+				, fn = this.addToStrokeFn
 			setTimeout(
 				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn(point)}
+				function() {fn(point, stroke, positionInStroke)}
 				, 3
 			)
 			return point
@@ -130,9 +154,13 @@ function DataEngine(storageObject){
 		this.inStroke = false
 		this._lastPoint = null
 		if (c){
-			console.log("in SD.end")
 			var fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
-			setTimeout(fn, 3)
+				, stroke = this._stroke
+			setTimeout(
+				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+				function(){ fn(stroke) }
+				, 3
+			)
 			return true
 		} else {
 			return null
@@ -268,7 +296,6 @@ var apinamespace = 'jSignature'
 				
 				$canvas.data(apinamespace+'.data', data)
 			}
-			, lineCurveThreshold = settings.lineWidth * 3
 			// shifts - adjustment values in viewport pixels drived from position of canvas on the page
 			, shiftX
 			, shiftY
@@ -472,15 +499,179 @@ var apinamespace = 'jSignature'
 				return false
 			}
 
-		var renderFn = function(point) {
-			console.log(point.x, point.y)
-			//basicDot(point.x, point.y)
-			// startVector = new Vector(0,0) // we don't have inertia from prior stroke section.
+		var lineCurveThreshold = settings.lineWidth * 4
+		strokeStartCallback = function(point) {
+			basicDot(point.x, point.y)
 		}
-		
-		strokeStartCallback = function(point){console.log("start callback", point.x, point.y)}
-		strokeAddCallback = function(point){console.log("add callback", point.x, point.y)}
-		strokeEndCallback = function(point){console.log("end callback")}
+		strokeAddCallback = function(Dpoint, stroke, positionInStroke){
+			// Because we are funky this way, here we draw TWO curves.
+			// 1. POSSIBLY "this line" - spanning from point right before us, to this latest point.
+			// 2. POSSIBLY "prior curve" - spanning from "latest point" to the one before it.
+			
+			// Why you ask?
+			// long lines (ones with many pixels between them) do not look good when they are part of a large curvy stroke.
+			// You know, the jaggedy crocodile spine instead of a pretty, smooth curve. Yuck!
+			// We want to approximate pretty curves in-place of those ugly lines.
+			// To approximate a very nice curve we need to know the direction of line before and after.
+			// Hence, on long lines we actually wait for another point beyond it to come back from
+			// mousemoved before we draw this curve.
+			
+			// So for "prior curve" to be calc'ed we need 4 points 
+			// 	A, B, C, D
+			// and 3 lines:
+			//  pre-line (from points A to B), 
+			//  this line (from points B to C), (we call it "this" because if it was not yet, it's the only one we can draw for sure.) 
+			//  post-line (from points C to D) (even through it's 'current' line we don't know if we can draw it yet)
+			//
+			// Well, actually, we don't need to *know* the point A, just the vector A->B
+			// 
+			// 'Dpoint' we get in the args is the D point.
+			var Cpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
+				, CDvector = Cpoint.getVectorToPoint(Dpoint)
+				
+			// Again, we have a chance here to draw TWO things:
+			//  BC Curve (only if it's long, because if it was short, it was drawn by previous callback) and 
+			//  CD Line (only if it's short)
+			
+			// So, let's start with BC curve.
+			// if there is only 2 points in stroke array, we don't have "history" long enough to have point B, let alone point A.
+			// Falling through to drawing line CD is proper, as that's the only line we have points for.
+			if(positionInStroke > 1) {
+				// we are here when there are at least 3 points in stroke array.
+				var Bpoint = new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])
+					, BCvector = Bpoint.getVectorToPoint(Cpoint)
+					, ABvector
+				if(BCvector.getLength() > lineCurveThreshold){
+					// Yey! Pretty curves, here we come!
+					if(positionInStroke > 2) {
+						// we are here when at least 4 points in stroke array.
+						ABvector = (new Point(stroke.x[positionInStroke-3], stroke.y[positionInStroke-3])).getVectorToPoint(Bpoint)
+					} else {
+						ABvector = new Vector(0,0)
+					}
+					var halflen = BCvector.getLength() / 2
+						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
+						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
+					basicCurve(
+						Bpoint.x
+						, Bpoint.y
+						, Cpoint.x
+						, Cpoint.y
+						, Bpoint.x + BCP1vector.x
+						, Bpoint.y + BCP1vector.y
+						, Cpoint.x + CCP2vector.x
+						, Cpoint.y + CCP2vector.y
+					)
+				}
+			}
+			if(CDvector.getLength() <= lineCurveThreshold){
+				basicLine(
+					Cpoint.x
+					, Cpoint.y
+					, Dpoint.x
+					, Dpoint.y
+				)
+			}
+		}
+		strokeEndCallback = function(stroke){
+			// Here we tidy up things left unfinished in last strokeAddCallback run.
+			
+			// What's POTENTIALLY left unfinished there is the curve between the last points
+			// in the stroke, if the len of that line is more than lineCurveThreshold
+			// If the last line was shorter than lineCurveThreshold, it was drawn there, and there
+			// is nothing for us here to do.
+			// We can also be called when there is only one point in the stroke (meaning, the 
+			// stroke was just a dot), in which case, again, there is nothing for us to do.
+						
+			// So for "this curve" to be calc'ed we need 3 points 
+			// 	A, B, C
+			// and 2 lines:
+			//  pre-line (from points A to B), 
+			//  this line (from points B to C) 
+			// Well, actually, we don't need to *know* the point A, just the vector A->B
+			// so, we really need points B, C and AB vector.
+			var positionInStroke = stroke.x.length - 1
+			
+			if (positionInStroke > 0){
+				// there are at least 2 points in the stroke.we are in business.
+				var Cpoint = new Point(stroke.x[positionInStroke], stroke.y[positionInStroke])
+					, Bpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
+					, BCvector = Bpoint.getVectorToPoint(Cpoint)
+					, ABvector
+				if (BCvector.getLength() > lineCurveThreshold){
+					// yep. This one was left undrawn in prior callback. Have to draw it now.
+					if (positionInStroke > 1){
+						// we have at least 3 elems in stroke
+						ABvector = (new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])).getVectorToPoint(Bpoint)
+						var BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(BCvector.getLength() / 2)
+						basicCurve(
+							Bpoint.x
+							, Bpoint.y
+							, Cpoint.x
+							, Cpoint.y
+							, Bpoint.x + BCP1vector.x
+							, Bpoint.y + BCP1vector.y
+							, Cpoint.x
+							, Cpoint.y
+						)						
+					} else {
+						// ABvector = new Vector(0,0)
+						basicLine(
+							Bpoint.x
+							, Bpoint.y
+							, Cpoint.x
+							, Cpoint.y
+						)
+					}
+					
+				}
+			}
+			
+				
+			// Again, we have a chance here to draw TWO things:
+			//  BC Curve (only if it's long, because if it was short, it was drawn by previous callback) and 
+			//  CD Line (only if it's short)
+			
+			// So, let's start with BC curve.
+			// if there is only 2 points in stroke array, we don't have "history" long enough to have point B, let alone point A.
+			// Falling through to drawing line CD is proper, as that's the only line we have points for.
+			if(positionInStroke > 1) {
+				// we are here when there are at least 3 points in stroke array.
+				var Bpoint = new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])
+					, BCvector = Bpoint.getVectorToPoint(Cpoint)
+					, ABvector
+				if(BCvector.getLength() > lineCurveThreshold){
+					// Yey! Pretty curves, here we come!
+					if(positionInStroke > 2) {
+						// we are here when at least 4 points in stroke array.
+						ABvector = (new Point(stroke.x[positionInStroke-3], stroke.y[positionInStroke-3])).getVectorToPoint(Bpoint)
+					} else {
+						ABvector = new Vector(0,0)
+					}
+					var halflen = BCvector.getLength() / 2
+						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
+						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
+					basicCurve(
+						Bpoint.x
+						, Bpoint.y
+						, Cpoint.x
+						, Cpoint.y
+						, Bpoint.x + BCP1vector.x
+						, Bpoint.y + BCP1vector.y
+						, Cpoint.x + CCP2vector.x
+						, Cpoint.y + CCP2vector.y
+					)
+				}
+			}
+			if(CDvector.getLength() <= lineCurveThreshold){
+				basicLine(
+					Cpoint.x
+					, Cpoint.y
+					, Dpoint.x
+					, Dpoint.y
+				)
+			}
+		}
 		
 		if (canvas_emulator){
 			$canvas.bind('mousedown.'+apinamespace, function(e){
