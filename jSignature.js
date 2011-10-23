@@ -132,7 +132,7 @@ function DataEngine(storageObject){
 		}
 	}
 	this.addToStroke = function(point){
-		if (this.inStroke && point && typeof(point.x) == "number" && typeof(point.y) == "number" && !(this._lastPoint.x === point.x && this._lastPoint.y === point.y)){
+		if (this.inStroke && point && typeof(point.x) == "number" && typeof(point.y) == "number" && (Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 3){
 			var positionInStroke = this._stroke.x.length
 			this._stroke.x.push(point.x)
 			this._stroke.y.push(point.y)
@@ -373,68 +373,7 @@ var apinamespace = 'jSignature'
 					}
 				}
 			}
-			
 			/*
-			, polarity = function (e){
-				return Math.round(e / Math.abs(e))
-			}
-			, getCP1 = function(vectorx, vectory, maxlen){
-				var x, y
-					, oldvectorlen = hypotenuse(vectorx, vectory)
-					, newvectorlen = Math.min( oldvectorlen, maxlen / 2 ) // in besier curve, len of CP1 vector should be up to half the length of whole line, if we want the end of curve to come in at 0 degrees deviation from underlying (smoothed) line.
-				
-				if (newvectorlen == oldvectorlen){
-					// this is optimization for cases when drawing speed accellerates (and next stroke is longer than prior)
-					x = vectorx
-					y = vectory
-				} else if (vectorx === 0 && vectory === 0){
-					x = 0
-					y = 0
-				} else if (vectorx === 0){
-					x = 0
-					y = newvectorlen * polarity(vectory)
-				} else if(vectory === 0){
-					x = newvectorlen * polarity(vectorx)
-					y = 0
-				} else {
-					var proportion = Math.abs(vectory / vectorx)
-					x = Math.sqrt(Math.pow(newvectorlen, 2) / (1 + Math.pow(proportion, 2)))
-					y = proportion * x
-					x = x * polarity(vectorx)
-					y = y * polarity(vectory)
-				}
-				return {
-					'x': x
-					, 'y': y 
-				}
-			}
-			, drawMoveBase = function(point){
-				dataEngine.addToStroke(point)
-				
-				var v = startPoint.getVectorToPoint(endPoint)
-				
-				var newvectorx = endx - startx
-					, newvectory = endy - starty
-					, new_length = hypotenuse(newvectorx, newvectory)
-					// stroke, vectorx, vectory are used from global scope.
-
-				if (v.getLength() < lineCurveThreshold){
-					basicLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y)
-				} else {
-					// here we still use vector x, y of OLD, previous line. From global scope and limit it to run of current line
-					// var cp = getCP1(vectorx, vectory, new_length)
-					var cp1 = new Point(startPoint.x, startPoint.y)
-						, cp2 = new Point(endPoint.x, endPoint.y)
-					basicCurve(
-						startPoint.x, startPoint.y
-						, endPoint.x, endPoint.y
-						, cp1.x, cp1.y
-						, cp2.x, cp2.y
-					)
-				}
-				vectorx = newvectorx
-				vectory = newvectory
-			}
 			, getDataStats = function(){
 				var strokecnt = strokes.length
 					, stroke
@@ -466,16 +405,13 @@ var apinamespace = 'jSignature'
 				}
 				return {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
 			}
-			*/
 			, renderStrokes = function(strokes){
 				// used for rendering signature strokes passed from external sources.
-				/*
 				 * Plan:
 				 * - make sure canvas is big enough to draw the sig
 				 *   - get image size stats
 				 *   - resize canvas if needed (or TODO: scale down the sig)
 				 * - Iterate over strokes, render. 
-				 */
 				resetCanvas()
 				if (strokes.length){
 					var strokecnt = strokes.length
@@ -498,8 +434,9 @@ var apinamespace = 'jSignature'
 				}
 				return false
 			}
+*/
 
-		var lineCurveThreshold = settings.lineWidth * 4
+		var lineCurveThreshold = settings.lineWidth * 3
 		strokeStartCallback = function(point) {
 			basicDot(point.x, point.y)
 		}
@@ -626,51 +563,6 @@ var apinamespace = 'jSignature'
 					
 				}
 			}
-			
-				
-			// Again, we have a chance here to draw TWO things:
-			//  BC Curve (only if it's long, because if it was short, it was drawn by previous callback) and 
-			//  CD Line (only if it's short)
-			
-			// So, let's start with BC curve.
-			// if there is only 2 points in stroke array, we don't have "history" long enough to have point B, let alone point A.
-			// Falling through to drawing line CD is proper, as that's the only line we have points for.
-			if(positionInStroke > 1) {
-				// we are here when there are at least 3 points in stroke array.
-				var Bpoint = new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])
-					, BCvector = Bpoint.getVectorToPoint(Cpoint)
-					, ABvector
-				if(BCvector.getLength() > lineCurveThreshold){
-					// Yey! Pretty curves, here we come!
-					if(positionInStroke > 2) {
-						// we are here when at least 4 points in stroke array.
-						ABvector = (new Point(stroke.x[positionInStroke-3], stroke.y[positionInStroke-3])).getVectorToPoint(Bpoint)
-					} else {
-						ABvector = new Vector(0,0)
-					}
-					var halflen = BCvector.getLength() / 2
-						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
-						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
-					basicCurve(
-						Bpoint.x
-						, Bpoint.y
-						, Cpoint.x
-						, Cpoint.y
-						, Bpoint.x + BCP1vector.x
-						, Bpoint.y + BCP1vector.y
-						, Cpoint.x + CCP2vector.x
-						, Cpoint.y + CCP2vector.y
-					)
-				}
-			}
-			if(CDvector.getLength() <= lineCurveThreshold){
-				basicLine(
-					Cpoint.x
-					, Cpoint.y
-					, Dpoint.x
-					, Dpoint.y
-				)
-			}
 		}
 		
 		if (canvas_emulator){
@@ -708,7 +600,7 @@ var apinamespace = 'jSignature'
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
 		$canvas.data(apinamespace+'.settings', settings)
 		$canvas.data(apinamespace+'.clear', resetCanvas)
-		$canvas.data(apinamespace+'.setData', renderStrokes)
+		//$canvas.data(apinamespace+'.setData', renderStrokes)
 		
 		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
 		$(document).bind('mouseup.'+apinamespace, drawEndHandler)
@@ -716,12 +608,12 @@ var apinamespace = 'jSignature'
 		// $canvas.bind('mouseout', drawEndHandler)
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
 		
-		if (settings.data && renderStrokes(settings.data)){
-			// renderStrokes returns true on succssful render
-			// false when fails
-		} else {
+//		if (settings.data && renderStrokes(settings.data)){
+//			// renderStrokes returns true on succssful render
+//			// false when fails
+//		} else {
 			resetCanvas()
-		}
+//		}
 	}
 	, methods = {
 		init : function( options ) {
