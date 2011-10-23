@@ -10,6 +10,166 @@
  * Released under the MIT License <http://www.opensource.org/licenses/mit-license.php> 
  */
 (function($) { 
+
+function Vector(x,y){
+	this.x = x
+	this.y = y
+	this.reverse = function(){
+		this.x = this.x * -1
+		this.y = this.y * -1
+		return this
+	}
+	this._length = null
+	this.getLength = function(){
+		if (!this._length){
+			this._length = Math.sqrt( Math.pow(this.x, 2) + Math.pow(this.y, 2) )
+		}
+		return this._length
+	}
+	
+	var polarity = function (e){
+		return Math.round(e / Math.abs(e))
+	}
+	this.resizeTo = function(length){
+		// proportionally changes x,y such that the hypotenuse (vector length) is = new length
+		if (this.x === 0 && this.y === 0){
+			this._length = 0
+		} else if (this.x === 0){
+			this._length = length
+			this.y = length * polarity(this.y)
+		} else if(this.y === 0){
+			this._length = length
+			this.x = length * polarity(this.x)
+		} else {
+			var proportion = Math.abs(this.y / this.x)
+				, x = Math.sqrt(Math.pow(length, 2) / (1 + Math.pow(proportion, 2)))
+				, y = proportion * x
+			this._length = length
+			this.x = x * polarity(this.x)
+			this.y = y * polarity(this.y)
+		}
+		return this
+	}
+}
+
+function Point(x,y){
+	this.x = x
+	this.y = y
+	
+	this.getVectorToCoordinates = function (x, y) {
+		return new Vector(x - this.x, y - this.y)
+	}
+	this.getVectorFromCoordinates = function (x, y) {
+		return this.getVectorToCoordinates(x, y).reverse()
+	}
+	this.getVectorToPoint = function (point) {
+		return new Vector(point.x - this.x, point.y - this.y)
+	}
+	this.getVectorFromPoint = function (point) {
+		return this.getVectorToPoint(point).reverse()
+	}
+}
+
+/*
+ * About data structure:
+ * We don't store / deal with "pictures" this signature capture code captures "vectors"
+ * 
+ * We don't store bitmaps. We store "strokes" as arrays of arrays. (Actually, arrays of objects containing arrays of coordinates.
+ * 
+ * Stroke = mousedown + mousemoved * n (+ mouseup but we don't record that as that was the "end / lack of movement" indicator)
+ * 
+ * Vectors = not classical vectors where numbers indicated shift relative last position. Our vectors are actually coordinates against top left of canvas.
+ * 			we could calc the classical vectors, but keeping the the actual coordinates allows us (through Math.max / min) 
+ * 			to calc the size of resulting drawing very quickly. If we want classical vectors later, we can always get them in backend code.
+ * 
+ * So, the data structure:
+ * 
+ * var data = [
+ * 	{ // stroke starts
+ * 		x : [101, 98, 57, 43] // x points
+ * 		, y : [1, 23, 65, 87] // y points
+ * 	} // stroke ends
+ * 	, { // stroke starts
+ * 		x : [55, 56, 57, 58] // x points
+ * 		, y : [101, 97, 54, 4] // y points
+ * 	} // stroke ends
+ * 	, { // stroke consisting of just a dot
+ * 		x : [53] // x points
+ * 		, y : [151] // y points
+ * 	} // stroke ends
+ * ]
+ * 
+ * we don't care or store stroke width (it's canvas-size-relative), color, shadow values. These can be added / changed on whim post-capture.
+ * 
+ */
+function DataEngine(storageObject){
+	this._storageObject = storageObject // we expect this to be an instance of Array
+	
+	this.startStrokeFn = function(){console.log("default start callback")}
+	this.addToStrokeFn = function(){console.log("default add callback")}
+	this.endStrokeFn = function(){console.log("default end callback")}
+	
+	this.inStroke = false
+	
+	this._lastPoint = null
+	this._stroke = null
+	this.startStroke = function(point){
+		if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
+			this._stroke = {'x':[point.x], 'y':[point.y]}
+			this._storageObject.push(this._stroke)
+			this._lastPoint = point
+			this.inStroke = true
+			// 'this' does not work same inside setTimeout(
+			var fn = this.startStrokeFn
+			setTimeout(
+				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+				function() {fn(point)}
+				, 3
+			)
+			return point
+		} else {
+			return null
+		}
+	}
+	this.addToStroke = function(point){
+		if (this.inStroke && point && typeof(point.x) == "number" && typeof(point.y) == "number" && (Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 3){
+			var positionInStroke = this._stroke.x.length
+			this._stroke.x.push(point.x)
+			this._stroke.y.push(point.y)
+			this._lastPoint = point
+			var stroke = this._stroke
+				, fn = this.addToStrokeFn
+			setTimeout(
+				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+				function() {fn(point, stroke, positionInStroke)}
+				, 3
+			)
+			return point
+		} else {
+			return null
+		}
+	}
+	this.endStroke = function(){
+		var c = this.inStroke
+		this.inStroke = false
+		this._lastPoint = null
+		if (c){
+			var fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
+				, stroke = this._stroke
+			setTimeout(
+				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+				function(){ fn(stroke) }
+				, 3
+			)
+			return true
+		} else {
+			return null
+		}
+		
+	}
+}
+
+
 var apinamespace = 'jSignature'
 	, initBase = function(options) {
 		
@@ -101,48 +261,23 @@ var apinamespace = 'jSignature'
 			$canvas.addClass(settings.cssclass)
 		}
 
-		/*
-		 * About data structure:
-		 * We don't store / deal with "pictures" this signature capture code captures "vectors"
-		 * 
-		 * We don't store bitmaps. We store "strokes" as arrays of arrays.
-		 * 
-		 * Stroke = mousedown + mousemoved * n (+ mouseup but we don't record that as that was the "end / lack of movement" indicator)
-		 * 
-		 * Vectors = not classical vectors where numbers indicated shift relative last position. Our vectors are actually coordinates against top left of canvas.
-		 * 			we could calc the classical vectors, but keeping the the actual coordinates allows us (through Math.max / min) 
-		 * 			to calc the size of resulting drawing very quickly. If we want classical vectors later, we can always get them in backend code.
-		 * 
-		 * So, the data structure:
-		 * 
-		 * var data = [
-		 * 	{ // stroke starts
-		 * 		x : [101, 98, 57, 43] // x points
-		 * 		, y : [1, 23, 65, 87] // y points
-		 * 	} // stroke ends
-		 * 	, { // stroke starts
-		 * 		x : [55, 56, 57, 58] // x points
-		 * 		, y : [101, 97, 54, 4] // y points
-		 * 	} // stroke ends
-		 * 	, { // stroke consisting of just a dot
-		 * 		x : [53] // x points
-		 * 		, y : [151] // y points
-		 * 	} // stroke ends
-		 * ]
-		 * 
-		 * we don't care or store stroke width (it's canvas-size-relative), color, shadow values. These can be added / changed on whim post-capture.
-		 * 
-		 */
-		
 		var ctx = canvas.getContext("2d")
+			, data, dataEngine
+			, strokeStartCallback, strokeAddCallback, strokeEndCallback
 			, resetCanvas = function(){
 				ctx.clearRect(0, 0, canvas.width * zoom + 30, canvas.height * zoom + 30)
 				
 				ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
 				ctx.strokeStyle = settings.color
 				ctx.lineCap = ctx.lineJoin = "round"
-				ctx.fillStyle = "rgba(255,255,255,255)"
-				ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
+
+				if (canvas_emulator){
+					// TODO: 
+					// FLashCanvas on IE9 fills with Black by default hence we refill with White, 
+					// but need to get background color from parent DIV and fill with that.
+					ctx.fillStyle = "rgba(255,255,255,255)"
+					ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
+				}
 				ctx.fillStyle = "rgba(0,0,0,0)"
 
 				if (!canvas_emulator && !small_screen){
@@ -153,54 +288,22 @@ var apinamespace = 'jSignature'
 				}
 				
 				data = []
+				dataEngine = new DataEngine(data)
+				
+				dataEngine.startStrokeFn = strokeStartCallback
+				dataEngine.addToStrokeFn = strokeAddCallback
+				dataEngine.endStrokeFn = strokeEndCallback
+				
 				$canvas.data(apinamespace+'.data', data)
 			}
-			, lineCurveThreshold = settings.lineWidth * 3
-			, fatFingerCompensation = 0 // in pixels. Usually a x5 multiple of line width enabled auto on touch.
-			, data
-			, stroke
-			, timer = null
 			// shifts - adjustment values in viewport pixels drived from position of canvas on the page
 			, shiftX
 			, shiftY
-			, dotShift = Math.round(settings.lineWidth / 2) * -1
-			, x , y, vectorx, vectory
-			, drawEndBase = function(){
-				x = y = null
-				vectorx = vectory = 0
-			}
-			, drawEndHandler = function() {
-				clearTimeout(timer)
-				drawEndBase()
-			}
-			, setXY = function(e) {
-				e.preventDefault()
-				var first = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e)
-				// All devices i tried report correct coordinates in pageX,Y
-				// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
-				// Windows: Chrome, FF, IE9, Safari
-				// None of that scroll shift calc vs screenXY other sigs do is needed.
-				// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
-				var newx = Math.round((first.pageX + shiftX) * zoom)
-					, newy = Math.round((first.pageY + shiftY) * zoom) + fatFingerCompensation
-				if (newx === x && newy === y){
-					return false
-				} else {
-					// kick done-drawing timer down the line
-					clearTimeout(timer)
-					timer = setTimeout(
-						drawEndHandler
-						, 750 // no moving = done with the stroke.
-					)
-					x = newx
-					y = newy
-					return true
-				}
-			}
+			, dotShift = Math.round(settings.lineWidth / 2) * -1 // only for single dots at start. this draws fat ones "centered"
 			, basicDot = function(x, y){
 				ctx.fillStyle = settings.color
 				ctx.fillRect(x + dotShift, y + dotShift, settings.lineWidth, settings.lineWidth)
-				ctx.fillStyle = 'rgba(0,0,0,0)'					
+				ctx.fillStyle = 'rgba(0,0,0,0)'
 			}
 			, basicLine = function(startx, starty, endx, endy){
 				ctx.beginPath()
@@ -214,86 +317,63 @@ var apinamespace = 'jSignature'
 				ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy)
 				ctx.stroke()
 			}
-			, polarity = function (e){
-				return Math.round(e / Math.abs(e))
+			, timer = null // used for endign stroke when no movement occurs for some time.
+			, clearIdeeTimeout = function(){
+				clearTimeout(timer)
+			} 
+			, resetIdleTimeout = function(){
+				// global scope:
+				// timer, drawEndHandler
+				clearTimeout(timer)
+				timer = setTimeout(
+					drawEndHandler
+					, 750 // no moving for this many ms? = done with the stroke.
+				)
 			}
-			, getCP1 = function(vectorx, vectory, boundx, boundy){
-				var x, y
-					, tan = Math.min(
-						Math.min(boundx, boundy)
-						, Math.max(boundx / 2, boundy / 2)
-					)
-				
-				if (vectorx === 0 && vectory === 0){
-					x = 0
-					y = 0
-				} else if (vectorx === 0){
-					x = 0
-					y = tan * polarity(vectory)
-				} else if(vectory === 0) {
-					x = tan * polarity(vectorx)
-					y = 0
-				} else {
-					var proportion = Math.abs(vectory / vectorx)
-					x = Math.sqrt(Math.pow(tan, 2) / (1 + Math.pow(proportion, 2)))
-					y = proportion * x
-					x = x * polarity(vectorx)
-					y = y * polarity(vectory)
+			, drawEndHandler = function(e) {
+				try {
+					e.preventDefault()						
+				} catch (ex) {
 				}
-				return {
-					'x': x
-					, 'y': y 
-				}
-			}
-			, drawStartBase = function(x, y) {
-				basicDot(x, y)
-				stroke = {'x':[x], 'y':[y]}
-				data.push(stroke)
-			}
-			, drawStartHandler = function(e) {
-				setXY(e)
-				drawStartBase(x, y)
-			}
-			, drawMoveBase = function(startx, starty, endx, endy){
-				var newvectorx = endx - startx
-					, newvectorxm = Math.abs(newvectorx)
-					, newvectory = endy - starty
-					, newvectorym = Math.abs(newvectory)
-					// stroke, vectorx, vectory are used from global scope.
-					
-				stroke.x.push(endx)
-				stroke.y.push(endy)
-
-				if (newvectorxm < lineCurveThreshold && newvectorym < lineCurveThreshold ){
-					basicLine(startx, starty, endx, endy)
-				} else {
-					var cp = getCP1(vectorx, vectory, newvectorxm, newvectorym)
-					basicCurve(
-						startx, starty
-						, endx, endy
-						, startx + cp.x, starty + cp.y
-						, endx, endy
-					)
-				}
-				vectorx = newvectorx
-				vectory = newvectory
-			}
-			, drawMoveHandler = function(e) {
-				if (x == null || y == null) {
-					e.preventDefault()
-					return
-				}
-				var startx = x
-					, starty = y
-				if( setXY(e) ){
-					drawMoveBase(startx, starty, x, y)
-				}
+				clearIdeeTimeout()
+				dataEngine.endStroke()
 			}
 			, setStartValues = function(){
 				var tos = $(canvas).offset()
 				shiftX = tos.left * -1
 				shiftY = tos.top * -1
 			}
+			, fatFingerCompensation = 0 // in pixels. Usually a x5 multiple of line width enabled auto on touch devices.
+			, getPointFromEvent = function(e) {
+				var firstEvent = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e)
+				// All devices i tried report correct coordinates in pageX,Y
+				// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
+				// Windows: Chrome, FF, IE9, Safari
+				// None of that scroll shift calc vs screenXY other sigs do is needed.
+				// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
+				// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
+				return new Point(
+					Math.round((firstEvent.pageX + shiftX) * zoom)
+					, Math.round((firstEvent.pageY + shiftY) * zoom) + fatFingerCompensation
+				)
+			}
+			, drawStartHandler = function(e) {
+				e.preventDefault()
+				dataEngine.startStroke( getPointFromEvent(e) )
+				resetIdleTimeout()
+			}
+			, drawMoveHandler = function(e) {
+				e.preventDefault()
+				if (!dataEngine.inStroke){
+					return
+				} else {
+					var acceptedPoint = dataEngine.addToStroke(getPointFromEvent(e))
+					if (acceptedPoint){
+						resetIdleTimeout()
+					}
+				}
+			}
+			/*
 			, getDataStats = function(){
 				var strokecnt = strokes.length
 					, stroke
@@ -327,13 +407,11 @@ var apinamespace = 'jSignature'
 			}
 			, renderStrokes = function(strokes){
 				// used for rendering signature strokes passed from external sources.
-				/*
 				 * Plan:
 				 * - make sure canvas is big enough to draw the sig
 				 *   - get image size stats
 				 *   - resize canvas if needed (or TODO: scale down the sig)
 				 * - Iterate over strokes, render. 
-				 */
 				resetCanvas()
 				if (strokes.length){
 					var strokecnt = strokes.length
@@ -356,7 +434,137 @@ var apinamespace = 'jSignature'
 				}
 				return false
 			}
+*/
 
+		var lineCurveThreshold = settings.lineWidth * 3
+		strokeStartCallback = function(point) {
+			basicDot(point.x, point.y)
+		}
+		strokeAddCallback = function(Dpoint, stroke, positionInStroke){
+			// Because we are funky this way, here we draw TWO curves.
+			// 1. POSSIBLY "this line" - spanning from point right before us, to this latest point.
+			// 2. POSSIBLY "prior curve" - spanning from "latest point" to the one before it.
+			
+			// Why you ask?
+			// long lines (ones with many pixels between them) do not look good when they are part of a large curvy stroke.
+			// You know, the jaggedy crocodile spine instead of a pretty, smooth curve. Yuck!
+			// We want to approximate pretty curves in-place of those ugly lines.
+			// To approximate a very nice curve we need to know the direction of line before and after.
+			// Hence, on long lines we actually wait for another point beyond it to come back from
+			// mousemoved before we draw this curve.
+			
+			// So for "prior curve" to be calc'ed we need 4 points 
+			// 	A, B, C, D
+			// and 3 lines:
+			//  pre-line (from points A to B), 
+			//  this line (from points B to C), (we call it "this" because if it was not yet, it's the only one we can draw for sure.) 
+			//  post-line (from points C to D) (even through it's 'current' line we don't know if we can draw it yet)
+			//
+			// Well, actually, we don't need to *know* the point A, just the vector A->B
+			// 
+			// 'Dpoint' we get in the args is the D point.
+			var Cpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
+				, CDvector = Cpoint.getVectorToPoint(Dpoint)
+				
+			// Again, we have a chance here to draw TWO things:
+			//  BC Curve (only if it's long, because if it was short, it was drawn by previous callback) and 
+			//  CD Line (only if it's short)
+			
+			// So, let's start with BC curve.
+			// if there is only 2 points in stroke array, we don't have "history" long enough to have point B, let alone point A.
+			// Falling through to drawing line CD is proper, as that's the only line we have points for.
+			if(positionInStroke > 1) {
+				// we are here when there are at least 3 points in stroke array.
+				var Bpoint = new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])
+					, BCvector = Bpoint.getVectorToPoint(Cpoint)
+					, ABvector
+				if(BCvector.getLength() > lineCurveThreshold){
+					// Yey! Pretty curves, here we come!
+					if(positionInStroke > 2) {
+						// we are here when at least 4 points in stroke array.
+						ABvector = (new Point(stroke.x[positionInStroke-3], stroke.y[positionInStroke-3])).getVectorToPoint(Bpoint)
+					} else {
+						ABvector = new Vector(0,0)
+					}
+					var halflen = BCvector.getLength() / 2
+						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
+						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
+					basicCurve(
+						Bpoint.x
+						, Bpoint.y
+						, Cpoint.x
+						, Cpoint.y
+						, Bpoint.x + BCP1vector.x
+						, Bpoint.y + BCP1vector.y
+						, Cpoint.x + CCP2vector.x
+						, Cpoint.y + CCP2vector.y
+					)
+				}
+			}
+			if(CDvector.getLength() <= lineCurveThreshold){
+				basicLine(
+					Cpoint.x
+					, Cpoint.y
+					, Dpoint.x
+					, Dpoint.y
+				)
+			}
+		}
+		strokeEndCallback = function(stroke){
+			// Here we tidy up things left unfinished in last strokeAddCallback run.
+			
+			// What's POTENTIALLY left unfinished there is the curve between the last points
+			// in the stroke, if the len of that line is more than lineCurveThreshold
+			// If the last line was shorter than lineCurveThreshold, it was drawn there, and there
+			// is nothing for us here to do.
+			// We can also be called when there is only one point in the stroke (meaning, the 
+			// stroke was just a dot), in which case, again, there is nothing for us to do.
+						
+			// So for "this curve" to be calc'ed we need 3 points 
+			// 	A, B, C
+			// and 2 lines:
+			//  pre-line (from points A to B), 
+			//  this line (from points B to C) 
+			// Well, actually, we don't need to *know* the point A, just the vector A->B
+			// so, we really need points B, C and AB vector.
+			var positionInStroke = stroke.x.length - 1
+			
+			if (positionInStroke > 0){
+				// there are at least 2 points in the stroke.we are in business.
+				var Cpoint = new Point(stroke.x[positionInStroke], stroke.y[positionInStroke])
+					, Bpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
+					, BCvector = Bpoint.getVectorToPoint(Cpoint)
+					, ABvector
+				if (BCvector.getLength() > lineCurveThreshold){
+					// yep. This one was left undrawn in prior callback. Have to draw it now.
+					if (positionInStroke > 1){
+						// we have at least 3 elems in stroke
+						ABvector = (new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])).getVectorToPoint(Bpoint)
+						var BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(BCvector.getLength() / 2)
+						basicCurve(
+							Bpoint.x
+							, Bpoint.y
+							, Cpoint.x
+							, Cpoint.y
+							, Bpoint.x + BCP1vector.x
+							, Bpoint.y + BCP1vector.y
+							, Cpoint.x
+							, Cpoint.y
+						)						
+					} else {
+						// ABvector = new Vector(0,0)
+						basicLine(
+							Bpoint.x
+							, Bpoint.y
+							, Cpoint.x
+							, Cpoint.y
+						)
+					}
+					
+				}
+			}
+		}
+		
 		if (canvas_emulator){
 			$canvas.bind('mousedown.'+apinamespace, function(e){
 				setStartValues()
@@ -392,7 +600,7 @@ var apinamespace = 'jSignature'
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
 		$canvas.data(apinamespace+'.settings', settings)
 		$canvas.data(apinamespace+'.clear', resetCanvas)
-		$canvas.data(apinamespace+'.setData', renderStrokes)
+		//$canvas.data(apinamespace+'.setData', renderStrokes)
 		
 		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
 		$(document).bind('mouseup.'+apinamespace, drawEndHandler)
@@ -400,14 +608,12 @@ var apinamespace = 'jSignature'
 		// $canvas.bind('mouseout', drawEndHandler)
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
 		
-		if (settings.data && renderStrokes(settings.data)){
-			// renderStrokes returns true on succssful render
-			// false when fails
-		} else {
-			resetCanvas()		
-		}
-
-		drawEndBase()
+//		if (settings.data && renderStrokes(settings.data)){
+//			// renderStrokes returns true on succssful render
+//			// false when fails
+//		} else {
+			resetCanvas()
+//		}
 	}
 	, methods = {
 		init : function( options ) {
