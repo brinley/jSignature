@@ -1,15 +1,14 @@
-/**
+/** @license
  * jSignature v2
  *
- * Copyright 2011 Willow Systems Corp
- * http://willow-systems.com
+ * Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
+ * Copyright (c) 2010 Brinley Ang http://www.unbolt.net
  * 
- * Copyright (c) 2010 Brinley Ang 
- * http://www.unbolt.net
- * 
- * Released under the MIT License <http://www.opensource.org/licenses/mit-license.php> 
+ * MIT License <http://www.opensource.org/licenses/mit-license.php> 
  */
-(function($) { 
+(function() {
+	
+var Initializer = function($){
 
 function Vector(x,y){
 	this.x = x
@@ -672,4 +671,18 @@ $.fn[apinamespace] = function(method) {
 		$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
 	}
 }
-})(jQuery)
+
+return $
+} // end of Initializer
+
+if ( typeof define === "function" && define.amd != null) {
+	// AMD-loader compatible resource declaration
+	// you need to call this one with jQuery as argument.
+	define(function(){return Initializer} )
+} else {
+	// global-polluting outcome.
+	if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize..."); return}
+	Initializer(this.jQuery)
+}
+
+})(typeof window !== 'undefined'? window : this)
