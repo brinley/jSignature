@@ -627,16 +627,19 @@ var apinamespace = 'jSignature'
 			}
 			return this
 		}
+		// formattype can be: 
+		// 'strokes' - get vector-like coordinates of individual strokes.
+		// default - get image from canvas. Default only for backward-compatibility. Braky braky territory!
 		, getData : function(formattype) {
 			var $canvas=this.children('canvas.'+apinamespace)
 			if (!$canvas.length){
 				return
 			} else {
 				switch (formattype) {
-					case 'image':
-						return $canvas.get(0).toDataURL()
-					default:
+					case 'strokes':
 						return $canvas.data(apinamespace+'.data')
+					default:
+						return $canvas.get(0).toDataURL()
 				}
 			}
 		}
