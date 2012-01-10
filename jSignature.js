@@ -550,9 +550,9 @@ var apinamespace = 'jSignature'
 							, Bpoint.y + BCP1vector.y
 							, Cpoint.x
 							, Cpoint.y
-						)						
+						)
 					} else {
-						// ABvector = new Vector(0,0)
+						// Since there is no AB leg, there is no curve to draw. This line is still "long" but no curve.
 						basicLine(
 							Bpoint.x
 							, Bpoint.y

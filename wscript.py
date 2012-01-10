@@ -16,14 +16,12 @@ def build(bld):
 
     served_folder_prefix = "./release/"
     todeploy = [
-        ["js/libs/jquery-1.6.2.min.js", "js/libs/jquery.js"]
-        #, ["js/libs/excanvas.min.js", "js/libs/excanvas.js"]
-        , ["js/libs/flashcanvas.js", "js/libs/flashcanvas.js"]
-        , ["js/libs/flashcanvas.swf", "js/libs/flashcanvas.swf"]
-        , ["js/business_logic.js", "js/business_logic.js", 'cache busting']
+        ["libs/jquery.js", "js/libs/jquery.js"]
+        , ["libs/flashcanvas.js", "js/libs/flashcanvas.js"]
+        , ["libs/flashcanvas.swf", "js/libs/flashcanvas.swf"]
         , ["jSignature.js", "js/libs/jquery.jSignature.js", 'cache busting']
         , ["index.html", "index.html"] # item immediately following cache busting item(s) gets edited for all the busted names.
-        ]
+    ]
 
     cache_busting_string = ".%s" % int(time.time())
     cache_busting_list = []
