@@ -104,10 +104,10 @@ function Point(x,y){
 function DataEngine(storageObject){
 	this._storageObject = storageObject // we expect this to be an instance of Array
 	
-	this.startStrokeFn = function(){console.log("default start callback")}
-	this.addToStrokeFn = function(){console.log("default add callback")}
-	this.endStrokeFn = function(){console.log("default end callback")}
-	
+	this.startStrokeFn = function(){}
+	this.addToStrokeFn = function(){}
+	this.endStrokeFn = function(){}
+
 	this.inStroke = false
 	
 	this._lastPoint = null
