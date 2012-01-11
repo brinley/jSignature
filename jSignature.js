@@ -130,8 +130,13 @@ function DataEngine(storageObject){
 			return null
 		}
 	}
+	// that "5" at the very end of this if is important to explain.
+	// we do NOT render links between two captured points (in the middle of the stroke) if the distance is shorter than that number.
+	// not only do we NOT render it, we also do NOT capture (add) these intermediate points to storage.
+	// when clustering of these is too tight, it produces noise on the line, which, because of smoothing, makes lines too curvy.
+	// maybe, later, we can expose this as a configurable setting of some sort.
 	this.addToStroke = function(point){
-		if (this.inStroke && point && typeof(point.x) == "number" && typeof(point.y) == "number" && (Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 3){
+		if (this.inStroke && typeof(point.x) === "number" && typeof(point.y) === "number" && (Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 5){
 			var positionInStroke = this._stroke.x.length
 			this._stroke.x.push(point.x)
 			this._stroke.y.push(point.y)
@@ -164,7 +169,6 @@ function DataEngine(storageObject){
 		} else {
 			return null
 		}
-		
 	}
 }
 
@@ -225,10 +229,10 @@ var apinamespace = 'jSignature'
 		var canvas_emulator = false
 			, zoom = 1
 		if (!canvas.getContext){
-			if (typeof FlashCanvas != "undefined") {
+			if (typeof FlashCanvas !== "undefined") {
 				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. It matches pixel-to-pixel to screen instead.
 				// all x, y coords need to be scaled from pagezoom to Flash window.
-				// since we are targeting ONLY IE with FlashCanvas, we will test the zoom only the IE8, IE7 way
+				// since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
 				if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
 					zoom = window.screen.deviceXDPI / window.screen.logicalXDPI
 				}
@@ -245,7 +249,6 @@ var apinamespace = 'jSignature'
 			}
 		}
 
-		
 		if (!canvas.getContext){
 			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")
 			alert("Old or broken browser detected. Canvas element does not support 2d context. Signature capture logic cannot proceed.")			
