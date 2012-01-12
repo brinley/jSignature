@@ -1,20 +1,21 @@
 (function(){
 
 	var chunkSeparator = '_' 
-	, charmap = {'0':'o','1':'a','2':'b','3':'c','4':'d','5':'e','6':'f','7':'g','8':'h','9':'i'}
-	, charmap_reverse = {} // will be filled by 'uncompress*" functioon
-	, minus = 'm'
-	, plus = 'p'
-	, converttoalphanum = function(number){
+	, charmap = {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l','7':'m','8':'n','9':'o','a':'p','b':'q','c':'r','d':'s','e':'t','f':'u','0':'v'}
+	, charmap_reverse = {} // will be filled by 'uncompress*" function
+	, minus = 'z'
+	, plus = 'x'
+	// letters left: w, y
+	, remapTailChars = function(number){
 		// for any given number, returning string like so:
 		// 345 -> '3de'
-		var ns = number.toString().split('') // plits each char.
-		, l = ns.length
-		// we are skipping first char. Number char = delimiter, like ","
+		var chars = number.split('') 
+		, l = chars.length
+		// we are skipping first char. standard hex number char = delimiter
 		for (var i = 1; i < l; i++ ){
-			ns[i] = charmap[ns[i]]
+			chars[i] = charmap[chars[i]]
 		}
-		return ns.join('')
+		return chars.join('')
 	}
 	, compressstrokeleg = function(data){
 		// we convert half-stroke (only 'x' series or only 'y' series of numbers)
@@ -55,11 +56,11 @@
 			
 			// since we have dealt with sign. let's absolute the value.
 			absn = Math.abs(n)
-			// adding number to list 
-			if (absn>9) {
-				answer.push(converttoalphanum(absn))
+			// adding number to list  We convert these to Hex before storing on the string.
+			if (absn>15) {
+				answer.push(remapTailChars(absn.toString(16)))
 			} else {
-				answer.push(absn.toString())
+				answer.push(absn.toString(16))
 			}
 		}
 		return answer.join('')
@@ -93,13 +94,13 @@
 		, l = chars.length
 		, char
 		, polarity = 1
-		, isdigit = /\d/
+		, firstmax = 'g' // next letter after 'f' All after 'f' are results of conversion of trailing digits of long number.
 		, partial = []
 		, preprewhole = 0
 		, prewhole
 		for(var i = 0; i < l; i++){
-			char = chars[i]
-			if (isdigit.test(char) || char === minus || char === plus){
+			char = chars[i].toLowerCase()
+			if (char < firstmax || char === minus || char === plus){
 				// this is new number - start of a new whole number.
 				// before we can deal with it, we need to flush out what we already 
 				// parsed out from string, but keep in limbo, waiting for this sign
@@ -113,9 +114,9 @@
 
 				if (partial.length !== 0) {
 					// yep, we have some number parts in there.
-					prewhole = parseInt( partial.join('') ) * polarity + preprewhole
-					preprewhole = prewhole
+					prewhole = parseInt( partial.join(''), 16) * polarity + preprewhole
 					answer.push( prewhole )
+					preprewhole = prewhole
 				}
 
 				if (char === minus){
@@ -135,7 +136,7 @@
 		}
 		// we always will have something stuck in partial
 		// because we don't have closing delimiter
-		answer.push( parseInt( partial.join('') ) * polarity + preprewhole )
+		answer.push( parseInt( partial.join(''), 16 ) * polarity + preprewhole )
 		
 		return answer
 	}
@@ -163,6 +164,7 @@
 		, newcdata = compressstrokes(newdata)
 
 		console.log(cdata, ' ', cdata.length, '  ', cdata === newcdata)
+		console.log(newcdata)
 	})
 	
 
