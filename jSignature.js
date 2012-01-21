@@ -264,178 +264,178 @@ var apinamespace = 'jSignature'
 		}
 
 		var ctx = canvas.getContext("2d")
-			, data, dataEngine
-			, strokeStartCallback, strokeAddCallback, strokeEndCallback
-			, resetCanvas = function(){
-				ctx.clearRect(0, 0, canvas.width * zoom + 30, canvas.height * zoom + 30)
-				
-				ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
-				ctx.strokeStyle = settings.color
-				ctx.lineCap = ctx.lineJoin = "round"
+		, data, dataEngine
+		, strokeStartCallback, strokeAddCallback, strokeEndCallback
+		, resetCanvas = function(){
+			ctx.clearRect(0, 0, canvas.width * zoom + 30, canvas.height * zoom + 30)
+			
+			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
+			ctx.strokeStyle = settings.color
+			ctx.lineCap = ctx.lineJoin = "round"
 
-				if (canvas_emulator){
-					// TODO: 
-					// FLashCanvas on IE9 fills with Black by default hence we refill with White, 
-					// but need to get background color from parent DIV and fill with that.
-					ctx.fillStyle = "rgba(255,255,255,255)"
-					ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
-				}
-				ctx.fillStyle = "rgba(0,0,0,0)"
+			if (canvas_emulator){
+				// TODO: 
+				// FLashCanvas on IE9 fills with Black by default hence we refill with White, 
+				// but need to get background color from parent DIV and fill with that.
+				ctx.fillStyle = "rgba(255,255,255,255)"
+				ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
+			}
+			ctx.fillStyle = "rgba(0,0,0,0)"
 
-				if (!canvas_emulator && !small_screen){
-					ctx.shadowColor = ctx.strokeStyle
-					ctx.shadowOffsetX = ctx.lineWidth * 0.5
-					ctx.shadowOffsetY = ctx.lineWidth * -0.6
-					ctx.shadowBlur = 0					
+			if (!canvas_emulator && !small_screen){
+				ctx.shadowColor = ctx.strokeStyle
+				ctx.shadowOffsetX = ctx.lineWidth * 0.5
+				ctx.shadowOffsetY = ctx.lineWidth * -0.6
+				ctx.shadowBlur = 0					
+			}
+			
+			data = []
+			dataEngine = new DataEngine(data)
+			
+			dataEngine.startStrokeFn = strokeStartCallback
+			dataEngine.addToStrokeFn = strokeAddCallback
+			dataEngine.endStrokeFn = strokeEndCallback
+			
+			$canvas.data(apinamespace+'.data', data)
+		}
+		// shifts - adjustment values in viewport pixels drived from position of canvas on the page
+		, shiftX
+		, shiftY
+		, dotShift = Math.round(settings.lineWidth / 2) * -1 // only for single dots at start. this draws fat ones "centered"
+		, basicDot = function(x, y){
+			ctx.fillStyle = settings.color
+			ctx.fillRect(x + dotShift, y + dotShift, settings.lineWidth, settings.lineWidth)
+			ctx.fillStyle = 'rgba(0,0,0,0)'
+		}
+		, basicLine = function(startx, starty, endx, endy){
+			ctx.beginPath()
+			ctx.moveTo(startx, starty)
+			ctx.lineTo(endx, endy)
+			ctx.stroke()
+		}
+		, basicCurve = function(startx, starty, endx, endy, cp1x, cp1y, cp2x, cp2y){
+			ctx.beginPath()
+			ctx.moveTo(startx, starty)
+			ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy)
+			ctx.stroke()
+		}
+		, timer = null // used for endign stroke when no movement occurs for some time.
+		, clearIdeeTimeout = function(){
+			clearTimeout(timer)
+		} 
+		, resetIdleTimeout = function(){
+			// global scope:
+			// timer, drawEndHandler
+			clearTimeout(timer)
+			timer = setTimeout(
+				drawEndHandler
+				, 750 // no moving for this many ms? = done with the stroke.
+			)
+		}
+		, drawEndHandler = function(e) {
+			try {
+				e.preventDefault()						
+			} catch (ex) {
+			}
+			clearIdeeTimeout()
+			dataEngine.endStroke()
+		}
+		, setStartValues = function(){
+			var tos = $(canvas).offset()
+			shiftX = tos.left * -1
+			shiftY = tos.top * -1
+		}
+		, fatFingerCompensation = 0 // in pixels. Usually a x5 multiple of line width enabled auto on touch devices.
+		, getPointFromEvent = function(e) {
+			var firstEvent = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e)
+			// All devices i tried report correct coordinates in pageX,Y
+			// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
+			// Windows: Chrome, FF, IE9, Safari
+			// None of that scroll shift calc vs screenXY other sigs do is needed.
+			// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
+			// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
+			return new Point(
+				Math.round((firstEvent.pageX + shiftX) * zoom)
+				, Math.round((firstEvent.pageY + shiftY) * zoom) + fatFingerCompensation
+			)
+		}
+		, drawStartHandler = function(e) {
+			e.preventDefault()
+			dataEngine.startStroke( getPointFromEvent(e) )
+			resetIdleTimeout()
+		}
+		, drawMoveHandler = function(e) {
+			e.preventDefault()
+			if (!dataEngine.inStroke){
+				return
+			} else {
+				var acceptedPoint = dataEngine.addToStroke(getPointFromEvent(e))
+				if (acceptedPoint){
+					resetIdleTimeout()
 				}
-				
-				data = []
-				dataEngine = new DataEngine(data)
-				
-				dataEngine.startStrokeFn = strokeStartCallback
-				dataEngine.addToStrokeFn = strokeAddCallback
-				dataEngine.endStrokeFn = strokeEndCallback
-				
-				$canvas.data(apinamespace+'.data', data)
 			}
-			// shifts - adjustment values in viewport pixels drived from position of canvas on the page
-			, shiftX
-			, shiftY
-			, dotShift = Math.round(settings.lineWidth / 2) * -1 // only for single dots at start. this draws fat ones "centered"
-			, basicDot = function(x, y){
-				ctx.fillStyle = settings.color
-				ctx.fillRect(x + dotShift, y + dotShift, settings.lineWidth, settings.lineWidth)
-				ctx.fillStyle = 'rgba(0,0,0,0)'
-			}
-			, basicLine = function(startx, starty, endx, endy){
-				ctx.beginPath()
-				ctx.moveTo(startx, starty)
-				ctx.lineTo(endx, endy)
-				ctx.stroke()
-			}
-			, basicCurve = function(startx, starty, endx, endy, cp1x, cp1y, cp2x, cp2y){
-				ctx.beginPath()
-				ctx.moveTo(startx, starty)
-				ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy)
-				ctx.stroke()
-			}
-			, timer = null // used for endign stroke when no movement occurs for some time.
-			, clearIdeeTimeout = function(){
-				clearTimeout(timer)
-			} 
-			, resetIdleTimeout = function(){
-				// global scope:
-				// timer, drawEndHandler
-				clearTimeout(timer)
-				timer = setTimeout(
-					drawEndHandler
-					, 750 // no moving for this many ms? = done with the stroke.
-				)
-			}
-			, drawEndHandler = function(e) {
-				try {
-					e.preventDefault()						
-				} catch (ex) {
-				}
-				clearIdeeTimeout()
-				dataEngine.endStroke()
-			}
-			, setStartValues = function(){
-				var tos = $(canvas).offset()
-				shiftX = tos.left * -1
-				shiftY = tos.top * -1
-			}
-			, fatFingerCompensation = 0 // in pixels. Usually a x5 multiple of line width enabled auto on touch devices.
-			, getPointFromEvent = function(e) {
-				var firstEvent = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e)
-				// All devices i tried report correct coordinates in pageX,Y
-				// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
-				// Windows: Chrome, FF, IE9, Safari
-				// None of that scroll shift calc vs screenXY other sigs do is needed.
-				// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
-				// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
-				return new Point(
-					Math.round((firstEvent.pageX + shiftX) * zoom)
-					, Math.round((firstEvent.pageY + shiftY) * zoom) + fatFingerCompensation
-				)
-			}
-			, drawStartHandler = function(e) {
-				e.preventDefault()
-				dataEngine.startStroke( getPointFromEvent(e) )
-				resetIdleTimeout()
-			}
-			, drawMoveHandler = function(e) {
-				e.preventDefault()
-				if (!dataEngine.inStroke){
-					return
-				} else {
-					var acceptedPoint = dataEngine.addToStroke(getPointFromEvent(e))
-					if (acceptedPoint){
-						resetIdleTimeout()
+		}
+		/*
+		, getDataStats = function(){
+			var strokecnt = strokes.length
+				, stroke
+				, pointid
+				, pointcnt
+				, x, y
+				, maxX = Number.NEGATIVE_INFINITY
+				, maxY = Number.NEGATIVE_INFINITY
+				, minX = Number.POSITIVE_INFINITY
+				, minY = Number.POSITIVE_INFINITY
+			for(strokeid = 0; strokeid < strokecnt; strokeid++){
+				stroke = strokes[strokeid]
+				pointcnt = stroke.length
+				// basicDot(stroke.x[0], stroke.y[0])
+				for(pointid = 0; pointid < pointcnt; pointid++){
+					x = stroke.x[pointid]
+					y = stroke.y[pointid]
+					if (x > maxX){
+						maxX = x
+					} else if (x < minX) {
+						minX = x
+					}
+					if (y > maxY){
+						maxY = y
+					} else if (y < minY) {
+						minY = y
 					}
 				}
 			}
-			/*
-			, getDataStats = function(){
+			return {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
+		}
+		, renderStrokes = function(strokes){
+			// used for rendering signature strokes passed from external sources.
+			 * Plan:
+			 * - make sure canvas is big enough to draw the sig
+			 *   - get image size stats
+			 *   - resize canvas if needed (or TODO: scale down the sig)
+			 * - Iterate over strokes, render. 
+			resetCanvas()
+			if (strokes.length){
 				var strokecnt = strokes.length
 					, stroke
 					, pointid
 					, pointcnt
-					, x, y
-					, maxX = Number.NEGATIVE_INFINITY
-					, maxY = Number.NEGATIVE_INFINITY
-					, minX = Number.POSITIVE_INFINITY
-					, minY = Number.POSITIVE_INFINITY
-				for(strokeid = 0; strokeid < strokecnt; strokeid++){
+				for(var strokeid = 0; strokeid < strokecnt; strokeid++){
 					stroke = strokes[strokeid]
-					pointcnt = stroke.length
-					// basicDot(stroke.x[0], stroke.y[0])
-					for(pointid = 0; pointid < pointcnt; pointid++){
-						x = stroke.x[pointid]
-						y = stroke.y[pointid]
-						if (x > maxX){
-							maxX = x
-						} else if (x < minX) {
-							minX = x
-						}
-						if (y > maxY){
-							maxY = y
-						} else if (y < minY) {
-							minY = y
-						}
+					pointcnt = stroke.x.length
+					drawStartBase(stroke.x[0], stroke.y[0])
+					for(pointid = 1; pointid < pointcnt; pointid++){
+						drawMoveBase(
+							stroke.x[pointid-1], stroke.y[pointid-1]
+							, stroke.x[pointid], stroke.y[pointid]
+						)
 					}
+					drawEndBase()
 				}
-				return {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
+				return true
 			}
-			, renderStrokes = function(strokes){
-				// used for rendering signature strokes passed from external sources.
-				 * Plan:
-				 * - make sure canvas is big enough to draw the sig
-				 *   - get image size stats
-				 *   - resize canvas if needed (or TODO: scale down the sig)
-				 * - Iterate over strokes, render. 
-				resetCanvas()
-				if (strokes.length){
-					var strokecnt = strokes.length
-						, stroke
-						, pointid
-						, pointcnt
-					for(var strokeid = 0; strokeid < strokecnt; strokeid++){
-						stroke = strokes[strokeid]
-						pointcnt = stroke.x.length
-						drawStartBase(stroke.x[0], stroke.y[0])
-						for(pointid = 1; pointid < pointcnt; pointid++){
-							drawMoveBase(
-								stroke.x[pointid-1], stroke.y[pointid-1]
-								, stroke.x[pointid], stroke.y[pointid]
-							)
-						}
-						drawEndBase()
-					}
-					return true
-				}
-				return false
-			}
+			return false
+		}
 */
 
 		var lineCurveThreshold = settings.lineWidth * 3
