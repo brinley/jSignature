@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="converter_alphanum_base30.cs" />
+    <Compile Include="converter_toSVG.cs" />
     <Compile Include="imagingtools_Stats.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
