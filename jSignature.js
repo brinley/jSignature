@@ -136,13 +136,19 @@ function DataEngine(storageObject){
 	// when clustering of these is too tight, it produces noise on the line, which, because of smoothing, makes lines too curvy.
 	// maybe, later, we can expose this as a configurable setting of some sort.
 	this.addToStroke = function(point){
-		if (this.inStroke && typeof(point.x) === "number" && typeof(point.y) === "number" && (Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 5){
+		if (this.inStroke && 
+			typeof(point.x) === "number" && 
+			typeof(point.y) === "number" &&
+			// calculates absolute shift in diagonal pixels away from original point
+			(Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 2
+		){
 			var positionInStroke = this._stroke.x.length
 			this._stroke.x.push(point.x)
 			this._stroke.y.push(point.y)
 			this._lastPoint = point
+			
 			var stroke = this._stroke
-				, fn = this.addToStrokeFn
+			, fn = this.addToStrokeFn
 			setTimeout(
 				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
 				function() {fn(point, stroke, positionInStroke)}
