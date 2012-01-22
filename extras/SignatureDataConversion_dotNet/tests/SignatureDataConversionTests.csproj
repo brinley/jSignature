@@ -36,6 +36,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="converter_alphanum_base30_TESTS.cs" />
+    <Compile Include="common_base_for_tests.cs" />
+    <Compile Include="imagetools_Stats_TESTS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
