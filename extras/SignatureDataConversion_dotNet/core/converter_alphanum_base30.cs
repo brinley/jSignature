@@ -32,7 +32,7 @@ namespace jSignature
             }
         }
 
-        public int FromBase30(List<int> data)
+        private int FromBase30(List<int> data)
         {
             int len = data.Count;
             if (len == 1)
@@ -93,7 +93,7 @@ namespace jSignature
             return leg.ToArray();
         }
 
-        public int[][] GetStroke(string legX, string legY)
+        private int[][] GetStroke(string legX, string legY)
         {
             // Examples of legX, legY: "7UZ32232263353223222333242", "3w546647c9b96646475765444"
             var X = DecompressStrokeLeg(legX);
@@ -124,7 +124,7 @@ namespace jSignature
         /// </summary>
         /// <param name="data">string of data encoded in base30 format. Ex: "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"</param>
         /// <returns></returns>
-        public int[][][] GetStrokesTree(string data){
+        public int[][][] GetData(string data){
             List<int[][]> ss = new List<int[][]>();
 
             string[] parts = data.Split('_');

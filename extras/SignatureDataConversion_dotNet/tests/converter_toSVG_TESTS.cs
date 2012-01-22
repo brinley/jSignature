@@ -69,7 +69,7 @@ namespace jSignature.tests
             //};
 
 
-            var data = new jSignature.Base30Converter().GetStrokesTree("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
+            var data = new jSignature.Base30Converter().GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
 
             string shouldbe = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?><svg xmlns=""http://www.w3.org/2000/svg"" version=""1.1"" width=""57"" height=""59""><path style=""fill:none;stroke:#000000;"" d=""M 53 7 l 1 2 3 4 -5 -6 5 -6""/><path style=""fill:none;stroke:#000000;"" d=""M 3 57 l 1 2 -3 -4""/></svg>";
             string actual = jSignature.SVGConverter.ToSVG(data);

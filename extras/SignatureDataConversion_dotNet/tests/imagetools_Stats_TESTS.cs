@@ -47,7 +47,7 @@ namespace jSignature.tests
         public void id001_Sizes()
         {
             var c = new jSignature.Base30Converter();
-            var uncompresseddataobject = c.GetStrokesTree(compressedtestdata);
+            var uncompresseddataobject = c.GetData(compressedtestdata);
             var stats = new jSignature.Stats(uncompresseddataobject);
 
             // above sig has the following limits

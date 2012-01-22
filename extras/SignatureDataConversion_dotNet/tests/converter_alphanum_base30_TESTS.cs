@@ -89,7 +89,7 @@ namespace jSignature.tests
 
             Assert.AreEqual(
                 shouldbe
-                , c.GetStrokesTree("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4")
+                , c.GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4")
             );
         }
     }

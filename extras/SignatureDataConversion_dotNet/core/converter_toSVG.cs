@@ -11,9 +11,9 @@ namespace jSignature
         private static string pathtemplate = @"<path style=""fill:none;stroke:#000000;"" d=""M {0} l {1}""/>";
         private static string coordinatetemplate = "{0} {1}";
 
-        public static string GetSimplePathsFragment(int[][][] data)
-            {return GetSimplePathsFragment(data, 0, 0);}
-        public static string GetSimplePathsFragment(int[][][] data, int shiftx, int shifty)
+        public static string GetPathsSVGFragment(int[][][] data)
+            {return GetPathsSVGFragment(data, 0, 0);}
+        public static string GetPathsSVGFragment(int[][][] data, int shiftx, int shifty)
         {
             List<string> paths = new List<string>();
             List<string> points;
@@ -51,7 +51,7 @@ namespace jSignature
                 outersvgtemplate
                 , contentsize[0] // width
                 , contentsize[1] // height
-                , GetSimplePathsFragment(data, limits[0] * -1 + 1, limits[1] * -1 + 1) // multiple path tags
+                , GetPathsSVGFragment(data, limits[0] * -1 + 1, limits[1] * -1 + 1) // multiple path tags
             );
         }
     }
