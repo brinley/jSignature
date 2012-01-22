@@ -19,38 +19,90 @@ namespace jSignature
     /// <summary>
     /// This class Converts jSignature data into compressed alphanum base30 string and back.
     /// </summary>
-    public class Base30plusConverter
+    public class Base30Converter
     {
         /// <summary>
         /// These chars' place numbers correspond to the number they represent.
         /// </summary>
         string ALLCHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX";
 	    int bitness;
-	    string MINUS = "Z";
-        string PLUS = "Y";
+	    char MINUS = 'Z';
+        char PLUS = 'Y';
 
-        Dictionary<string, int> charmap;
-        Dictionary<int, string> charmap_reverse;
+        Dictionary<char, int> charmap;
+        Dictionary<char, int> charmap_tail;
 
-        public Base30plusConverter(){
+        public Base30Converter(){
             bitness = ALLCHARS.Length / 2; // likely will equal 30
 
-            charmap = new Dictionary<string,int>();
-            charmap_reverse = new Dictionary<int,string>();
+            charmap = new Dictionary<char,int>();
+            charmap_tail = new Dictionary<char,int>();
+            for (int i = 0; i < bitness; i++)
+            {
+                charmap.Add(ALLCHARS[i], i);
+                charmap_tail.Add(ALLCHARS[i+bitness], i);
+            }
+        }
 
-            //for(var i = bitness-1; i > -1; i--){
-            //    charmap[ALLCHARS[i]] = ALLCHARS[i+bitness];
-            //    charmap_reverse[ALLCHARS[i + bitness]] = ALLCHARS[i];
-            //}
+        public int FromBase30(List<int> data)
+        {
+            int len = data.Count;
+            if (len == 1)
+            {
+                return data[0];
+            }
+            else
+            {
+                data.Reverse();
+                // now we know that we have at least 2 elems.
+                double answer = data[0] + data[1] * bitness;
+                for (int i = 2; i < len; i++)
+                {
+                    answer = answer + data[i] * Math.Pow(bitness, i);
+                }
+                return (int)answer;
+            }
         }
 
         public int[] DecompressStrokeLeg(string data)
         {
-            List<int> l = new List<int>();
+            List<int> leg = new List<int>();
+            List<int> cell = new List<int>();
 
-            
+            int polarity = 1;
 
-            return l.ToArray();
+            foreach (char c in data)
+            {
+                if (charmap_tail.ContainsKey(c))
+                {
+                    // this is a char that indicates continuation of a number that started a earlier number.
+                    cell.Add(charmap_tail[c]);
+                }
+                else
+                {
+                    // This is a start of new number (or, in case of + or - an end of previous number)
+                    // We can now convert the parts we piled up in cell array into an int.
+                    if (cell.Count != 0) {
+					    // yep, we have some number parts in there.
+                        leg.Add(FromBase30(cell) * polarity);
+				    }
+
+                    // When i say "we start a new number" I mean it!
+                    cell.Clear();
+                    if (c == MINUS){
+					    polarity = -1;
+				    } else if (c == PLUS){
+					    polarity = 1;
+				    } else {
+					    // now, let's start collecting parts for the new number:
+                        cell.Add(charmap[c]);
+				    }
+                }
+            }
+            // we will alway have one number stuck in cell array because no "new number starts" follows it.
+            leg.Add(FromBase30(cell) * polarity);
+
+            return leg.ToArray();
         }
 
         public Coordinate[] GetStroke(string legX, string legY)
