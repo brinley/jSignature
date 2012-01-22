@@ -1,12 +1,21 @@
 (function(){
 
 	var chunkSeparator = '_' 
-	, charmap = {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l','7':'m','8':'n','9':'o','a':'p','b':'q','c':'r','d':'s','e':'t','f':'u','0':'v'}
+	, charmap = {} // {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l','7':'m','8':'n','9':'o','a':'p','b':'q','c':'r','d':'s','e':'t','f':'u','0':'v'}
 	, charmap_reverse = {} // will be filled by 'uncompress*" function
-	, minus = 'z'
-	, plus = 'x'
+	, allchars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX'
+	, bitness = allchars.length / 2
+	, minus = 'Z'
+	, plus = 'Y'
+	
+	for(var i = bitness-1; i > -1; i--){
+		charmap[allchars[i]] = allchars[i+bitness]
+		charmap_reverse[allchars[i+bitness]] = allchars[i]
+	} 
+	console.log(charmap)
+	
 	// letters left: w, y
-	, remapTailChars = function(number){
+	var remapTailChars = function(number){
 		// for any given number, returning string like so:
 		// 345 -> '3de'
 		var chars = number.split('') 
@@ -57,10 +66,10 @@
 			// since we have dealt with sign. let's absolute the value.
 			absn = Math.abs(n)
 			// adding number to list  We convert these to Hex before storing on the string.
-			if (absn>15) {
-				answer.push(remapTailChars(absn.toString(16)))
+			if (absn >= bitness) {
+				answer.push(remapTailChars(absn.toString(bitness)))
 			} else {
-				answer.push(absn.toString(16))
+				answer.push(absn.toString(bitness))
 			}
 		}
 		return answer.join('')
@@ -94,13 +103,12 @@
 		, l = chars.length
 		, char
 		, polarity = 1
-		, firstmax = 'g' // next letter after 'f' All after 'f' are results of conversion of trailing digits of long number.
 		, partial = []
 		, preprewhole = 0
 		, prewhole
 		for(var i = 0; i < l; i++){
-			char = chars[i].toLowerCase()
-			if (char < firstmax || char === minus || char === plus){
+			char = chars[i]
+			if (char in charmap || char === minus || char === plus){
 				// this is new number - start of a new whole number.
 				// before we can deal with it, we need to flush out what we already 
 				// parsed out from string, but keep in limbo, waiting for this sign
@@ -114,7 +122,7 @@
 
 				if (partial.length !== 0) {
 					// yep, we have some number parts in there.
-					prewhole = parseInt( partial.join(''), 16) * polarity + preprewhole
+					prewhole = parseInt( partial.join(''), bitness) * polarity + preprewhole
 					answer.push( prewhole )
 					preprewhole = prewhole
 				}
@@ -136,14 +144,11 @@
 		}
 		// we always will have something stuck in partial
 		// because we don't have closing delimiter
-		answer.push( parseInt( partial.join(''), 16 ) * polarity + preprewhole )
+		answer.push( parseInt( partial.join(''), bitness ) * polarity + preprewhole )
 		
 		return answer
 	}
 	, uncompressstrokes = function(datastring){
-		// we need these mappings for uncompressing the data.
-		for(key in charmap){ charmap_reverse[charmap[key]] = key}
-		
 		var data = []
 		, chunks = datastring.split(chunkSeparator)
 		, l = chunks.length / 2
