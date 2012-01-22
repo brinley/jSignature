@@ -35,8 +35,14 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="converter_alphanum_base30plus_TESTS.cs" />
+    <Compile Include="converter_alphanum_base30_TESTS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\SignatureDataConversionCore.csproj">
+      <Project>{A439B878-B25B-4F05-8410-E9D3336B484F}</Project>
+      <Name>SignatureDataConversionCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
