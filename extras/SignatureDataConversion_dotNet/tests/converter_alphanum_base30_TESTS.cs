@@ -119,18 +119,18 @@ namespace jSignature.tests
             // [{'x':[100,101,104,99,104],'y':[50,52,56,50,44]},{'x':[50,51,48],'y':[100,102,98]}]
             // "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"
 
-            Coordinate[][] shouldbe = new Coordinate[][] { 
-                new Coordinate[] {
-                    new Coordinate(100, 50)
-                    , new Coordinate(1,2)
-                    , new Coordinate(3,4)
-                    , new Coordinate(-5, -6)
-                    , new Coordinate(5, -6)
+            int[][][] shouldbe = new int[][][] { 
+                new int[][] {
+                    new int[] {100, 50}
+                    ,new int[] {1, 2}
+                    ,new int[] {3, 4}
+                    ,new int[] {-5, -6}
+                    ,new int[] {5, -6}
                 }
-                , new Coordinate[] {
-                    new Coordinate(50, 100)
-                    , new Coordinate(1,2)
-                    , new Coordinate(-3,-4)
+                , new int[][] {
+                    new int[] {50, 100}
+                    ,new int[] {1, 2}
+                    ,new int[] {-3, -4}
                 }
             };
 

@@ -4,18 +4,6 @@ using System.Text;
 
 namespace jSignature
 {
-    public class Coordinate
-    {
-        public int x;
-        public int y;
-
-        public Coordinate(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
     /// <summary>
     /// This class Converts jSignature data into compressed alphanum base30 string and back.
     /// </summary>
@@ -33,7 +21,7 @@ namespace jSignature
         Dictionary<char, int> charmap_tail;
 
         public Base30Converter(){
-            bitness = ALLCHARS.Length / 2; // likely will equal 30
+            bitness = ALLCHARS.Length / 2; // will equal 30
 
             charmap = new Dictionary<char,int>();
             charmap_tail = new Dictionary<char,int>();
@@ -105,10 +93,9 @@ namespace jSignature
             return leg.ToArray();
         }
 
-        public Coordinate[] GetStroke(string legX, string legY)
+        public int[][] GetStroke(string legX, string legY)
         {
             // Examples of legX, legY: "7UZ32232263353223222333242", "3w546647c9b96646475765444"
-
             var X = DecompressStrokeLeg(legX);
             var Y = DecompressStrokeLeg(legY);
 
@@ -118,27 +105,27 @@ namespace jSignature
                 throw new Exception("Coordinate length for Y side of the stroke does not match the coordinate length of X side of the stroke");
             }
 
-            List<Coordinate> l = new List<Coordinate>();
+            List<int[]> l = new List<int[]>();
             for (int i = 0; i < len; i++)
             {
-                l.Add(new Coordinate(
-                    X[i]
-                    , Y[i]
-                ));
+                l.Add(new int[] {X[i], Y[i]});
             }
-
             return l.ToArray();
         }
 
         /// <summary>
-        /// Converts stringified base30-compressed string with signature data into
-        /// .Net-specific Signature object tuned for quick iteration of it
-        /// for rendering / use.
+        /// Returns a .net-specific array of arrays structure representing a single signature stroke
+        /// A compressed string like this one: 
+        ///  "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"
+        /// representing this raw signature data: 
+        ///  [{'x':[100,101,104,99,104],'y':[50,52,56,50,44]},{'x':[50,51,48],'y':[100,102,98]}]
+        /// turns into this .Net-specific structure (of array or arrays of arrays)
+        ///  [[[100,50],[1,2],[3,4],[-5,-6],[5,-6]], [[50,100],[1,2],[-3,-4]]]
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">string of data encoded in base30 format. Ex: "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"</param>
         /// <returns></returns>
-        public Coordinate[][] GetStrokesTree(string data){
-            List<Coordinate[]> ss = new List<Coordinate[]>();
+        public int[][][] GetStrokesTree(string data){
+            List<int[][]> ss = new List<int[][]>();
 
             string[] parts = data.Split('_');
             int len = parts.Length / 2;
@@ -150,7 +137,6 @@ namespace jSignature
                     , parts[i * 2 + 1]
                 ));
             }
-            
             return ss.ToArray();
         }
     }
