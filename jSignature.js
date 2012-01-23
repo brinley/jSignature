@@ -304,7 +304,7 @@ var Initializer = function($){
 				
 				for (var i = 0; i < numofstrokes; i++){
 					stroke = data[i]
-					numofpoints = stroke.length
+					numofpoints = stroke.x.length
 					strokeStartCallback(stroke)
 					for(var j = 1; j < numofpoints; j++){
 						strokeAddCallback(stroke, j)
@@ -625,7 +625,9 @@ var Initializer = function($){
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
 		, reset : function( data ) {
-			this.children('canvas.'+apinamespace).data(apinamespace+'.reset')( data )
+			this.find('canvas.'+apinamespace)
+			.add(this.filter('canvas.'+apinamespace))
+			.data(apinamespace+'.reset')( data )
 			return this
 		}
 		, addPlugin : function(pluginType, pluginName, callable){
@@ -636,7 +638,7 @@ var Initializer = function($){
 			return this
 		}
 		, getData : function( formattype ) {
-			var undef, $canvas=this.children('canvas.'+apinamespace)
+			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
 			if (formattype === undef) formattype = 'default'
 			if ($canvas.length !== 0 && exportplugins.hasOwnProperty(formattype)){				
 				return exportplugins[formattype].call(
@@ -646,7 +648,7 @@ var Initializer = function($){
 			}
 		}
 		, setData : function(data, formattype) {
-			var undef, $canvas=this.children('canvas.'+apinamespace)
+			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
 			if (formattype === undef && typeof data === 'string') {
 				formattype = data.split(',')[0]
 				if (formattype === data) return
@@ -656,7 +658,7 @@ var Initializer = function($){
 					$canvas.get(0) // canvas dom elem
 					, data
 					, formattype
-					, $canvas.data(apinamespace+'.reset')( data )
+					, $canvas.data(apinamespace+'.reset')
 				)
 			}
 			return this
