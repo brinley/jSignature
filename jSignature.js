@@ -270,9 +270,9 @@ var apinamespace = 'jSignature'
 		}
 
 		var ctx = canvas.getContext("2d")
-		, data, dataEngine
+		, dataEngine, undef
 		, strokeStartCallback, strokeAddCallback, strokeEndCallback
-		, resetCanvas = function(){
+		, resetCanvas = function(data){
 			ctx.clearRect(0, 0, canvas.width * zoom + 30, canvas.height * zoom + 30)
 			
 			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
@@ -295,7 +295,8 @@ var apinamespace = 'jSignature'
 				ctx.shadowBlur = 0					
 			}
 			
-			data = []
+			if (data === undef) { data = [] }
+			
 			dataEngine = new DataEngine(data)
 			
 			dataEngine.startStrokeFn = strokeStartCallback
@@ -608,7 +609,6 @@ var apinamespace = 'jSignature'
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
 		$canvas.data(apinamespace+'.settings', settings)
 		$canvas.data(apinamespace+'.clear', resetCanvas)
-		//$canvas.data(apinamespace+'.setData', renderStrokes)
 		
 		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
 		$(document).bind('mouseup.'+apinamespace, drawEndHandler)
@@ -616,12 +616,7 @@ var apinamespace = 'jSignature'
 		// $canvas.bind('mouseout', drawEndHandler)
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
 		
-//		if (settings.data && renderStrokes(settings.data)){
-//			// renderStrokes returns true on succssful render
-//			// false when fails
-//		} else {
-			resetCanvas()
-//		}
+		resetCanvas(settings.data)
 	}
 	, methods = {
 		init : function( options ) {
