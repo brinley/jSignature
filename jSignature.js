@@ -319,6 +319,9 @@ var Initializer = function($){
 			dataEngine.endStrokeFn = strokeEndCallback
 			
 			$canvas.data(apinamespace+'.data', data)
+			
+			// import filters will be passing this back as indication of "we rendered"
+			return true
 		}
 		// shifts - adjustment values in viewport pixels drived from position of canvas on the page
 		, shiftX
@@ -594,7 +597,7 @@ var Initializer = function($){
 		 * API EXPOSED THROUGH jQuery.data() on Canvas element.
 		 */
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
-		$canvas.data(apinamespace+'.settings', settings)
+		// $canvas.data(apinamespace+'.settings', settings)
 		$canvas.data(apinamespace+'.reset', resetCanvas)
 		
 		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
@@ -604,52 +607,59 @@ var Initializer = function($){
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
 		
 		resetCanvas(settings.data)
+	} // end of initBase
+	, exportplugins = {
+		'default':function(data){return data}
+		, 'image':function(data){/*this = canvas elem */ return this.toDataURL()}
 	}
+	, importplugins = {
+		'default':function(data, formattype, rerendercallable){
+			// we expect data as Array of objects of arrays here - whatever 'default' EXPORT plugin spits out.
+			// returning Truthy to indicate we are good, all updated.
+			rerendercallable( data )
+		}
+	}
+	//These are exposed as methods under $obj.jSignature('methodname', *args)
 	, methods = {
 		init : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
-		, clear : function( ) {
-			try {
-				this.children('canvas.'+apinamespace).data(apinamespace+'.clear')()
-			} catch (ex) {
-				// pass
+		, reset : function( data ) {
+			this.children('canvas.'+apinamespace).data(apinamespace+'.reset')( data )
+			return this
+		}
+		, addPlugin : function(pluginType, pluginName, callable){
+			var plugins = {'export':exportplugins, 'import':importplugins}
+			if (plugins.hasOwnProperty(pluginType)){
+				plugins[pluginType][pluginName] = callable
 			}
 			return this
 		}
-		// formattype can be: 
-		// 'strokes' - get vector-like coordinates of individual strokes.
-		// default - get image from canvas. Default only for backward-compatibility. Braky braky territory!
-		, getData : function(formattype) {
-			var $canvas=this.children('canvas.'+apinamespace)
-			if (!$canvas.length){
-				return
-			} else {
-				switch (formattype) {
-					case 'strokes':
-						return $canvas.data(apinamespace+'.data')
-					default:
-						return $canvas.get(0).toDataURL()
-				}
+		, getData : function( formattype ) {
+			var undef, $canvas=this.children('canvas.'+apinamespace)
+			if (formattype === undef) formattype = 'default'
+			if ($canvas.length !== 0 && exportplugins.hasOwnProperty(formattype)){				
+				return exportplugins[formattype].call(
+					$canvas.get(0) // canvas dom elem
+					, $canvas.data(apinamespace+'.data') // raw signature data as array of objects of arrays
+				)
 			}
 		}
 		, setData : function(data, formattype) {
-			var $canvas=this.children('canvas.'+apinamespace)
-			if (!$canvas.length){
-				return this
-			} else {
-				switch (formattype) {
-					case 'example_format_value':
-						throw new Error("This format type is not implemented yet.")
-						// return this
-					default:
-						if ( $canvas.data(apinamespace+'.setData')(data) ) {
-							return this
-						} else {
-							throw new Error("Call to "+apinamespace+".setData failed.")
-						}
-				}
+			var undef, $canvas=this.children('canvas.'+apinamespace)
+			if (formattype === undef && typeof data === 'string') {
+				formattype = data.split(',')[0]
+				if (formattype === data) return
 			}
+			if ($canvas.length !== 0 && importplugins.hasOwnProperty(formattype)){
+				importplugins[formattype].call(
+					$canvas.get(0) // canvas dom elem
+					, data
+					, formattype
+					, $canvas.data(apinamespace+'.reset')( data )
+				)
+			}
+			return this
 		}
 	} // end of methods dclaration.
 	
