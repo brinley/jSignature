@@ -12,9 +12,6 @@
 		charmap[allchars[i]] = allchars[i+bitness]
 		charmap_reverse[allchars[i+bitness]] = allchars[i]
 	} 
-	console.log(charmap)
-	
-	// letters left: w, y
 	var remapTailChars = function(number){
 		// for any given number, returning string like so:
 		// 345 -> '3de'
@@ -73,17 +70,6 @@
 			}
 		}
 		return answer.join('')
-	}
-	, compressstrokes = function(data){
-		var answer = []
-		, l = data.length
-		, stroke
-		for(var i = 0; i < l; i++){
-			stroke = data[i] 
-			answer.push(compressstrokeleg(stroke.x))
-			answer.push(compressstrokeleg(stroke.y))
-		}
-		return answer.join(chunkSeparator)
 	}
 	, uncompressstrokeleg = function(datastring){
 		// we convert half-stroke (only 'x' series or only 'y' series of numbers)
@@ -148,6 +134,17 @@
 		
 		return answer
 	}
+	, compressstrokes = function(data){
+		var answer = []
+		, l = data.length
+		, stroke
+		for(var i = 0; i < l; i++){
+			stroke = data[i] 
+			answer.push(compressstrokeleg(stroke.x))
+			answer.push(compressstrokeleg(stroke.y))
+		}
+		return answer.join(chunkSeparator)
+	}
 	, uncompressstrokes = function(datastring){
 		var data = []
 		, chunks = datastring.split(chunkSeparator)
@@ -160,18 +157,54 @@
 		}
 		return data
 	}
+	, acceptedformat = 'image/jsignature;base30'
+	, pluginCompressor = function(data){
+		return [acceptedformat , compressstrokes(data)]
+	}
+	, pluginDecompressor = function(data, formattype, importcallable){
+		if (typeof data !== 'string') return
+		if (data.substring(0, acceptedformat.length).toLowerCase() === acceptedformat) {
+			data = data.substring(acceptedformat.length + 1) // chopping off "," there
+		}
+		importcallable( uncompressstrokes(data) )
+	}
+	, Initializer = function($){
+		var mothership = $.fn['jSignature']
+		mothership(
+			'addPlugin'
+			,'export'
+			,'base30' // alias
+			,pluginCompressor
+		)
+		mothership(
+			'addPlugin'
+			,'export'
+			,acceptedformat // full name
+			,pluginCompressor
+		)
+		mothership(
+			'addPlugin'
+			,'import'
+			,'base30' // alias
+			,pluginDecompressor
+		)
+		mothership(
+			'addPlugin'
+			,'import'
+			,acceptedformat // full name
+			,pluginDecompressor
+		)
+	}
 	
-	
-	$('#controls').on('click', function(){
-		var data = $('#signature').jSignature('getData', 'strokes')
-		, cdata = compressstrokes(data)
-		, newdata = uncompressstrokes(cdata)
-		, newcdata = compressstrokes(newdata)
 
-		console.log(cdata, ' ', cdata.length, '  ', cdata === newcdata)
-		console.log(newcdata)
-	})
-	
+	if ( typeof define === "function" && define.amd != null) {
+		// AMD-loader compatible resource declaration
+		// you need to call this one with jQuery as argument.
+		define(function(){return Initializer} )
+	} else {
+		// global-polluting outcome.
+		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize..."); return}
+		Initializer(this.jQuery)
+	}
 
-	
 }).call(typeof window !== 'undefined'? window : this)
