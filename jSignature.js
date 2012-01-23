@@ -119,10 +119,11 @@ function DataEngine(storageObject){
 			this._lastPoint = point
 			this.inStroke = true
 			// 'this' does not work same inside setTimeout(
-			var fn = this.startStrokeFn
+			var stroke = this._stroke 
+			, fn = this.startStrokeFn
 			setTimeout(
 				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn(point)}
+				function() {fn(stroke)}
 				, 3
 			)
 			return point
@@ -151,7 +152,7 @@ function DataEngine(storageObject){
 			, fn = this.addToStrokeFn
 			setTimeout(
 				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn(point, stroke, positionInStroke)}
+				function() {fn(stroke, positionInStroke)}
 				, 3
 			)
 			return point
@@ -446,10 +447,10 @@ var apinamespace = 'jSignature'
 */
 
 		var lineCurveThreshold = settings.lineWidth * 3
-		strokeStartCallback = function(point) {
-			basicDot(point.x, point.y)
+		strokeStartCallback = function(stroke) {
+			basicDot(stroke.x[0], stroke.y[0])
 		}
-		strokeAddCallback = function(Dpoint, stroke, positionInStroke){
+		strokeAddCallback = function(stroke, positionInStroke){
 			// Because we are funky this way, here we draw TWO curves.
 			// 1. POSSIBLY "this line" - spanning from point right before us, to this latest point.
 			// 2. POSSIBLY "prior curve" - spanning from "latest point" to the one before it.
@@ -473,6 +474,7 @@ var apinamespace = 'jSignature'
 			// 
 			// 'Dpoint' we get in the args is the D point.
 			var Cpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
+				, Dpoint = new Point(stroke.x[positionInStroke], stroke.y[positionInStroke])
 				, CDvector = Cpoint.getVectorToPoint(Dpoint)
 				
 			// Again, we have a chance here to draw TWO things:
