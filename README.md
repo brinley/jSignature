@@ -5,21 +5,24 @@ jSignature is a plugin for jQuery which simplifies the creation of a signature f
 *   All *major* desktop, tablet and phone browsers are supported. (see List of supported / tested browsers, devices)
 *   Default stroke entry capture technology used is HTML5 Canvas element. Plugin falls back on Canvas tag emulator in Flash when actual Canvas is not supported by the browser. 
 *   All signature data is captured and stored internally as vectors, not pixels. Same signature can be rerendered using variety of postproduction filters to improve presentation on printed media, small screens etc.
-*   What is rendered in the browser is NOT was is captured. Rendering of strokes differ per browser's featureset, capture device quality, screen size. Capture of data is always same - we capture as much data as possible. We render much less than what we capture. This is done on purpose. Real use of the captured signature will be in high-resolution (likely print) environment, rendered using hight-quality, computationally-intensive smoothing logic that can see the entire captured sig and fit perfect curves between the dots. The image customer sees real-time on the screen is a 'balance' of what the device used for capture can render without sacrificing the responsiveness of capture. Rendering on Canvas within browser can, surprizingly, be extremely slow even on decent equipment and that slowness depends on too many diverse variables for us to control. The plugin tries to make some guesses about efficiency of the device and degrades (only) the renderer appropriately.
+*   What is rendered in the browser is NOT was is captured. Rendering of strokes differ per browser's featureset, capture device quality, screen size. Capture of data is always same - we capture as much data as possible. We render an approximation of what we capture. This is done on purpose. Real use of the captured signature will be in high-resolution (likely print) environment, rendered using hight-quality, computationally-intensive smoothing logic that can see the entire captured sig and fit perfect curves between the dots. The image customer sees real-time on the screen is a 'balance' of what the device used for capture can render without sacrificing the responsiveness of capture. Rendering on Canvas within browser can, surprizingly, be extremely slow even on decent equipment and that slowness depends on too many diverse variables for us to control. The plugin tries to make some guesses about efficiency of the device and degrades the renderer appropriately.
 
 
 See demos here.
 
 ## Adding jSignature to your page
 
-jSignature is really two distinct pieces of code:
+jSignature is really tree distinct pieces of code:
 
 1.  Code that prepares a Canvas element.
     It includes detection of browser features, maximizing a canvas within the confines of a div, setting up emulated Canvas using Flashcanvas, when needed.
 2.  Code that handles actual signature capture + data import / export API.
     It attaches and listens to movement event handlers, stores stroke data inside data structure, handles API calls.
+3.  Plugins that help you get the signature data in convenient for you format, like raw data coordinates, image, compressed url-compatible string, SVG.
 
 If you are certain that your audience will be limited to a specific browser engine (you deploy through an embedded browser widget, using something like PhoneGap) you can roll up your sleeves and yank out the part #1.
+
+Data export plugins are provided (and can be loaded) separately, but these can, certainly, be minified together with jSignature core into one js file.
 
 ### through SCRIPT tag
 
@@ -30,6 +33,7 @@ For the "generic" deployment scenario (which includes support of old IE) do this
     <script type="text/javascript" src="libs/flashcanvas.js"></script>
     <![endif]-->
     <script src="libs/jquery.jSignature.js"></script>
+    <script src="libs/jquery.jSignature,ExportPluginYouNeed.js"></script>
     <div id="signature"></div>
     <script>
         $(document).ready(function() {
@@ -67,20 +71,36 @@ The following method becomes exposed on top of jQuery: `.jSignature(String comma
 
 *   `command` when provided, is expected to be a string with a command for jSignature. Commands supported at this time: 'init', 'clear', 'getData', 'setData'
     *   `init` is the default, assumed action. `init` takes one argument - a settings Object. You can omit the command and just pass the settings object in upon init. Returns jQuery ref to the element onto which the plugin was applied.
-    *   `clear`just clears the signatre pad, data store (and puts back signature line and other decor). Returns jQuery ref to the element onto which the plugin was applied.
-    *   `getData` takes an argument - the name of the data format ('strokes' is only **production quality** format supported at this time. Image extraction from Canvas is broken on too many mobile browsers and, obviously, on emulated Canvas in IE) Returns a data object appropriate for the data format.
+    *   `reset` just clears the signatre pad, data store (and puts back signature line and other decor). Returns jQuery ref to the element onto which the plugin was applied.
+    *   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
     *   'setData' takes two arguments - data object, data format name. Returns jQuery ref to the element onto which the plugin was applied.
 
     Usage examples:
 
         $.jSignature({color:"#145394"}) // inits the widget.
-        $.jSignature('clear') // clears the canvas and rerenders the decor on it.
-        var hopefully_imagedata = $.jSignature('getData') // no arg = default of "image" - returns image data scraped from Canvas. No worky on many browsers.
-        var data = $.jSignature('getData', 'strokes') // returns array of arrays containing the signature strokes.
-        $.jSignature('setData', data, 'strokes') 
+        $.jSignature('reset') // clears the canvas and rerenders the decor on it.
+        var svgstring = $.jSignature('getData', 'svg') // simple svg representation of the strokes.
+        
+        var datapair = $.jSignature('getData','base30') // returns array of formattype, custom-Base30-compressed string.
+        var datastring = datapair.join(",") // import plugins understand 'data url' formatted strings like "mime;encoding,data"
+        $.jSignature('setData', datastring) 
 
 
 See tests for more examples.
+
+## Data Import / Export and Plugins
+
+The following plugins are part of mainline jSignature distribution:
+
+*   "Native" data format is (at this time) an array of objects with props .x, .y, each of which is an array.
+    Although you could JSONify that and pass it around, it may not be the most efficient way to store data, as internal format may change in other major versions of jSignature. Both, Import and Export is supported in this format.
+*   "Base30" is a Base64-spirited compression format. This one is tuned to be simple to do fast in the browsers, to create very short, URL-compatible strings. One of possible ways of communicating the data to the server is JSONP, which has a practical URL length limit (imposed by IE, of course) or no more than 2000+ characters. This compression format is natively URL-compatible without a need for reencoding, yet will fit into 2000 for most non-complex data. Both, Import and Export is supported in this format.
+*   "SVG" export filter allows you to get the signature as an SVG image (all of SVG XML in a long string). All strokes are exported as lines, not curves. Doing proper line smoothing computations requires a bit of juice and that is usually done on the server. This SVG export filter does not do any smoothing at all. It's designed for only one purpose - quick preview of the drawing.
+*   "image" base64-encoded image of the sig as scraped pixel-by-pixel from the canvas. Does not work on many mobil Androids, possibly breaks elsewhere, definitely does not work on Flash-based Canvas emulator. Because the export filter depends on browser support recommend using this only during development or in scenarios where you can guanrantee the browser will have Canvas implementation that supports canvas.toDataURL().
+
+jSignature is targeting usecases providing reliable extraction of the stroke coordinates. A resonable efford is made to make the strokes look pretty on the screen while these are drawn by the signor. However because "image" (even the one that looks pretty on the screen) is a substandard medium for use in print, the focus here is on extraction of core vector data that can be rendered on a whim, per desired use. 
+I know you are tempted to want "images" from jSignature, but, please, contemplate capturing "Base30" or "SVG" data and render / enhance that in postproduction.
+The creation of *very pretty* images (dropping of noise, fitting curves within paths, applying stroke thickness, preasure-simulation) based on those strokes is largely delegated to the server code and is not part of this project. However, decompression and sample, rudimentary rendering code (.Net, Python as of Jan 2012) can be found in Extras folder. You would use these as core that provides data for your own rendering logic.
 
 ## License, Copyright
 
