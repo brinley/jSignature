@@ -9,188 +9,187 @@
 (function() {
 	
 var Initializer = function($){
-
-function Vector(x,y){
-	this.x = x
-	this.y = y
-	this.reverse = function(){
-		this.x = this.x * -1
-		this.y = this.y * -1
-		return this
-	}
-	this._length = null
-	this.getLength = function(){
-		if (!this._length){
-			this._length = Math.sqrt( Math.pow(this.x, 2) + Math.pow(this.y, 2) )
+	
+	function Vector(x,y){
+		this.x = x
+		this.y = y
+		this.reverse = function(){
+			this.x = this.x * -1
+			this.y = this.y * -1
+			return this
 		}
-		return this._length
-	}
-	
-	var polarity = function (e){
-		return Math.round(e / Math.abs(e))
-	}
-	this.resizeTo = function(length){
-		// proportionally changes x,y such that the hypotenuse (vector length) is = new length
-		if (this.x === 0 && this.y === 0){
-			this._length = 0
-		} else if (this.x === 0){
-			this._length = length
-			this.y = length * polarity(this.y)
-		} else if(this.y === 0){
-			this._length = length
-			this.x = length * polarity(this.x)
-		} else {
-			var proportion = Math.abs(this.y / this.x)
-				, x = Math.sqrt(Math.pow(length, 2) / (1 + Math.pow(proportion, 2)))
-				, y = proportion * x
-			this._length = length
-			this.x = x * polarity(this.x)
-			this.y = y * polarity(this.y)
+		this._length = null
+		this.getLength = function(){
+			if (!this._length){
+				this._length = Math.sqrt( Math.pow(this.x, 2) + Math.pow(this.y, 2) )
+			}
+			return this._length
 		}
-		return this
-	}
-}
-
-function Point(x,y){
-	this.x = x
-	this.y = y
-	
-	this.getVectorToCoordinates = function (x, y) {
-		return new Vector(x - this.x, y - this.y)
-	}
-	this.getVectorFromCoordinates = function (x, y) {
-		return this.getVectorToCoordinates(x, y).reverse()
-	}
-	this.getVectorToPoint = function (point) {
-		return new Vector(point.x - this.x, point.y - this.y)
-	}
-	this.getVectorFromPoint = function (point) {
-		return this.getVectorToPoint(point).reverse()
-	}
-}
-
-/*
- * About data structure:
- * We don't store / deal with "pictures" this signature capture code captures "vectors"
- * 
- * We don't store bitmaps. We store "strokes" as arrays of arrays. (Actually, arrays of objects containing arrays of coordinates.
- * 
- * Stroke = mousedown + mousemoved * n (+ mouseup but we don't record that as that was the "end / lack of movement" indicator)
- * 
- * Vectors = not classical vectors where numbers indicated shift relative last position. Our vectors are actually coordinates against top left of canvas.
- * 			we could calc the classical vectors, but keeping the the actual coordinates allows us (through Math.max / min) 
- * 			to calc the size of resulting drawing very quickly. If we want classical vectors later, we can always get them in backend code.
- * 
- * So, the data structure:
- * 
- * var data = [
- * 	{ // stroke starts
- * 		x : [101, 98, 57, 43] // x points
- * 		, y : [1, 23, 65, 87] // y points
- * 	} // stroke ends
- * 	, { // stroke starts
- * 		x : [55, 56, 57, 58] // x points
- * 		, y : [101, 97, 54, 4] // y points
- * 	} // stroke ends
- * 	, { // stroke consisting of just a dot
- * 		x : [53] // x points
- * 		, y : [151] // y points
- * 	} // stroke ends
- * ]
- * 
- * we don't care or store stroke width (it's canvas-size-relative), color, shadow values. These can be added / changed on whim post-capture.
- * 
- */
-function DataEngine(storageObject){
-	this._storageObject = storageObject // we expect this to be an instance of Array
-	
-	this.startStrokeFn = function(){}
-	this.addToStrokeFn = function(){}
-	this.endStrokeFn = function(){}
-
-	this.inStroke = false
-	
-	this._lastPoint = null
-	this._stroke = null
-	this.startStroke = function(point){
-		if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
-			this._stroke = {'x':[point.x], 'y':[point.y]}
-			this._storageObject.push(this._stroke)
-			this._lastPoint = point
-			this.inStroke = true
-			// 'this' does not work same inside setTimeout(
-			var stroke = this._stroke 
-			, fn = this.startStrokeFn
-			setTimeout(
-				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn(stroke)}
-				, 3
-			)
-			return point
-		} else {
-			return null
+		
+		var polarity = function (e){
+			return Math.round(e / Math.abs(e))
+		}
+		this.resizeTo = function(length){
+			// proportionally changes x,y such that the hypotenuse (vector length) is = new length
+			if (this.x === 0 && this.y === 0){
+				this._length = 0
+			} else if (this.x === 0){
+				this._length = length
+				this.y = length * polarity(this.y)
+			} else if(this.y === 0){
+				this._length = length
+				this.x = length * polarity(this.x)
+			} else {
+				var proportion = Math.abs(this.y / this.x)
+					, x = Math.sqrt(Math.pow(length, 2) / (1 + Math.pow(proportion, 2)))
+					, y = proportion * x
+				this._length = length
+				this.x = x * polarity(this.x)
+				this.y = y * polarity(this.y)
+			}
+			return this
 		}
 	}
-	// that "5" at the very end of this if is important to explain.
-	// we do NOT render links between two captured points (in the middle of the stroke) if the distance is shorter than that number.
-	// not only do we NOT render it, we also do NOT capture (add) these intermediate points to storage.
-	// when clustering of these is too tight, it produces noise on the line, which, because of smoothing, makes lines too curvy.
-	// maybe, later, we can expose this as a configurable setting of some sort.
-	this.addToStroke = function(point){
-		if (this.inStroke && 
-			typeof(point.x) === "number" && 
-			typeof(point.y) === "number" &&
-			// calculates absolute shift in diagonal pixels away from original point
-			(Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 2
-		){
-			var positionInStroke = this._stroke.x.length
-			this._stroke.x.push(point.x)
-			this._stroke.y.push(point.y)
-			this._lastPoint = point
-			
-			var stroke = this._stroke
-			, fn = this.addToStrokeFn
-			setTimeout(
-				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn(stroke, positionInStroke)}
-				, 3
-			)
-			return point
-		} else {
-			return null
+	
+	function Point(x,y){
+		this.x = x
+		this.y = y
+		
+		this.getVectorToCoordinates = function (x, y) {
+			return new Vector(x - this.x, y - this.y)
+		}
+		this.getVectorFromCoordinates = function (x, y) {
+			return this.getVectorToCoordinates(x, y).reverse()
+		}
+		this.getVectorToPoint = function (point) {
+			return new Vector(point.x - this.x, point.y - this.y)
+		}
+		this.getVectorFromPoint = function (point) {
+			return this.getVectorToPoint(point).reverse()
 		}
 	}
-	this.endStroke = function(){
-		var c = this.inStroke
+	
+	/*
+	 * About data structure:
+	 * We don't store / deal with "pictures" this signature capture code captures "vectors"
+	 * 
+	 * We don't store bitmaps. We store "strokes" as arrays of arrays. (Actually, arrays of objects containing arrays of coordinates.
+	 * 
+	 * Stroke = mousedown + mousemoved * n (+ mouseup but we don't record that as that was the "end / lack of movement" indicator)
+	 * 
+	 * Vectors = not classical vectors where numbers indicated shift relative last position. Our vectors are actually coordinates against top left of canvas.
+	 * 			we could calc the classical vectors, but keeping the the actual coordinates allows us (through Math.max / min) 
+	 * 			to calc the size of resulting drawing very quickly. If we want classical vectors later, we can always get them in backend code.
+	 * 
+	 * So, the data structure:
+	 * 
+	 * var data = [
+	 * 	{ // stroke starts
+	 * 		x : [101, 98, 57, 43] // x points
+	 * 		, y : [1, 23, 65, 87] // y points
+	 * 	} // stroke ends
+	 * 	, { // stroke starts
+	 * 		x : [55, 56, 57, 58] // x points
+	 * 		, y : [101, 97, 54, 4] // y points
+	 * 	} // stroke ends
+	 * 	, { // stroke consisting of just a dot
+	 * 		x : [53] // x points
+	 * 		, y : [151] // y points
+	 * 	} // stroke ends
+	 * ]
+	 * 
+	 * we don't care or store stroke width (it's canvas-size-relative), color, shadow values. These can be added / changed on whim post-capture.
+	 * 
+	 */
+	function DataEngine(storageObject){
+		this._storageObject = storageObject // we expect this to be an instance of Array
+		
+		this.startStrokeFn = function(){}
+		this.addToStrokeFn = function(){}
+		this.endStrokeFn = function(){}
+	
 		this.inStroke = false
+		
 		this._lastPoint = null
-		if (c){
-			var fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
-				, stroke = this._stroke
-			setTimeout(
-				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function(){ fn(stroke) }
-				, 3
-			)
-			return true
-		} else {
-			return null
+		this._stroke = null
+		this.startStroke = function(point){
+			if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
+				this._stroke = {'x':[point.x], 'y':[point.y]}
+				this._storageObject.push(this._stroke)
+				this._lastPoint = point
+				this.inStroke = true
+				// 'this' does not work same inside setTimeout(
+				var stroke = this._stroke 
+				, fn = this.startStrokeFn
+				setTimeout(
+					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+					function() {fn(stroke)}
+					, 3
+				)
+				return point
+			} else {
+				return null
+			}
+		}
+		// that "5" at the very end of this if is important to explain.
+		// we do NOT render links between two captured points (in the middle of the stroke) if the distance is shorter than that number.
+		// not only do we NOT render it, we also do NOT capture (add) these intermediate points to storage.
+		// when clustering of these is too tight, it produces noise on the line, which, because of smoothing, makes lines too curvy.
+		// maybe, later, we can expose this as a configurable setting of some sort.
+		this.addToStroke = function(point){
+			if (this.inStroke && 
+				typeof(point.x) === "number" && 
+				typeof(point.y) === "number" &&
+				// calculates absolute shift in diagonal pixels away from original point
+				(Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 2
+			){
+				var positionInStroke = this._stroke.x.length
+				this._stroke.x.push(point.x)
+				this._stroke.y.push(point.y)
+				this._lastPoint = point
+				
+				var stroke = this._stroke
+				, fn = this.addToStrokeFn
+				setTimeout(
+					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+					function() {fn(stroke, positionInStroke)}
+					, 3
+				)
+				return point
+			} else {
+				return null
+			}
+		}
+		this.endStroke = function(){
+			var c = this.inStroke
+			this.inStroke = false
+			this._lastPoint = null
+			if (c){
+				var fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
+					, stroke = this._stroke
+				setTimeout(
+					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+					function(){ fn(stroke) }
+					, 3
+				)
+				return true
+			} else {
+				return null
+			}
 		}
 	}
-}
-
-
-var apinamespace = 'jSignature'
+	
+	var apinamespace = 'jSignature'
 	, initBase = function(options) {
 		
 		var settings = {
-				'width' : 'max'
-				,'height' : 'max'
-				,'sizeRatio': 4 // only used when width or height = 'max'
-				,'color' : '#000'
-				,'lineWidth' : 0
-				,'bgcolor': '#fff'
-			}
+			'width' : 'max'
+			,'height' : 'max'
+			,'sizeRatio': 4 // only used when width or height = 'max'
+			,'color' : '#000'
+			,'lineWidth' : 0
+			,'bgcolor': '#fff'
+		}
 		if (options) {
 			$.extend(settings, options)
 		}
@@ -217,7 +216,7 @@ var apinamespace = 'jSignature'
 				settings.lineWidth = lineWidth
 			}
 		}
-
+	
 		var small_screen = parseInt(settings.width, 10) < 1000? true : false
 		
 		var $canvas = $parent.find('canvas')
@@ -255,21 +254,21 @@ var apinamespace = 'jSignature'
 				canvas_emulator = true
 			}
 		}
-
+	
 		if (!canvas.getContext){
 			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")
 			alert("Old or broken browser detected. Canvas element does not support 2d context. Signature capture logic cannot proceed.")			
 		}
-
+	
 		// normally select preventer would be short, but
 		// vml-based Canvas emulator on IE does NOT provide value for Event. Hence this convoluted line.
 		canvas.onselectstart = function(e){if(e && e.preventDefault){e.preventDefault()}; if(e && e.stopPropagation){e.stopPropagation()}; return false;}
-
+	
 		// Add custom class if defined
 		if(settings.cssclass && $.trim(settings.cssclass) != "") {
 			$canvas.addClass(settings.cssclass)
 		}
-
+	
 		var ctx = canvas.getContext("2d")
 		, dataEngine, undef
 		, strokeStartCallback, strokeAddCallback, strokeEndCallback
@@ -279,7 +278,7 @@ var apinamespace = 'jSignature'
 			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
 			ctx.strokeStyle = settings.color
 			ctx.lineCap = ctx.lineJoin = "round"
-
+	
 			if (canvas_emulator){
 				// TODO: 
 				// FLashCanvas on IE9 fills with Black by default hence we refill with White, 
@@ -288,7 +287,7 @@ var apinamespace = 'jSignature'
 				ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
 			}
 			ctx.fillStyle = "rgba(0,0,0,0)"
-
+	
 			if (!canvas_emulator && !small_screen){
 				ctx.shadowColor = ctx.strokeStyle
 				ctx.shadowOffsetX = ctx.lineWidth * 0.5
@@ -315,7 +314,6 @@ var apinamespace = 'jSignature'
 			}
 			
 			dataEngine = new DataEngine(data)
-			
 			dataEngine.startStrokeFn = strokeStartCallback
 			dataEngine.addToStrokeFn = strokeAddCallback
 			dataEngine.endStrokeFn = strokeEndCallback
@@ -399,6 +397,7 @@ var apinamespace = 'jSignature'
 				}
 			}
 		}
+		, lineCurveThreshold = settings.lineWidth * 3
 		/*
 		, getDataStats = function(){
 			var strokecnt = strokes.length
@@ -431,38 +430,8 @@ var apinamespace = 'jSignature'
 			}
 			return {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
 		}
-		, renderStrokes = function(strokes){
-			// used for rendering signature strokes passed from external sources.
-			 * Plan:
-			 * - make sure canvas is big enough to draw the sig
-			 *   - get image size stats
-			 *   - resize canvas if needed (or TODO: scale down the sig)
-			 * - Iterate over strokes, render. 
-			resetCanvas()
-			if (strokes.length){
-				var strokecnt = strokes.length
-					, stroke
-					, pointid
-					, pointcnt
-				for(var strokeid = 0; strokeid < strokecnt; strokeid++){
-					stroke = strokes[strokeid]
-					pointcnt = stroke.x.length
-					drawStartBase(stroke.x[0], stroke.y[0])
-					for(pointid = 1; pointid < pointcnt; pointid++){
-						drawMoveBase(
-							stroke.x[pointid-1], stroke.y[pointid-1]
-							, stroke.x[pointid], stroke.y[pointid]
-						)
-					}
-					drawEndBase()
-				}
-				return true
-			}
-			return false
-		}
-*/
-
-		var lineCurveThreshold = settings.lineWidth * 3
+		*/
+		
 		strokeStartCallback = function(stroke) {
 			basicDot(stroke.x[0], stroke.y[0])
 		}
@@ -626,7 +595,7 @@ var apinamespace = 'jSignature'
 		 */
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
 		$canvas.data(apinamespace+'.settings', settings)
-		$canvas.data(apinamespace+'.clear', resetCanvas)
+		$canvas.data(apinamespace+'.reset', resetCanvas)
 		
 		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
 		$(document).bind('mouseup.'+apinamespace, drawEndHandler)
@@ -683,18 +652,18 @@ var apinamespace = 'jSignature'
 			}
 		}
 	} // end of methods dclaration.
-
-$.fn[apinamespace] = function(method) {
-	if ( methods[method] ) {
-		return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
-	} else if ( typeof method === 'object' || ! method ) {
-		return methods.init.apply( this, arguments )
-	} else {
-		$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
+	
+	$.fn[apinamespace] = function(method) {
+		if ( methods[method] ) {
+			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
+		} else if ( typeof method === 'object' || ! method ) {
+			return methods.init.apply( this, arguments )
+		} else {
+			$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
+		}
 	}
-}
-
-return $
+	
+	return $
 } // end of Initializer
 
 if ( typeof define === "function" && define.amd != null) {
