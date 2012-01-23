@@ -297,6 +297,22 @@ var apinamespace = 'jSignature'
 			}
 			
 			if (data === undef) { data = [] }
+			else {
+				// we have data to render
+				var numofstrokes = data.length
+				, stroke
+				, numofpoints
+				
+				for (var i = 0; i < numofstrokes; i++){
+					stroke = data[i]
+					numofpoints = stroke.length
+					strokeStartCallback(stroke)
+					for(var j = 1; j < numofpoints; j++){
+						strokeAddCallback(stroke, j)
+					}
+					strokeEndCallback(stroke)
+				}
+			}
 			
 			dataEngine = new DataEngine(data)
 			
