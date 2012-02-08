@@ -20,6 +20,7 @@
 <body>
 <div id="signature"></div>
 <div id="tools"></div>
+<div><span>Data: </span><span id="dataspan"></span></div>
 <script src="libs/jquery.js"></script>
 <script src="jSignature.js"></script>
 <script src="jSignature.CompressorBase30.js"></script>
@@ -27,14 +28,14 @@
 $(document).ready(function() {
 	var $sigdiv = $("#signature").jSignature({color:"#145394"})
 	
-	/*
-	$('<input type="button" name="rerender" value="Rerender Sig Red">').bind('click', function(e){
-		var data = $sigdiv.jSignature('getData')
-			, settings = $sigdiv.jSignature('clear').children('canvas.jSignature').data('jSignature.settings')
-		settings.color = 'red'
-		$sigdiv.jSignature('setData', data)
+	$('<input type="button" value="GetData">').bind('click', function(e){
+		var data = $sigdiv.jSignature('getData', 'base30')
+		$('#dataspan').html(data.join(","))
 	}).appendTo($('#tools'));
-	*/
+	
+	$('<input type="button" value="Reset">').bind('click', function(e){
+		$sigdiv.jSignature('reset')
+	}).appendTo($('#tools'));
 	
 })
 </script>
