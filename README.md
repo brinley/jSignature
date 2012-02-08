@@ -1,18 +1,17 @@
 # jSignature
 
-jSignature is a plugin for jQuery which simplifies the creation of a signature field in the browser window that allows a user to draw a signature using mouse, pen, or finger. 
+jSignature is a jQuery plugin which simplifies creation of a signature fields in the browser window allowing a user to draw a signature using mouse, pen, or finger. 
 
-*   All *major* desktop, tablet and phone browsers are supported. (see List of supported / tested browsers, devices)
+*   All *major* desktop, tablet and phone browsers are supported. (List of supported / tested browsers, devices is coming)
 *   Default stroke entry capture technology used is HTML5 Canvas element. Plugin falls back on Canvas tag emulator in Flash when actual Canvas is not supported by the browser. 
 *   All signature data is captured and stored internally as vectors, not pixels. Same signature can be rerendered using variety of postproduction filters to improve presentation on printed media, small screens etc.
 *   What is rendered in the browser is NOT was is captured. Rendering of strokes differ per browser's featureset, capture device quality, screen size. Capture of data is always same - we capture as much data as possible. We render an approximation of what we capture. This is done on purpose. Real use of the captured signature will be in high-resolution (likely print) environment, rendered using hight-quality, computationally-intensive smoothing logic that can see the entire captured sig and fit perfect curves between the dots. The image customer sees real-time on the screen is a 'balance' of what the device used for capture can render without sacrificing the responsiveness of capture. Rendering on Canvas within browser can, surprizingly, be extremely slow even on decent equipment and that slowness depends on too many diverse variables for us to control. The plugin tries to make some guesses about efficiency of the device and degrades the renderer appropriately.
 
-
-See demos here.
+See [demos here](http://walnutcomputing.com/demo/signature/ "Signature Capture Demos").
 
 ## Adding jSignature to your page
 
-jSignature is really tree distinct pieces of code:
+jSignature is really three distinct pieces of code:
 
 1.  Code that prepares a Canvas element.
     It includes detection of browser features, maximizing a canvas within the confines of a div, setting up emulated Canvas using Flashcanvas, when needed.
@@ -69,11 +68,11 @@ jSignature, when loaded as AMD module returns Instantializer. It does not augmen
 
 The following method becomes exposed on top of jQuery: `.jSignature(String command, *args)`
 
-*   `command` when provided, is expected to be a string with a command for jSignature. Commands supported at this time: 'init', 'clear', 'getData', 'setData'
+*   `command` when provided, is expected to be a string with a command for jSignature. Commands supported at this time: 'init', 'reset', 'getData', 'setData'
     *   `init` is the default, assumed action. `init` takes one argument - a settings Object. You can omit the command and just pass the settings object in upon init. Returns jQuery ref to the element onto which the plugin was applied.
     *   `reset` just clears the signatre pad, data store (and puts back signature line and other decor). Returns jQuery ref to the element onto which the plugin was applied.
     *   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
-    *   'setData' takes two arguments - data object, data format name. Returns jQuery ref to the element onto which the plugin was applied.
+    *   `setData` takes two arguments - data object, data format name. Returns jQuery ref to the element onto which the plugin was applied.
 
     Usage examples:
 
