@@ -15,10 +15,11 @@
 <![endif]-->
 <style type="text/css">
 	canvas { border: 1px dotted #000;}
+	#signatureparent {color:darkblue;background-color:lightgray;}
 </style>
 </head>
 <body>
-<div id="signature"></div>
+<div id="signatureparent"><div>jSignature inherits colors from parent element. Text = Pen color. Background = Background. This works even when Flash-based Canvas emulation is used.</div><div id="signature"></div></div>
 <div id="tools"></div>
 <div><span>Data: </span><span id="dataspan"></span></div>
 <script src="libs/jquery.js"></script>
@@ -26,7 +27,7 @@
 <script src="jSignature.CompressorBase30.js"></script>
 <script>
 $(document).ready(function() {
-	var $sigdiv = $("#signature").jSignature({color:"#145394"})
+	var $sigdiv = $("#signature").jSignature()
 	
 	$('<input type="button" value="GetData">').bind('click', function(e){
 		var data = $sigdiv.jSignature('getData', 'base30')

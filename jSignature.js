@@ -10,6 +10,92 @@
 	
 var Initializer = function($){
 	
+	/// Returns front, back and "decor" colors derived from element (as jQuery obj)
+	function getColors($e){
+		var tmp
+		, undef
+		, frontcolor = $e.css('color')
+		, backcolor
+		
+		while(backcolor === undef && $e !== undef){
+			try{
+				tmp = $e.css('background-color')				
+			} catch (ex) {
+				tmp = 'transparent'
+			}
+			if (tmp !== 'transparent' && tmp !== 'rgba(0, 0, 0, 0)'){
+				backcolor = tmp
+			}
+			try{
+				$e = $e.parent()
+				if ($e[0] === document){
+					$e = undef
+				}
+			} catch (ec) {
+				$e = undef
+			}
+		}
+
+		var rgbaregex = /rgb[a]*\((\d+),\s*(\d+),\s*(\d+)/ // modern browsers
+		, hexregex = /#([AaBbCcDdEeFf\d]{2})([AaBbCcDdEeFf\d]{2})([AaBbCcDdEeFf\d]{2})/ // IE 8 and less.
+		, frontcolorcomponents
+
+		// Decomposing Front color into R, G, B ints
+		tmp = undef
+		tmp = frontcolor.match(rgbaregex)
+		if (tmp){
+			frontcolorcomponents = {'r':parseInt(tmp[1],10),'g':parseInt(tmp[2],10),'b':parseInt(tmp[3],10)}
+		} else {
+			tmp = frontcolor.match(hexregex)
+			if (tmp) {
+				frontcolorcomponents = {'r':parseInt(tmp[1],16),'g':parseInt(tmp[2],16),'b':parseInt(tmp[3],16)}
+			}
+		}
+		if(!frontcolorcomponents){
+			frontcolorcomponents = {'r':255,'g':255,'b':255}
+		}
+		
+		var frontcolorbrightness = Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b])
+		, backcolorcomponents
+		
+		// Decomposing back color into R, G, B ints
+		if(!backcolor){
+			// Not really possible, but, fine..
+			// we'll pick up back color from front color 
+			if (frontcolorbrightness > 127){
+				backcolorcomponents = {'r':0,'g':0,'b':0}
+			} else {
+				backcolorcomponents = {'r':255,'g':255,'b':255}
+			}
+		} else {
+			tmp = undef
+			tmp = backcolor.match(rgbaregex)
+			if (tmp){
+				backcolorcomponents = {'r':parseInt(tmp[1],10),'g':parseInt(tmp[2],10),'b':parseInt(tmp[3],10)}
+			} else {
+				tmp = backcolor.match(hexregex)
+				if (tmp) {
+					backcolorcomponents = {'r':parseInt(tmp[1],16),'g':parseInt(tmp[2],16),'b':parseInt(tmp[3],16)}
+				}
+			}
+			if(!backcolorcomponents){
+				backcolorcomponents = {'r':0,'g':0,'b':0}
+			}
+		}
+		
+		// Deriving Decor color
+		var backcolorbrightness = Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b])
+		, adjusted = Math.round(frontcolorbrightness + (-1 * (frontcolorbrightness - backcolorbrightness) * 0.6)) // dimming the pen's color by 3/4 to get decor color.
+		, decorcolorcomponents = {'r':adjusted,'g':adjusted,'b':adjusted} // always shade of gray 
+		, toRGBfn = function(o){return 'rgb(' + [o.r, o.g, o.b].join(', ') + ')'}
+		
+		return {
+			'color':toRGBfn(frontcolorcomponents)
+			, 'background-color': toRGBfn(backcolorcomponents)
+			, 'decor-color': toRGBfn(decorcolorcomponents)
+		}
+	}
+	
 	function Vector(x,y){
 		this.x = x
 		this.y = y
@@ -187,14 +273,16 @@ var Initializer = function($){
 			,'height' : 'max'
 			,'sizeRatio': 4 // only used when width or height = 'max'
 			,'color' : '#000'
+			,'background-color': '#fff'
+			,'decor-color': '#eee'
 			,'lineWidth' : 0
-			,'bgcolor': '#fff'
-		}
-		if (options) {
-			$.extend(settings, options)
 		}
 		
 		var $parent = $(this)
+		$.extend(settings, getColors($parent))
+		if (options) {
+			$.extend(settings, options)
+		}
 		
 		if (settings.width == 'max' || settings.height == 'max'){
 			// this maxes the sig widget within the parent container.
@@ -243,7 +331,7 @@ var Initializer = function($){
 					zoom = window.screen.deviceXDPI / window.screen.logicalXDPI
 				}
 				canvas = FlashCanvas.initElement(canvas)
-				// We effectively abbuse the brokenness of FlashCanvas and force the flash rendering surface to
+				// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
 				// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
 				if (zoom != 1){
 					$canvas.children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
@@ -279,14 +367,12 @@ var Initializer = function($){
 			ctx.strokeStyle = settings.color
 			ctx.lineCap = ctx.lineJoin = "round"
 	
+			ctx.fillStyle = settings['background-color']
 			if (canvas_emulator){
-				// TODO: 
-				// FLashCanvas on IE9 fills with Black by default hence we refill with White, 
-				// but need to get background color from parent DIV and fill with that.
-				ctx.fillStyle = "rgba(255,255,255,255)"
+				// FLashCanvas on IE9 fills with Black by default, covering up the parent div's background
+				// hence we refill 
 				ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
 			}
-			ctx.fillStyle = "rgba(0,0,0,0)"
 	
 			if (!canvas_emulator && !small_screen){
 				ctx.shadowColor = ctx.strokeStyle
@@ -330,7 +416,7 @@ var Initializer = function($){
 		, basicDot = function(x, y){
 			ctx.fillStyle = settings.color
 			ctx.fillRect(x + dotShift, y + dotShift, settings.lineWidth, settings.lineWidth)
-			ctx.fillStyle = 'rgba(0,0,0,0)'
+			ctx.fillStyle = settings['background-color']
 		}
 		, basicLine = function(startx, starty, endx, endy){
 			ctx.beginPath()
