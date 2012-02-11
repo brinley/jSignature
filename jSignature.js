@@ -387,7 +387,7 @@ var Initializer = function($){
 			
 			ctx.clearRect(0, 0, cw * zoom + 30, ch * zoom + 30)
 
-			ctx.fillStyle = settings['background-color']
+			ctx.shadowColor = ctx.fillStyle = settings['background-color']
 			if (canvas_emulator){
 				// FLashCanvas on IE9 fills with Black by default, covering up the parent div's background
 				// hence we refill 
@@ -400,6 +400,8 @@ var Initializer = function($){
 			// signature line
 			var lineoffset = Math.round( ch / 5 )
 			ctx.strokeStyle = settings['decor-color']
+			ctx.shadowOffsetX = 0
+			ctx.shadowOffsetY = 0
 			basicLine(lineoffset * 1.5, ch - lineoffset, cw - (lineoffset * 1.5), ch - lineoffset)
 			
 			ctx.strokeStyle = settings.color
