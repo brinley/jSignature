@@ -360,19 +360,49 @@ var Initializer = function($){
 		var ctx = canvas.getContext("2d")
 		, dataEngine, undef
 		, strokeStartCallback, strokeAddCallback, strokeEndCallback
+		// shifts - adjustment values in viewport pixels drived from position of canvas on the page
+		, shiftX
+		, shiftY
+		, dotShift = Math.round(settings.lineWidth / 2) * -1 // only for single dots at start. this draws fat ones "centered"
+		, basicDot = function(x, y){
+			ctx.fillStyle = settings.color
+			ctx.fillRect(x + dotShift, y + dotShift, settings.lineWidth, settings.lineWidth)
+			ctx.fillStyle = settings['background-color']
+		}
+		, basicLine = function(startx, starty, endx, endy){
+			ctx.beginPath()
+			ctx.moveTo(startx, starty)
+			ctx.lineTo(endx, endy)
+			ctx.stroke()
+		}
+		, basicCurve = function(startx, starty, endx, endy, cp1x, cp1y, cp2x, cp2y){
+			ctx.beginPath()
+			ctx.moveTo(startx, starty)
+			ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy)
+			ctx.stroke()
+		}
 		, resetCanvas = function(data){
-			ctx.clearRect(0, 0, canvas.width * zoom + 30, canvas.height * zoom + 30)
+			var cw = canvas.width
+			, ch = canvas.height
 			
-			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
-			ctx.strokeStyle = settings.color
-			ctx.lineCap = ctx.lineJoin = "round"
-	
+			ctx.clearRect(0, 0, cw * zoom + 30, ch * zoom + 30)
+
 			ctx.fillStyle = settings['background-color']
 			if (canvas_emulator){
 				// FLashCanvas on IE9 fills with Black by default, covering up the parent div's background
 				// hence we refill 
-				ctx.fillRect(0,0,canvas.width * zoom + 30, canvas.height * zoom + 30)
+				ctx.fillRect(0,0,cw * zoom + 30, ch * zoom + 30)
 			}
+
+			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
+			ctx.lineCap = ctx.lineJoin = "round"
+			
+			// signature line
+			var lineoffset = Math.round( ch / 5 )
+			ctx.strokeStyle = settings['decor-color']
+			basicLine(lineoffset * 1.5, ch - lineoffset, cw - (lineoffset * 1.5), ch - lineoffset)
+			
+			ctx.strokeStyle = settings.color
 	
 			if (!canvas_emulator && !small_screen){
 				ctx.shadowColor = ctx.strokeStyle
@@ -408,27 +438,6 @@ var Initializer = function($){
 			
 			// import filters will be passing this back as indication of "we rendered"
 			return true
-		}
-		// shifts - adjustment values in viewport pixels drived from position of canvas on the page
-		, shiftX
-		, shiftY
-		, dotShift = Math.round(settings.lineWidth / 2) * -1 // only for single dots at start. this draws fat ones "centered"
-		, basicDot = function(x, y){
-			ctx.fillStyle = settings.color
-			ctx.fillRect(x + dotShift, y + dotShift, settings.lineWidth, settings.lineWidth)
-			ctx.fillStyle = settings['background-color']
-		}
-		, basicLine = function(startx, starty, endx, endy){
-			ctx.beginPath()
-			ctx.moveTo(startx, starty)
-			ctx.lineTo(endx, endy)
-			ctx.stroke()
-		}
-		, basicCurve = function(startx, starty, endx, endy, cp1x, cp1y, cp2x, cp2y){
-			ctx.beginPath()
-			ctx.moveTo(startx, starty)
-			ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy)
-			ctx.stroke()
 		}
 		, timer = null // used for endign stroke when no movement occurs for some time.
 		, clearIdeeTimeout = function(){
