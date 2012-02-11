@@ -705,6 +705,7 @@ var Initializer = function($){
 	} // end of initBase
 	, exportplugins = {
 		'default':function(data){return data}
+		, 'native':function(data){return data}
 		, 'image':function(data){/*this = canvas elem */ return this.toDataURL()}
 	}
 	, importplugins = {
