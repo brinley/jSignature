@@ -51,20 +51,24 @@ var Initializer = function($){
 				frontcolorcomponents = {'r':parseInt(tmp[1],16),'g':parseInt(tmp[2],16),'b':parseInt(tmp[3],16)}
 			}
 		}
-		if(!frontcolorcomponents){
-			frontcolorcomponents = {'r':255,'g':255,'b':255}
-		}
-		
-		var frontcolorbrightness = Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b])
-		, backcolorcomponents
-		
+//		if(!frontcolorcomponents){
+//			frontcolorcomponents = {'r':255,'g':255,'b':255}
+//		}
+
+		var backcolorcomponents
 		// Decomposing back color into R, G, B ints
 		if(!backcolor){
-			// Not really possible, but, fine..
-			// we'll pick up back color from front color 
-			if (frontcolorbrightness > 127){
-				backcolorcomponents = {'r':0,'g':0,'b':0}
+			// HIghly unlikely since this means that no background styling was applied to any element from here to top of dom.
+			// we'll pick up back color from front color
+			if(frontcolorcomponents){
+				if (Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b]) > 127){
+					backcolorcomponents = {'r':0,'g':0,'b':0}
+				} else {
+					backcolorcomponents = {'r':255,'g':255,'b':255}
+				}
 			} else {
+				// arg!!! front color is in format we don't understand (hsl, named colors)
+				// Let's just go with white background.
 				backcolorcomponents = {'r':255,'g':255,'b':255}
 			}
 		} else {
@@ -78,20 +82,41 @@ var Initializer = function($){
 					backcolorcomponents = {'r':parseInt(tmp[1],16),'g':parseInt(tmp[2],16),'b':parseInt(tmp[3],16)}
 				}
 			}
-			if(!backcolorcomponents){
-				backcolorcomponents = {'r':0,'g':0,'b':0}
-			}
+//			if(!backcolorcomponents){
+//				backcolorcomponents = {'r':0,'g':0,'b':0}
+//			}
 		}
 		
 		// Deriving Decor color
-		var backcolorbrightness = Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b])
-		, adjusted = Math.round(frontcolorbrightness + (-1 * (frontcolorbrightness - backcolorbrightness) * 0.6)) // dimming the pen's color by 3/4 to get decor color.
-		, decorcolorcomponents = {'r':adjusted,'g':adjusted,'b':adjusted} // always shade of gray 
-		, toRGBfn = function(o){return 'rgb(' + [o.r, o.g, o.b].join(', ') + ')'}
+		// THis is LAZY!!!! Better way would be to use HSL and adjust luminocity. However, that could be an overkill. 
 		
+		var toRGBfn = function(o){return 'rgb(' + [o.r, o.g, o.b].join(', ') + ')'} 
+		, decorcolorcomponents
+		, frontcolorbrightness
+		, adjusted
+		
+		if (frontcolorcomponents && backcolorcomponents){
+			var backcolorbrightness = Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b])
+			
+			frontcolorbrightness = Math.max.apply(null, [backcolorcomponents.r, backcolorcomponents.g, backcolorcomponents.b])
+			adjusted = Math.round(frontcolorbrightness + (-1 * (frontcolorbrightness - backcolorbrightness) * 0.75)) // "dimming" the difference between pen and back.
+			decorcolorcomponents = {'r':adjusted,'g':adjusted,'b':adjusted} // always shade of gray
+		} else if (frontcolorcomponents) {
+			frontcolorbrightness = Math.max.apply(null, [frontcolorcomponents.r, frontcolorcomponents.g, frontcolorcomponents.b])
+			var polarity = +1
+			if (frontcolorbrightness > 127){
+				polarity = -1
+			}
+			// shifting by 25% (64 points on RGB scale)
+			adjusted = Math.round(frontcolorbrightness + (polarity * 96)) // "dimming" the pen's color by 75% to get decor color.
+			decorcolorcomponents = {'r':adjusted,'g':adjusted,'b':adjusted} // always shade of gray
+		} else {
+			decorcolorcomponents = {'r':191,'g':191,'b':191} // always shade of gray
+		}
+
 		return {
-			'color':toRGBfn(frontcolorcomponents)
-			, 'background-color': toRGBfn(backcolorcomponents)
+			'color': frontcolor
+			, 'background-color': backcolorcomponents? toRGBfn(backcolorcomponents) : backcolor
 			, 'decor-color': toRGBfn(decorcolorcomponents)
 		}
 	}
