@@ -3,6 +3,7 @@
 import shutil
 import os.path
 import time
+import subprocess
 
 out = 'build'
 
@@ -14,13 +15,17 @@ def configure(conf):
 
 def build(bld):
 
+    subprocess.call(
+        'java -jar /bin/closure_compiler.jar --js=jSignature.js --js=jSignature.CompressorBase30.js --js_output_file=jSignature.min.js'
+    )
+
     served_folder_prefix = "./release/"
     todeploy = [
         ['jq', "libs/jquery.js", "js/libs/jquery.js"]
         , ['fcj', "libs/flashcanvas.js", "js/libs/flashcanvas.js"]
         , ['fcswf', "libs/flashcanvas.swf", "js/libs/flashcanvas.swf"]
-        , ['jsig', "jSignature.js", "js/libs/jquery.jSignature.${CACHEBUST}.js"]
-        , ['index', "index.html", "index.html", ['jq','fcj','jsig']] # item immediately following cache busting item(s) gets edited for all the busted names.
+        , ['jsig', "jSignature.min.js", "js/libs/jquery.jSignature.${CACHEBUST}.js"]
+        , ['index', "index.html", "index.html", ['jq','fcj','jsig']]
     ]
     todeploy_map = {} # used for string replacement in HTML files. See list above next to index.html
   
