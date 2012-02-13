@@ -87,14 +87,14 @@
 		var answer = []
 		, chars = datastring.split('')
 		, l = chars.length
-		, char
+		, ch
 		, polarity = 1
 		, partial = []
 		, preprewhole = 0
 		, prewhole
 		for(var i = 0; i < l; i++){
-			char = chars[i]
-			if (char in charmap || char === minus || char === plus){
+			ch = chars[i]
+			if (ch in charmap || ch === minus || ch === plus){
 				// this is new number - start of a new whole number.
 				// before we can deal with it, we need to flush out what we already 
 				// parsed out from string, but keep in limbo, waiting for this sign
@@ -113,19 +113,19 @@
 					preprewhole = prewhole
 				}
 
-				if (char === minus){
+				if (ch === minus){
 					polarity = -1
 					partial = []
-				} else if (char === plus){
+				} else if (ch === plus){
 					polarity = 1
 					partial = []
 				} else {
 					// now, let's start collecting parts for the new number:
-					partial = [char]					
+					partial = [ch]					
 				}
 			} else /* alphas replacing digits */ {
 				// more parts for the new number
-				partial.push(charmap_reverse[char])
+				partial.push(charmap_reverse[ch])
 			}
 		}
 		// we always will have something stuck in partial
