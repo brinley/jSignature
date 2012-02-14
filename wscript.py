@@ -16,7 +16,7 @@ def configure(conf):
 def build(bld):
 
     subprocess.call(
-        'java -jar /bin/closure_compiler.jar --js=jSignature.js --js=jSignature.CompressorBase30.js --js_output_file=jSignature.min.js'
+        'java -jar /bin/closure_compiler.jar --js=jSignature.js --js=jSignature.CompressorBase30.js --js=jSignature.CompressorSVG.js --js_output_file=jSignature.min.js'
     )
 
     served_folder_prefix = "./release/"
