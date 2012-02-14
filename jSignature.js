@@ -731,7 +731,7 @@ var Initializer = function($){
 		resetCanvas(settings.data)
 	} // end of initBase
 	, exportplugins = {
-		'default':function(data){return data}
+		'default':function(data){return this.toDataURL()}
 		, 'native':function(data){return data}
 		, 'image':function(data){
 			/*this = canvas elem */
