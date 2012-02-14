@@ -24,8 +24,9 @@ def build(bld):
         ['jq', "libs/jquery.js", "js/libs/jquery.js"]
         , ['fcj', "libs/flashcanvas.js", "js/libs/flashcanvas.js"]
         , ['fcswf', "libs/flashcanvas.swf", "js/libs/flashcanvas.swf"]
+        , ['mzr', "libs/modernizr.js", "js/libs/modernizr.js"]
         , ['jsig', "jSignature.min.js", "js/libs/jquery.jSignature.${CACHEBUST}.js"]
-        , ['index', "index.html", "index.html", ['jq','fcj','jsig']]
+        , ['index', "index.html", "index.html", ['jq','fcj','jsig','mzr']]
     ]
     todeploy_map = {} # used for string replacement in HTML files. See list above next to index.html
   
