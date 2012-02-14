@@ -1,3 +1,10 @@
+/** @license
+ * jSignature v2 jSignature's custom "base30" export and import plugins.
+ *
+ * Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
+ * 
+ * MIT License <http://www.opensource.org/licenses/mit-license.php> 
+ */
 (function(){
 
 	var chunkSeparator = '_' 
@@ -197,14 +204,17 @@
 	}
 	
 
-	if ( typeof define === "function" && define.amd != null) {
-		// AMD-loader compatible resource declaration
-		// you need to call this one with jQuery as argument.
-		define(function(){return Initializer} )
-	} else {
+//  //Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
+//	//Need to revisit this later.
+	
+//	if ( typeof define === "function" && define.amd != null) {
+//		// AMD-loader compatible resource declaration
+//		// you need to call this one with jQuery as argument.
+//		define(function(){return Initializer} )
+//	} else {
 		// global-polluting outcome.
 		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize..."); return}
 		Initializer(this.jQuery)
-	}
+//	}
 
 }).call(typeof window !== 'undefined'? window : this)
