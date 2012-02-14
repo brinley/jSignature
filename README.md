@@ -23,9 +23,7 @@ jSignature is really three distinct pieces of code:
 
 If you are certain that your audience will be limited to a specific browser engine (you deploy through an embedded browser widget, using something like PhoneGap) you can roll up your sleeves and yank out the part #1.
 
-Data export plugins are provided (and can be loaded) separately, but these can, certainly, be minified together with jSignature core into one js file.
-
-### through SCRIPT tag
+Data export plugins are provided (and can be loaded) separately, but these can, certainly, be minified together with jSignature core into one js file. *Minified file ('jSignature.min.js') you see in the repository already includes (minified, concatenated) all available export, import plugins.*
 
 For the "generic" deployment scenario (which includes support of old IE) do this:
 
@@ -33,12 +31,11 @@ For the "generic" deployment scenario (which includes support of old IE) do this
     <!--[if lt IE 9]>
     <script type="text/javascript" src="libs/flashcanvas.js"></script>
     <![endif]-->
-    <script src="libs/jquery.jSignature.js"></script>
-    <script src="libs/jquery.jSignature,ExportPluginYouNeed.js"></script>
+    <script src="libs/jSignature.min.js"></script>
     <div id="signature"></div>
     <script>
         $(document).ready(function() {
-            $("#signature").jSignature({color:"#145394"})
+            $("#signature").jSignature()
         })
     </script>
 
@@ -49,21 +46,6 @@ Explained:
 *   Then we load jSignature plugin.
 *   Next we have the `div` inside which the canvas element will be created (You cannot reuse a canvas element at this time. Plugin creates its own Canvas elem inside the DIV.)
 *   Lastly, the script invokes the signature widget within the specificed DIV.
-    
-    
-### as AMD-loader module
-
-Because jSignature is also an AMD-loader compatible module, if you want to load it AFTER you set up your loader within the page, you pretty much MUST load it using require(, not SCRIPT tag. This is a limitation of AMD-loaders, not of the plugin. Some (many?) of the loaders tried blew up when anonymous module is loaded outside of the loader. (A patch for that was pushed to Curl.js AMD-loader project. As of 2012-01-10, we, unequivocally and without reservations, recommend use of Curl.js over RequireJS. Following numerous blow ups (in basics  like nested named requires, loading order, etc) RequireJS was deemed by us a "magical minefield," "alpha" code compared to Curl,js.)
-jSignature, when loaded as AMD module returns Instantializer. It does not augment global jQuery, since it does not know which one it needs to augment. You need to initialize jSignature against the jQuery instance you desire to use.
-
-    require(['jquery','path/to/jquery.jSignature'], function($, jSigInitializer){
-        $ = jSigInitializer($) // initializer augments jQuery instance with itself and retuns augmented jQuery
-        $(document).ready(function() {
-            $("#signature").jSignature({color:"#145394"})
-        })
-        // ...
-        // your business logic continues here.
-    })
 
 
 ## API
@@ -75,33 +57,36 @@ The following method becomes exposed on top of jQuery: `.jSignature(String comma
     *   `reset` just clears the signatre pad, data store (and puts back signature line and other decor). Returns jQuery ref to the element onto which the plugin was applied.
     *   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
     *   `setData` takes two arguments - data object, data format name. Returns jQuery ref to the element onto which the plugin was applied.
+    *   `listPlugins` takes an argument - a string denoting the category ('export', 'import') of plugins (data formats) to list. Returns an array of strings. 
 
     Usage examples:
 
         $.jSignature({color:"#145394"}) // inits the widget.
         $.jSignature('reset') // clears the canvas and rerenders the decor on it.
-        var svgstring = $.jSignature('getData', 'svg') // simple svg representation of the strokes.
+        var datapair = $.jSignature('getData', 'svg') // array of mimetype + (unencoded) string of SVG of the signature strokes.
+        var i = new Image()
+        i.src = 'data:' + datapair[0] + ';base64,' + btoa( datapair[1] ) // base64 encode data + make it src for Image element.
+        $(i).appendTo($('#someelement') // append the image (SVG) to DOM.
         
-        var datapair = $.jSignature('getData','base30') // returns array of formattype, custom-Base30-compressed string.
-        var datastring = datapair.join(",") // import plugins understand 'data url' formatted strings like "mime;encoding,data"
-        $.jSignature('setData', datastring) 
+        datapair = $.jSignature('getData','base30') // array of mimetype + string in custom Base30-compressed format.
+        $.jSignature('setData', datapair.join(",")) // import plugins understand 'data url' formatted strings like "mime;encoding,data"
 
 
 See tests for more examples.
 
-## Data Import / Export and Plugins
+## Data Import / Export (and Plugins)
 
 The following plugins are part of mainline jSignature distribution:
 
 *   "native" data format is (at this time) an array of objects with props .x, .y, each of which is an array.
     Although you could JSONify that and pass it around, it may not be the most efficient way to store data, as internal format may change in other major versions of jSignature. Both, Import and Export is supported in this format.
 *   "base30" is a Base64-spirited compression format. This one is tuned to be simple to do fast in the browsers, to create very short, URL-compatible strings. One of possible ways of communicating the data to the server is JSONP, which has a practical URL length limit (imposed by IE, of course) or no more than 2000+ characters. This compression format is natively URL-compatible without a need for reencoding, yet will fit into 2000 for most non-complex data. Both, Import and Export is supported in this format.
-*   "SVG" export filter allows you to get the signature as an SVG image (all of SVG XML in a long string). All strokes are exported as lines, not curves. Doing proper line smoothing computations requires a bit of juice and that is usually done on the server. This SVG export filter does not do any smoothing at all. It's designed for only one purpose - quick preview of the drawing.
-*   "image" base64-encoded image of the sig as scraped pixel-by-pixel from the canvas. Does not work on many mobil Androids, possibly breaks elsewhere, definitely does not work on Flash-based Canvas emulator. Because the export filter depends on browser support recommend using this only during development or in scenarios where you can guanrantee the browser will have Canvas implementation that supports canvas.toDataURL().
+*   "svg" export filter allows you to get the signature as an SVG image (all of SVG XML in a long string). All strokes are exported as lines, not curves. Doing proper line smoothing computations requires a bit of juice and that is usually done on the server. This SVG export filter does not do any smoothing at all. It's designed for only one purpose - quick readily-viewable representation of the drawing.
+*   "image" base64-encoded (lilely a PNG) image of the sig as scraped pixel-by-pixel from the canvas. Does not work on some mobil Androids, possibly breaks elsewhere. Image extraction picks up 'decor' like signature line (and background on FlashCanvas). Because the export filter depends on browser support and picks up needless data, recommend using this only for demonstration and during development. 
 
-jSignature is targeting usecases providing reliable extraction of the stroke coordinates. A resonable efford is made to make the strokes look pretty on the screen while these are drawn by the signor. However because "image" (even the one that looks pretty on the screen) is a substandard medium for use in print, the focus here is on extraction of core vector data that can be rendered on a whim, per desired use. 
-I know you are tempted to want "images" from jSignature, but, please, contemplate capturing "Base30" or "SVG" data and render / enhance that in postproduction.
-The creation of *very pretty* images (dropping of noise, fitting curves within paths, applying stroke thickness, preasure-simulation) based on those strokes is largely delegated to the server code and is not part of this project. However, decompression and sample, rudimentary rendering code (.Net, Python as of Jan 2012) can be found in Extras folder. You would use these as core that provides data for your own rendering logic.
+jSignature is targeting usecases providing reliable extraction of highly scalable stroke movement coordinates. A resonable effort is made to make the strokes look pretty on the screen while these are drawn by the signor. However because "image" (even the one that looks pretty on the screen) is a substandard medium for use in print, the focus here is on extraction of core vector data that can be rendered on a whim, per desired use. 
+I know you are tempted to want "images" from jSignature, but, please, contemplate capturing "base30" or "svg" data and enhance + render that in postproduction.
+The creation of *very pretty* images (dropping of noise pixels, fitting curves within remaining points, applying stroke thickness, preasure-simulation) based on those strokes is largely delegated to the server code and is not part of this project. However, decompression and sample, rudimentary rendering code (.Net, Python as of Feb 2012) can be found in "extras" folder. You would use these as core that provides data for your own rendering logic.
 
 ## License, Copyright
 
