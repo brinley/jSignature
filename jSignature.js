@@ -733,7 +733,24 @@ var Initializer = function($){
 	, exportplugins = {
 		'default':function(data){return data}
 		, 'native':function(data){return data}
-		, 'image':function(data){/*this = canvas elem */ return this.toDataURL()}
+		, 'image':function(data){
+			/*this = canvas elem */
+			var imagestring = this.toDataURL()
+			
+			if (typeof imagestring === 'string' && 
+				imagestring.length > 4 && 
+				imagestring.slice(0,5) === 'data:' &&
+				imagestring.indexOf(',') !== -1){
+				
+				var splitterpos = imagestring.indexOf(',')
+
+				return [
+			        imagestring.slice(5, splitterpos)
+			        , imagestring.substr(splitterpos + 1)
+		        ]
+			}
+			return []
+		}
 	}
 	, importplugins = {
 		'default':function(data, formattype, rerendercallable){
@@ -759,6 +776,19 @@ var Initializer = function($){
 				plugins[pluginType][pluginName] = callable
 			}
 			return this
+		}
+		, listPlugins : function(pluginType){
+			var plugins = {'export':exportplugins, 'import':importplugins}
+			, answer = []
+			if (plugins.hasOwnProperty(pluginType)){
+				var o = plugins[pluginType]
+				for (var k in o){
+					if (o.hasOwnProperty(k)){
+						answer.push(k)
+					}
+				}
+			}
+			return answer
 		}
 		, getData : function( formattype ) {
 			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
