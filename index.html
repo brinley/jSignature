@@ -109,7 +109,10 @@ http://dojofoundation.org/license for more information.
 <script>
 $(document).ready(function() {
 	
+	// This is the part where jSignature is initialized.
 	var $sigdiv = $("#signature").jSignature()
+	
+	// All the code below is just code driving the demo. 
 	, $tools = $('#tools')
 	, $extraarea = $('#displayarea')
 	, pubsubprefix = 'jSignature.demo.'
@@ -120,9 +123,7 @@ $(document).ready(function() {
 	for(var i in export_plugins){
 		if (export_plugins.hasOwnProperty(i)){
 			name = export_plugins[i]
-			if (name !== 'default' && name !== 'native'){
-				chops.push('<option value="' + name + '">' + name + '</option>')
-			}
+			chops.push('<option value="' + name + '">' + name + '</option>')
 		}
 	}
 	chops.push('</select><span><b> or: </b></span>')
@@ -130,12 +131,18 @@ $(document).ready(function() {
 	$(chops.join('')).bind('change', function(e){
 		if (e.target.value !== ''){
 			var data = $sigdiv.jSignature('getData', e.target.value)
-			if($.isArray(data) && data.length === 2){
+			$.publish(pubsubprefix + 'formatchanged')
+			if (typeof data === 'string'){
+				$('textarea', $tools).val(data)
+			} else if($.isArray(data) && data.length === 2){
 				$('textarea', $tools).val(data.join(','))
-				$.publish(pubsubprefix + 'formatchanged')
 				$.publish(pubsubprefix + data[0], data);
 			} else {
-				$('textarea', $tools).val('Not sure how to stringify this, likely binary, format.')
+				try {
+					$('textarea', $tools).val(JSON.stringify(data))
+				} catch (ex) {
+					$('textarea', $tools).val('Not sure how to stringify this, likely binary, format.')
+				}
 			}
 		}
 	}).appendTo($tools)
@@ -150,7 +157,7 @@ $(document).ready(function() {
 	$.subscribe(pubsubprefix + 'formatchanged', function(){
 		$extraarea.html('')
 	})
-	
+
 	$.subscribe(pubsubprefix + 'image/svg+xml', function(data) {
 		if (typeof btoa === 'undefined'){
 			// IE, what else?
