@@ -469,15 +469,6 @@ var Initializer = function($){
 		, timer = null // used for endign stroke when no movement occurs for some time.
 		, clearIdeeTimeout = function(){
 			clearTimeout(timer)
-		} 
-		, resetIdleTimeout = function(){
-			// global scope:
-			// timer, drawEndHandler
-			clearTimeout(timer)
-			timer = setTimeout(
-				drawEndHandler
-				, 750 // no moving for this many ms? = done with the stroke.
-			)
 		}
 		, drawEndHandler = function(e) {
 			try {
@@ -487,8 +478,17 @@ var Initializer = function($){
 			clearIdeeTimeout()
 			dataEngine.endStroke()
 		}
+		, resetIdleTimeout = function(){
+			// global scope:
+			// timer, drawEndHandler
+			clearTimeout(timer)
+			timer = setTimeout(
+				drawEndHandler
+				, 750 // no moving for this many ms? = done with the stroke.
+			)
+		}
 		, setStartValues = function(){
-			var tos = $(canvas).offset()
+			var tos = $canvas.offset()
 			shiftX = tos.left * -1
 			shiftY = tos.top * -1
 		}
@@ -508,6 +508,9 @@ var Initializer = function($){
 		}
 		, drawStartHandler = function(e) {
 			e.preventDefault()
+			// for performance we cache the offsets
+			// we recalc these only at the beginning the stroke			
+			setStartValues() 
 			dataEngine.startStroke( getPointFromEvent(e) )
 			resetIdleTimeout()
 		}
@@ -688,30 +691,27 @@ var Initializer = function($){
 		
 		if (canvas_emulator){
 			$canvas.bind('mousedown.'+apinamespace, function(e){
-				setStartValues()
 				$canvas.unbind('mousedown.'+apinamespace)
-				$canvas.bind('mousedown.'+apinamespace, drawStartHandler)
-				$canvas.bind('mouseup.'+apinamespace, drawEndHandler)
 				drawStartHandler(e)
 				$canvas.bind('mousemove.'+apinamespace, drawMoveHandler)
+				$canvas.bind('mouseup.'+apinamespace, drawEndHandler)
+				$canvas.bind('mousedown.'+apinamespace, drawStartHandler)
 			})
 		} else {
 			canvas.ontouchstart = function(e) {
 				canvas.onmousedown = null
 				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
-				setStartValues()
-				canvas.ontouchstart = drawStartHandler
-				canvas.ontouchend = drawEndHandler
-				canvas.ontouchmove = drawMoveHandler
 				drawStartHandler(e)
+				canvas.ontouchend = drawEndHandler
+				canvas.ontouchstart = drawStartHandler
+				canvas.ontouchmove = drawMoveHandler
 			}
 			canvas.onmousedown = function(e) {
 				canvas.ontouchstart = null
-				setStartValues()
+				drawStartHandler(e)
 				canvas.onmousedown = drawStartHandler
 				canvas.onmouseup = drawEndHandler
 				canvas.onmousemove = drawMoveHandler
-				drawStartHandler(e)
 			}
 		}
 		
