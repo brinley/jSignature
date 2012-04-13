@@ -59,11 +59,20 @@
 			sizey = maxy - miny
 		}
 		
-		answer.push('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'+ sizex.toString() +'" height="'+ sizey.toString() +'">')
+		answer.push(
+			'<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'+ 
+			sizex.toString() +
+			'" height="'+ 
+			sizey.toString() +
+			'">'
+		)
+		answer.push(
+			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2}]]></style>'
+		)
 
 		for(i = 0; i < l; i++){
 			stroke = data[i]
-			answer.push('<path style="fill:none;stroke:#000000;" d="'+ compressstroke(stroke.x, stroke.y, shiftx, shifty) +'"/>')			
+			answer.push('<path class="f" d="'+ compressstroke(stroke.x, stroke.y, shiftx, shifty) +'"/>')			
 		}
 		answer.push('</svg>')
 		return answer.join('')
