@@ -47,6 +47,16 @@
 			}
 			return this
 		}
+		
+		/**
+		 * Calculates the angle between 'this' vector and another.
+		 * @public
+		 * @function
+		 * @returns {Number} The angle between the two vectors as measured in PI. 
+		 */
+		this.angleTo = function(vectorB) {
+			return Math.acos( ( this.x * vectorB.x + this.y * vectorB.y ) / ( this.getLength() * vectorB.getLength() ) ) / Math.PI
+		}
 	}
 	
 	function Point(x,y){
@@ -110,11 +120,28 @@
 			} else {
 				ABvector = new Vector(0,0)
 			}
-			var halflen = BCvector.getLength() / 2
-			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
-			, CtoCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
+			var minlenfraction = 0.2
+			, maxlen = BCvector.getLength() / 2
+			, ABCangle = BCvector.angleTo(ABvector.reverse())
+			, BCDangle = CDvector.angleTo(BCvector.reverse())
+			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
+				(ABCangle < 0.5) ?
+				Math.max(minlenfraction, ABCangle * 2 /** scaling to range of 0.0-1.0 */ ) * maxlen :
+				maxlen
+			)
+			, CtoCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(
+				(BCDangle < 0.5) ?
+				Math.max(minlenfraction, BCDangle * 2 /** scaling to range of 0.0-1.0 */ ) * maxlen :
+				maxlen
+			)
 			, BtoCP2vector = new Vector(BCvector.x + CtoCP2vector.x, BCvector.y + CtoCP2vector.y)
 
+			if (ABCangle < 0.5) {
+				console.log("ABC is sharp", ABCangle * 180, maxlen, ABvector.x, ABvector.y, BCvector.x, BCvector.y)
+			} else {
+				console.log("ABC is obtuse", ABCangle * 180, maxlen, ABvector.x, ABvector.y, BCvector.x, BCvector.y)
+			}
+			
 			// returing curve for BC segment
 			// all coords are vectors against Bpoint
 			return [
@@ -160,7 +187,15 @@
 		if (positionInStroke > 1 && BCvector.getLength() > lineCurveThreshold){
 			// we have at least 3 elems in stroke
 			var ABvector = (new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])).getVectorToPoint(Bpoint)
-			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(BCvector.getLength() / 2)
+			, ABCangle = BCvector.angleTo(ABvector.reverse())
+			, minlenfraction = 0.2
+			, maxlen = BCvector.getLength() / 2
+			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
+				(ABCangle < 0.5) ?
+				Math.max(minlenfraction, ABCangle * 2 /** scaling to range of 0.0-1.0 */ ) * maxlen :
+				maxlen
+			)
+
 			return [
 				'c' // bezier curve
 				, BtoCP1vector.x
