@@ -6,7 +6,7 @@
  * MIT License <http://www.opensource.org/licenses/mit-license.php> 
  */
 
-(functhion(){
+(function(){
 
 	function Vector(x,y){
 		this.x = x
