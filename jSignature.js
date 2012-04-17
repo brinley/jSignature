@@ -124,9 +124,10 @@ var Initializer = function($){
 		this.x = x
 		this.y = y
 		this.reverse = function(){
-			this.x = this.x * -1
-			this.y = this.y * -1
-			return this
+			return new this.constructor( 
+				this.x * -1
+				, this.y * -1
+			)
 		}
 		this._length = null
 		this.getLength = function(){
@@ -608,7 +609,7 @@ var Initializer = function($){
 					} else {
 						ABvector = new Vector(0,0)
 					}
-					var halflen = BCvector.getLength() / 2
+					var halflen = BCvector.getLength() * 0.35
 						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
 						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
 					basicCurve(
