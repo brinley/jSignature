@@ -14,7 +14,6 @@
 	*/
 	(function(a,b){function c(a,b){var c=a.x-b.x,d=a.y-b.y;return c*c+d*d}function d(a,b,c){var d=b.x,e=b.y,f=c.x-d,g=c.y-e,h;if(f!==0||g!==0)h=((a.x-d)*f+(a.y-e)*g)/(f*f+g*g),h>1?(d=c.x,e=c.y):h>0&&(d+=f*h,e+=g*h);return f=a.x-d,g=a.y-e,f*f+g*g}function e(a,b){var d,e=a.length,f,g=a[0],h=[g];for(d=1;d<e;d++)f=a[d],c(f,g)>b&&(h.push(f),g=f);return g!==f&&h.push(f),h}function f(a,c){var e=a.length,f=typeof Uint8Array!=b+""?Uint8Array:Array,g=new f(e),h=0,i=e-1,j,k,l,m,n=[],o=[],p=[];g[h]=g[i]=1;while(i){k=0;for(j=h+1;j<i;j++)l=d(a[j],a[h],a[i]),l>k&&(m=j,k=l);k>c&&(g[m]=1,n.push(h),o.push(m),n.push(m),o.push(i)),h=n.pop(),i=o.pop()}for(j=0;j<e;j++)g[j]&&p.push(a[j]);return p}"use strict";var g=typeof exports!=b+""?exports:a;g.simplify=function(a,c,d){var g=c!==b?c*c:1;return d||(a=e(a,g)),a=f(a,g),a}})(this);
 	
-	
 	function Vector(x,y){
 		this.x = x
 		this.y = y
@@ -101,10 +100,10 @@
 		}
 	}
 	
-	var round = function(number, position){
+	function round (number, position){
 		var tmp = Math.pow(10, position)
 		return Math.round( number * tmp ) / tmp
-	} 
+	}
 //	/**
 //	 * This is a simple, points-to-lines (not curves) renderer. 
 //	 * Keeping it around so we can activate it from time to time and see
@@ -113,7 +112,7 @@
 //	 * @function
 //	 * @returns {String} Like so "l 1 2 3 5' with stroke as long line chain. 
 //	 */
-//	, compressstroke = function(stroke, shiftx, shifty){
+//	function compressstroke(stroke, shiftx, shifty){
 //		// we combine strokes data into string like this:
 //		// 'M 53 7 l 1 2 3 4 -5 -6 5 -6'
 //		// see SVG documentation for Path element's 'd' argument.
@@ -136,7 +135,8 @@
 //		}
 //		return answer.join(' ')
 //	} 
-	, segmentToCurve = function(stroke, positionInStroke, lineCurveThreshold){
+
+	function segmentToCurve(stroke, positionInStroke, lineCurveThreshold){
 		'use strict'
 		// long lines (ones with many pixels between them) do not look good when they are part of a large curvy stroke.
 		// You know, the jaggedy crocodile spine instead of a pretty, smooth curve. Yuck!
@@ -211,7 +211,8 @@
 			]
 		}
 	}
-	, lastSegmentToCurve = function(stroke, lineCurveThreshold){
+	
+	function lastSegmentToCurve(stroke, lineCurveThreshold){
 		'use strict'
 		// Here we tidy up things left unfinished
 		
@@ -262,7 +263,8 @@
 			]
 		}
 	}
-	, addstroke = function(stroke, shiftx, shifty){
+	
+	function addstroke(stroke, shiftx, shifty){
 		'use strict'
 		// we combine strokes data into string like this:
 		// 'M 53 7 l 1 2 c 3 4 -5 -6 5 -6'
@@ -285,7 +287,8 @@
 		}
 		return lines.join(' ')
 	}
-	, simplifystroke = function(stroke){
+	
+	function simplifystroke(stroke){
 		var d = []
 		, newstroke = {'x':[], 'y':[]}
 		, i, l
@@ -300,7 +303,8 @@
 		}		
 		return newstroke
 	}
-	, compressstrokes = function(data){
+	
+	function compressstrokes(data){
 		'use strict'
 		var answer = ['<?xml version="1.0" encoding="UTF-8" standalone="no"?>']
 		, i , l = data.length
@@ -360,23 +364,92 @@
 		answer.push('</svg>')
 		return answer.join('')
 	}
-	, acceptedformat = 'image/svg+xml'
-	, pluginCompressor = function(data){
-		return [acceptedformat , compressstrokes(data)]
+
+	if (typeof btoa !== 'function')
+	{
+		function btoa(data) {
+			/** @preserve
+			====================================================================
+			base64 encoder
+			MIT, GPL
+		
+			version: 1109.2015
+			discuss at: http://phpjs.org/functions/base64_encode
+			+   original by: Tyler Akins (http://rumkin.com)
+			+   improved by: Bayron Guevara
+			+   improved by: Thunder.m
+			+   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+			+   bugfixed by: Pellentesque Malesuada
+			+   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+			+   improved by: Rafal Kukawski (http://kukawski.pl)
+			====================================================================
+			*/
+		    var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+		    , b64a = b64.split('')
+		    , o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
+	        ac = 0,
+	        enc = "",
+	        tmp_arr = [];
+		 
+		    do { // pack three octets into four hexets
+		        o1 = data.charCodeAt(i++);
+		        o2 = data.charCodeAt(i++);
+		        o3 = data.charCodeAt(i++);
+		 
+		        bits = o1 << 16 | o2 << 8 | o3;
+		 
+		        h1 = bits >> 18 & 0x3f;
+		        h2 = bits >> 12 & 0x3f;
+		        h3 = bits >> 6 & 0x3f;
+		        h4 = bits & 0x3f;
+		 
+		        // use hexets to index into b64, and append result to encoded string
+		        tmp_arr[ac++] = b64a[h1] + b64a[h2] + b64a[h3] + b64a[h4];
+		    } while (i < data.length);
+
+		    enc = tmp_arr.join('');
+		    var r = data.length % 3;
+		    return (r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
+
+		    // end of base64 encoder MIT, GPL
+		}
 	}
-	, Initializer = function($){
+	
+	var unencodedmime = 'image/svg+xml'
+	function getUnencodedSVG(data){
+		return [unencodedmime , compressstrokes(data)]
+	}
+	
+	var base64encodedmime = 'image/svg+xml;base64'
+	function getBase64encodedSVG(data){
+		return [base64encodedmime , btoa( compressstrokes(data) )] 
+	} 
+	
+	function Initializer($){
 		var mothership = $.fn['jSignature']
 		mothership(
 			'addPlugin'
 			,'export'
 			,'svg' // alias
-			,pluginCompressor
+			,getUnencodedSVG
 		)
 		mothership(
 			'addPlugin'
 			,'export'
-			,acceptedformat // full name
-			,pluginCompressor
+			,unencodedmime // full name
+			,getUnencodedSVG
+		)
+		mothership(
+			'addPlugin'
+			,'export'
+			,'svgbase64' // alias
+			,getBase64encodedSVG
+		)
+		mothership(
+			'addPlugin'
+			,'export'
+			,base64encodedmime // full name
+			,getBase64encodedSVG
 		)
 	}
 
