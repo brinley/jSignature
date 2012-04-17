@@ -213,7 +213,7 @@
 //		define(function(){return Initializer} )
 //	} else {
 		// global-polluting outcome.
-		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize..."); return}
+		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
 		Initializer(this.jQuery)
 //	}
 
