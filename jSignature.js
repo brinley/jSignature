@@ -1,11 +1,10 @@
-/** @license
- * jSignature v2
- *
- * Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
- * Copyright (c) 2010 Brinley Ang http://www.unbolt.net
- * 
- * MIT License <http://www.opensource.org/licenses/mit-license.php> 
- */
+/** @preserve ==============
+jSignature v2
+Copyright (c) 2012 Willow Systems Corp http://willow-systems.com
+Copyright (c) 2010 Brinley Ang http://www.unbolt.net
+MIT License <http://www.opensource.org/licenses/mit-license.php> 
+==============
+*/
 (function() {
 	
 var Initializer = function($){
