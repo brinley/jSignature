@@ -1,11 +1,10 @@
-/** @license
- * jSignature v2
- *
- * Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
- * Copyright (c) 2010 Brinley Ang http://www.unbolt.net
- * 
- * MIT License <http://www.opensource.org/licenses/mit-license.php> 
- */
+/** @preserve ==============
+jSignature v2
+Copyright (c) 2012 Willow Systems Corp http://willow-systems.com
+Copyright (c) 2010 Brinley Ang http://www.unbolt.net
+MIT License <http://www.opensource.org/licenses/mit-license.php> 
+==============
+*/
 (function() {
 	
 var Initializer = function($){
@@ -369,8 +368,7 @@ var Initializer = function($){
 		}
 	
 		if (!canvas.getContext){
-			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")
-			alert("Old or broken browser detected. Canvas element does not support 2d context. Signature capture logic cannot proceed.")			
+			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
 		}
 	
 		// normally select preventer would be short, but
@@ -840,7 +838,7 @@ var Initializer = function($){
 //	define(function(){return Initializer} )
 //} else {
 	// global-polluting outcome.
-	if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize..."); return}
+	if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
 	Initializer(this.jQuery)
 //}
 

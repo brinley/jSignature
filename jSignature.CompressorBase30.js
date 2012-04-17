@@ -1,9 +1,9 @@
 /** @license
- * jSignature v2 jSignature's custom "base30" export and import plugins.
- *
- * Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
- * 
- * MIT License <http://www.opensource.org/licenses/mit-license.php> 
+==============
+jSignature v2 jSignature's custom "base30" format export and import plugins.
+Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
+MIT License <http://www.opensource.org/licenses/mit-license.php>
+==============
  */
 (function(){
 
@@ -213,7 +213,7 @@
 //		define(function(){return Initializer} )
 //	} else {
 		// global-polluting outcome.
-		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize..."); return}
+		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
 		Initializer(this.jQuery)
 //	}
 
