@@ -12,9 +12,10 @@
 		this.x = x
 		this.y = y
 		this.reverse = function(){
-			this.x = this.x * -1
-			this.y = this.y * -1
-			return this;
+			return new this.__proto__.constructor( 
+				this.x * -1
+				, this.y * -1
+			)
 		}
 		this._length = null
 		this.getLength = function(){
