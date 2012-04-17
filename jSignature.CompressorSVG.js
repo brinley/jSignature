@@ -191,7 +191,7 @@
 			)
 			, BtoCP2vector = new Vector(BCvector.x + CtoCP2vector.x, BCvector.y + CtoCP2vector.y)
 			
-			var rounding = 4
+			var rounding = 2
 			// returing curve for BC segment
 			// all coords are vectors against Bpoint
 			return [
@@ -245,21 +245,23 @@
 				Math.max(minlenfraction, ABCangle) * maxlen
 			)
 
+			var rounding = 2
+			
 			return [
 				'c' // bezier curve
-				, round( BtoCP1vector.x, 3 )
-				, round( BtoCP1vector.y, 3 )
-				, round( BCvector.x, 3 ) // CP2 is same as Cpoint
-				, round( BCvector.y, 3 ) // CP2 is same as Cpoint
-				, round( BCvector.x, 3 )
-				, round( BCvector.y, 3 )
+				, round( BtoCP1vector.x, rounding )
+				, round( BtoCP1vector.y, rounding )
+				, round( BCvector.x, rounding ) // CP2 is same as Cpoint
+				, round( BCvector.y, rounding ) // CP2 is same as Cpoint
+				, round( BCvector.x, rounding )
+				, round( BCvector.y, rounding )
 			]
 		} else {
 			// Since there is no AB leg, there is no curve to draw. This is just line
 			return [
 				'l' // simple line
-				, round( BCvector.x, 3 )
-				, round( BCvector.y, 3 )
+				, round( BCvector.x, rounding )
+				, round( BCvector.y, rounding )
 			]
 		}
 	}
