@@ -7,7 +7,14 @@
  */
 
 (function(){
-
+	
+	/** 
+	 (c) 2012, Vladimir Agafonkin
+	 mourner.github.com/simplify-js
+	*/
+	(function(a,b){function c(a,b){var c=a.x-b.x,d=a.y-b.y;return c*c+d*d}function d(a,b,c){var d=b.x,e=b.y,f=c.x-d,g=c.y-e,h;if(f!==0||g!==0)h=((a.x-d)*f+(a.y-e)*g)/(f*f+g*g),h>1?(d=c.x,e=c.y):h>0&&(d+=f*h,e+=g*h);return f=a.x-d,g=a.y-e,f*f+g*g}function e(a,b){var d,e=a.length,f,g=a[0],h=[g];for(d=1;d<e;d++)f=a[d],c(f,g)>b&&(h.push(f),g=f);return g!==f&&h.push(f),h}function f(a,c){var e=a.length,f=typeof Uint8Array!=b+""?Uint8Array:Array,g=new f(e),h=0,i=e-1,j,k,l,m,n=[],o=[],p=[];g[h]=g[i]=1;while(i){k=0;for(j=h+1;j<i;j++)l=d(a[j],a[h],a[i]),l>k&&(m=j,k=l);k>c&&(g[m]=1,n.push(h),o.push(m),n.push(m),o.push(i)),h=n.pop(),i=o.pop()}for(j=0;j<e;j++)g[j]&&p.push(a[j]);return p}"use strict";var g=typeof exports!=b+""?exports:a;g.simplify=function(a,c,d){var g=c!==b?c*c:1;return d||(a=e(a,g)),a=f(a,g),a}})(this);
+	
+	
 	function Vector(x,y){
 		this.x = x
 		this.y = y
@@ -278,6 +285,21 @@
 		}
 		return lines.join(' ')
 	}
+	, simplifystroke = function(stroke){
+		var d = []
+		, newstroke = {'x':[], 'y':[]}
+		, i, l
+		
+		for (i = 0, l = stroke.x.length; i < l; i++){
+			d.push({'x':stroke.x[i], 'y':stroke.y[i]})
+		}
+		d = simplify(d, 0.7, true)
+		for (i = 0, l = d.length; i < l; i++){
+			newstroke.x.push(d[i].x)
+			newstroke.y.push(d[i].y)
+		}		
+		return newstroke
+	}
 	, compressstrokes = function(data){
 		'use strict'
 		var answer = ['<?xml version="1.0" encoding="UTF-8" standalone="no"?>']
@@ -290,10 +312,12 @@
 		, shiftx = 0
 		, shifty = 0
 		, minx, maxx, miny, maxy, padding = 1
+		, simplifieddata = []
 		
 		if(l !== 0){
 			for(i = 0; i < l; i++){
-				stroke = data[i]
+				stroke = simplifystroke( data[i] )
+				simplifieddata.push(stroke)
 				xlimits = xlimits.concat(stroke.x)
 				ylimits = ylimits.concat(stroke.y)
 			}
@@ -317,14 +341,20 @@
 		)
 		answer.push(
 			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2}]]></style>'
-//			// This one is accompaniment to "simple line renderer"
-//			, '<style type="text/css"><![CDATA[.t {fill:none;stroke:#FF0000;stroke-width:2}]]></style>'
 		)
 
-		for(i = 0; i < l; i++){
-			stroke = data[i]
+//		// This set is accompaniment to "simple line renderer" - compressstroke
+//		answer.push(
+//			'<style type="text/css"><![CDATA[.t {fill:none;stroke:#FF0000;stroke-width:2}]]></style>'
+//		)
+//		for(i = 0; i < l; i++){
+//			stroke = data[i]
 //			// This one is accompaniment to "simple line renderer"
 //			answer.push('<path class="t" d="'+ compressstroke(stroke, shiftx, shifty) +'"/>')
+//		}
+
+		for(i = 0, l = simplifieddata.length; i < l; i++){
+			stroke = simplifieddata[i]
 			answer.push('<path class="f" d="'+ addstroke(stroke, shiftx, shifty) + '"/>')
 		}
 		answer.push('</svg>')
