@@ -98,37 +98,37 @@
 		var tmp = Math.pow(10, position)
 		return Math.round( number * tmp ) / tmp
 	} 
-	/**
-	 * This is a simple, points-to-lines (not curves) renderer. 
-	 * Keeping it around so we can activate it from time to time and see
-	 * if smoothing logic is off much.
-	 * @public
-	 * @function
-	 * @returns {String} Like so "l 1 2 3 5' with stroke as long line chain. 
-	 */
-	, compressstroke = function(stroke, shiftx, shifty){
-		// we combine strokes data into string like this:
-		// 'M 53 7 l 1 2 3 4 -5 -6 5 -6'
-		// see SVG documentation for Path element's 'd' argument.
-		var lastx = stroke.x[0]
-		, lasty = stroke.y[0]
-		, i
-		, l = stroke.x.length
-		, answer = ['M', lastx - shiftx, lasty - shifty, 'l']
-		
-		if (l === 1){
-			// meaning this was just a DOT, not a stroke.
-			// instead of creating a circle, we just create a short line
-			answer.concat(1, -1)
-		} else {
-			for(i = 1; i < l; i++){
-				answer = answer.concat(stroke.x[i] - lastx, stroke.y[i] - lasty)
-				lastx = stroke.x[i]
-				lasty = stroke.y[i]
-			}
-		}
-		return answer.join(' ')
-	} 
+//	/**
+//	 * This is a simple, points-to-lines (not curves) renderer. 
+//	 * Keeping it around so we can activate it from time to time and see
+//	 * if smoothing logic is off much.
+//	 * @public
+//	 * @function
+//	 * @returns {String} Like so "l 1 2 3 5' with stroke as long line chain. 
+//	 */
+//	, compressstroke = function(stroke, shiftx, shifty){
+//		// we combine strokes data into string like this:
+//		// 'M 53 7 l 1 2 3 4 -5 -6 5 -6'
+//		// see SVG documentation for Path element's 'd' argument.
+//		var lastx = stroke.x[0]
+//		, lasty = stroke.y[0]
+//		, i
+//		, l = stroke.x.length
+//		, answer = ['M', lastx - shiftx, lasty - shifty, 'l']
+//		
+//		if (l === 1){
+//			// meaning this was just a DOT, not a stroke.
+//			// instead of creating a circle, we just create a short line
+//			answer.concat(1, -1)
+//		} else {
+//			for(i = 1; i < l; i++){
+//				answer = answer.concat(stroke.x[i] - lastx, stroke.y[i] - lasty)
+//				lastx = stroke.x[i]
+//				lasty = stroke.y[i]
+//			}
+//		}
+//		return answer.join(' ')
+//	} 
 	, segmentToCurve = function(stroke, positionInStroke, lineCurveThreshold){
 		'use strict'
 		// long lines (ones with many pixels between them) do not look good when they are part of a large curvy stroke.
@@ -317,14 +317,14 @@
 		)
 		answer.push(
 			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2}]]></style>'
-			// This one is accompaniment to "simple line renderer"
-			, '<style type="text/css"><![CDATA[.t {fill:none;stroke:#FF0000;stroke-width:2}]]></style>'
+//			// This one is accompaniment to "simple line renderer"
+//			, '<style type="text/css"><![CDATA[.t {fill:none;stroke:#FF0000;stroke-width:2}]]></style>'
 		)
 
 		for(i = 0; i < l; i++){
 			stroke = data[i]
-			// This one is accompaniment to "simple line renderer"
-			answer.push('<path class="t" d="'+ compressstroke(stroke, shiftx, shifty) +'"/>')
+//			// This one is accompaniment to "simple line renderer"
+//			answer.push('<path class="t" d="'+ compressstroke(stroke, shiftx, shifty) +'"/>')
 			answer.push('<path class="f" d="'+ addstroke(stroke, shiftx, shifty) + '"/>')
 		}
 		answer.push('</svg>')
