@@ -56,7 +56,23 @@
 		 * @returns {Number} The angle between the two vectors as measured in PI. 
 		 */
 		this.angleTo = function(vectorB) {
-			return Math.acos( ( this.x * vectorB.x + this.y * vectorB.y ) / ( this.getLength() * vectorB.getLength() ) ) / Math.PI
+			var divisor = this.getLength() * vectorB.getLength()
+			if (divisor === 0) {
+				return 0
+			} else {
+				// JavaScript floating point math is screwed up.
+				// because of it, the core of the formula can, on occasion, have values
+				// over 1.0 and below -1.0.
+				return Math.acos(
+					Math.min( 
+						Math.max( 
+							( this.x * vectorB.x + this.y * vectorB.y ) / divisor
+							, -1.0
+						)
+						, 1.0
+					)
+				) / Math.PI
+			}
 		}
 	}
 	
