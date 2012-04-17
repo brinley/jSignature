@@ -94,7 +94,11 @@
 		}
 	}
 	
-	var segmentToCurve = function(stroke, positionInStroke, lineCurveThreshold){
+	var round = function(number, position){
+		var tmp = Math.pow(10, position)
+		return Math.round( number * tmp ) / tmp
+	} 
+	, segmentToCurve = function(stroke, positionInStroke, lineCurveThreshold){
 		'use strict'
 		// long lines (ones with many pixels between them) do not look good when they are part of a large curvy stroke.
 		// You know, the jaggedy crocodile spine instead of a pretty, smooth curve. Yuck!
@@ -137,44 +141,35 @@
 			} else {
 				ABvector = new Vector(0,0)
 			}
-			var minlenfraction = 0.2
-			, maxlen = BCvector.getLength() / 2
+			var minlenfraction = 0.1
+			, maxlen = BCvector.getLength() * 0.4
 			, ABCangle = BCvector.angleTo(ABvector.reverse())
 			, BCDangle = CDvector.angleTo(BCvector.reverse())
 			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
-				(ABCangle < 0.5) ?
-				Math.max(minlenfraction, ABCangle * 2 /** scaling to range of 0.0-1.0 */ ) * maxlen :
-				maxlen
+				Math.max(minlenfraction, ABCangle) * maxlen
 			)
 			, CtoCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(
-				(BCDangle < 0.5) ?
-				Math.max(minlenfraction, BCDangle * 2 /** scaling to range of 0.0-1.0 */ ) * maxlen :
-				maxlen
+				Math.max(minlenfraction, BCDangle) * maxlen
 			)
 			, BtoCP2vector = new Vector(BCvector.x + CtoCP2vector.x, BCvector.y + CtoCP2vector.y)
-
-			if (ABCangle < 0.5) {
-				console.log("ABC is sharp", ABCangle * 180, maxlen, ABvector.x, ABvector.y, BCvector.x, BCvector.y)
-			} else {
-				console.log("ABC is obtuse", ABCangle * 180, maxlen, ABvector.x, ABvector.y, BCvector.x, BCvector.y)
-			}
 			
+			var rounding = 4
 			// returing curve for BC segment
 			// all coords are vectors against Bpoint
 			return [
 				'c' // bezier curve
-				, BtoCP1vector.x
-				, BtoCP1vector.y
-				, BtoCP2vector.x
-				, BtoCP2vector.y
-				, BCvector.x
-				, BCvector.y
+				, round( BtoCP1vector.x, rounding )
+				, round( BtoCP1vector.y, rounding )
+				, round( BtoCP2vector.x, rounding )
+				, round( BtoCP2vector.y, rounding )
+				, round( BCvector.x, rounding )
+				, round( BCvector.y, rounding )
 			]
 		} else {
 			return [
 				'l' // line
-				, BCvector.x
-				, BCvector.y
+				, round( BCvector.x, rounding )
+				, round( BCvector.y, rounding )
 			]
 		}
 	}
@@ -205,29 +200,27 @@
 			// we have at least 3 elems in stroke
 			var ABvector = (new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])).getVectorToPoint(Bpoint)
 			, ABCangle = BCvector.angleTo(ABvector.reverse())
-			, minlenfraction = 0.2
+			, minlenfraction = 0.1
 			, maxlen = BCvector.getLength() / 2
 			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
-				(ABCangle < 0.5) ?
-				Math.max(minlenfraction, ABCangle * 2 /** scaling to range of 0.0-1.0 */ ) * maxlen :
-				maxlen
+				Math.max(minlenfraction, ABCangle) * maxlen
 			)
 
 			return [
 				'c' // bezier curve
-				, BtoCP1vector.x
-				, BtoCP1vector.y
-				, BCvector.x // CP2 is same as Cpoint
-				, BCvector.y // CP2 is same as Cpoint
-				, BCvector.x
-				, BCvector.y
+				, round( BtoCP1vector.x, 3 )
+				, round( BtoCP1vector.y, 3 )
+				, round( BCvector.x, 3 ) // CP2 is same as Cpoint
+				, round( BCvector.y, 3 ) // CP2 is same as Cpoint
+				, round( BCvector.x, 3 )
+				, round( BCvector.y, 3 )
 			]
 		} else {
 			// Since there is no AB leg, there is no curve to draw. This is just line
 			return [
 				'l' // simple line
-				, BCvector.x
-				, BCvector.y
+				, round( BCvector.x, 3 )
+				, round( BCvector.y, 3 )
 			]
 		}
 	}
