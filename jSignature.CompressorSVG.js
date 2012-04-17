@@ -19,7 +19,7 @@
 		this.x = x
 		this.y = y
 		this.reverse = function(){
-			return new this.__proto__.constructor( 
+			return new this.constructor( 
 				this.x * -1
 				, this.y * -1
 			)
