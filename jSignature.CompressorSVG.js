@@ -179,8 +179,8 @@
 			} else {
 				ABvector = new Vector(0,0)
 			}
-			var minlenfraction = 0.1
-			, maxlen = BCvector.getLength() * 0.4
+			var minlenfraction = 0.05
+			, maxlen = BCvector.getLength() * 0.35
 			, ABCangle = BCvector.angleTo(ABvector.reverse())
 			, BCDangle = CDvector.angleTo(BCvector.reverse())
 			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
@@ -238,8 +238,8 @@
 			// we have at least 3 elems in stroke
 			var ABvector = (new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])).getVectorToPoint(Bpoint)
 			, ABCangle = BCvector.angleTo(ABvector.reverse())
-			, minlenfraction = 0.1
-			, maxlen = BCvector.getLength() / 2
+			, minlenfraction = 0.05
+			, maxlen = BCvector.getLength() * 0.35
 			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
 				Math.max(minlenfraction, ABCangle) * maxlen
 			)
@@ -340,7 +340,7 @@
 			'">'
 		)
 		answer.push(
-			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2}]]></style>'
+			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}]]></style>'
 		)
 
 //		// This set is accompaniment to "simple line renderer" - compressstroke
