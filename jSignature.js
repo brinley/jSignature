@@ -815,8 +815,10 @@ var Initializer = function($){
 		}
 		, setData : function(data, formattype) {
 			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
-			if (formattype === undef && typeof data === 'string') {
-				formattype = data.split(',')[0]
+			if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
+				formattype = data.slice(5).split(',')[0]
+				// 5 chars of "data:" + mimetype len + 1 "," char = all skipped.
+				data = data.slice(6 + formattype.length) 
 				if (formattype === data) return
 			}
 			if ($canvas.length !== 0 && importplugins.hasOwnProperty(formattype)){
