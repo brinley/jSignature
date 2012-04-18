@@ -213,7 +213,9 @@ var Initializer = function($){
 	 * 
 	 */
 	function DataEngine(storageObject){
-		this._storageObject = storageObject // we expect this to be an instance of Array
+		this.data = storageObject // we expect this to be an instance of Array
+
+		this.changed = function(){}
 		
 		this.startStrokeFn = function(){}
 		this.addToStrokeFn = function(){}
@@ -226,7 +228,7 @@ var Initializer = function($){
 		this.startStroke = function(point){
 			if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
 				this._stroke = {'x':[point.x], 'y':[point.y]}
-				this._storageObject.push(this._stroke)
+				this.data.push(this._stroke)
 				this._lastPoint = point
 				this.inStroke = true
 				// 'this' does not work same inside setTimeout(
@@ -277,10 +279,17 @@ var Initializer = function($){
 			this._lastPoint = null
 			if (c){
 				var fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
-					, stroke = this._stroke
+				, stroke = this._stroke
 				setTimeout(
 					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
 					function(){ fn(stroke) }
+					, 3
+				)
+				
+				var changedfn = this.changed
+				setTimeout(
+					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+					changedfn
 					, 3
 				)
 				return true
@@ -459,6 +468,7 @@ var Initializer = function($){
 			dataEngine.startStrokeFn = strokeStartCallback
 			dataEngine.addToStrokeFn = strokeAddCallback
 			dataEngine.endStrokeFn = strokeEndCallback
+			dataEngine.changed = function(){ $parent.trigger('change') }
 			
 			$canvas.data(apinamespace+'.data', data)
 			
@@ -699,6 +709,8 @@ var Initializer = function($){
 		} else {
 			canvas.ontouchstart = function(e) {
 				canvas.onmousedown = null
+				canvas.onmouseup = null
+				canvas.onmousemove = null
 				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
 				drawStartHandler(e)
 				canvas.ontouchend = drawEndHandler
@@ -707,6 +719,8 @@ var Initializer = function($){
 			}
 			canvas.onmousedown = function(e) {
 				canvas.ontouchstart = null
+				canvas.ontouchend = null
+				canvas.ontouchmove = null
 				drawStartHandler(e)
 				canvas.onmousedown = drawStartHandler
 				canvas.onmouseup = drawEndHandler
