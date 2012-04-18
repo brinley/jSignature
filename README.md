@@ -77,9 +77,11 @@ The following method becomes exposed on top of jQuery objects: `.jSignature(Stri
         $(i).appendTo($(`#someelement`) // append the image (SVG) to DOM.
         
         // Getting signature as `base30` data pair
-        datapair = $sigdiv.jSignature(`getData`,`base30`) // array of [mimetype, string of jSIgnature's custom Base30-compressed format]
+        // array of [mimetype, string of jSIgnature's custom Base30-compressed format]
+        datapair = $sigdiv.jSignature(`getData`,`base30`) 
         // reimporting the data into jSignature.
-        $sigdiv.jSignature(`setData`, 'data:' + datapair.join(",")) // import plugins understand `data url` formatted strings like "data:mime;encoding,data"
+        // import plugins understand `data url` formatted strings like "data:mime;encoding,data"
+        $sigdiv.jSignature(`setData`, 'data:' + datapair.join(",")) 
 
 
 See tests and index.html for more examples.
@@ -101,7 +103,7 @@ The following plugins (data formats) are part of mainline jSignature minified di
     The call to `jSIgnature(`getData`,`svg`)` returns an array of form `['image/svg+xml','svg xml here']`. 
 *   "svgbase64" (alias `image/svg+xml;base64`) (EXPORT ONLY) (VECTOR)  This is same as "svg" plugin, but the SVG XML text is compressed using base64 encoding. Although many browsers now have built-in base64 encoder ( `btoa()` ), some, like Internet Explorer do not. This plugin has its own (short and efficient) copy of software-based base64 encoded to which is invoked on the browsers lacking `btoa()`. 
     The call to `jSIgnature(`getData`,`svgbase64`)` returns an array of form `['image/svg+xml;base64','base64-encoded svg xml here']`. This two-member array is rather easy to turn into `data url` formatted string (`"data:" + data.join(",")`) or turn into args and pass to server as form values.
-*   "image" (EXPORT ONLY) (BITMAP) data format is essentially same as "default" above, but parsed apart so that mimetype and data are separate objects in an array structure similar to that produced by "svg" export. Example (shortened) `[`image/png;base64`,`i123i412i341jijalsdfjijl234123i...`]`. Because image export filter depends on (somewhat flaky) browser support and picks up needless data, recommend using this only for demonstration and during development. 
+*   "image" (EXPORT ONLY) (BITMAP) data format is essentially same as "default" above, but parsed apart so that mimetype and data are separate objects in an array structure similar to that produced by "svg" export. Example (shortened) `['image/png;base64','i123i412i341jijalsdfjijl234123i...']`. Because image export filter depends on (somewhat flaky) browser support and picks up needless data, recommend using this only for demonstration and during development. 
 
 ## Choosing the export / storage format.
 
