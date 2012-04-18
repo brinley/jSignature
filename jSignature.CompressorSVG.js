@@ -174,6 +174,7 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		var Bpoint = new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])
 		, BCvector = Bpoint.getVectorToPoint(Cpoint)
 		, ABvector
+		, rounding = 2
 		
 		if ( BCvector.getLength() > lineCurveThreshold ){
 			// Yey! Pretty curves, here we come!
@@ -194,7 +195,6 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 			)
 			, BtoCP2vector = new Vector(BCvector.x + CtoCP2vector.x, BCvector.y + CtoCP2vector.y)
 			
-			var rounding = 2
 			// returing curve for BC segment
 			// all coords are vectors against Bpoint
 			return [
@@ -237,6 +237,7 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		var Cpoint = new Point(stroke.x[positionInStroke], stroke.y[positionInStroke])
 		, Bpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
 		, BCvector = Bpoint.getVectorToPoint(Cpoint)
+		, rounding = 2
 		
 		if (positionInStroke > 1 && BCvector.getLength() > lineCurveThreshold){
 			// we have at least 3 elems in stroke
@@ -247,8 +248,6 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 			, BtoCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
 				Math.max(minlenfraction, ABCangle) * maxlen
 			)
-
-			var rounding = 2
 			
 			return [
 				'c' // bezier curve
