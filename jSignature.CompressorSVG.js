@@ -311,7 +311,10 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 	
 	function compressstrokes(data){
 		'use strict'
-		var answer = ['<?xml version="1.0" encoding="UTF-8" standalone="no"?>']
+		var answer = [
+			'<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+			, '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+        ]
 		, i , l = data.length
 		, stroke
 		, xlimits = []
