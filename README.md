@@ -80,7 +80,7 @@ The following method becomes exposed on top of jQuery objects: `.jSignature(Stri
         // array of [mimetype, string of jSIgnature's custom Base30-compressed format]
         datapair = $sigdiv.jSignature(`getData`,`base30`) 
         // reimporting the data into jSignature.
-        // import plugins understand `data url` formatted strings like "data:mime;encoding,data"
+        // import plugins understand data-url-formatted strings like "data:mime;encoding,data"
         $sigdiv.jSignature(`setData`, 'data:' + datapair.join(",")) 
 
 
@@ -99,7 +99,7 @@ The following plugins (data formats) are part of mainline jSignature minified di
     Code examples (.Net, Python) detailing decompression of this format into render-able form (SVG, language-native coordinate arrays) are provided in the `extras` folder.
     One of possible ways of communicating the data to the server is JSONP, which has a practical URL length limit (imposed by IE, of course) of no more than 2000+ characters. This compression format is natively URL-compatible without a need for re-encoding, yet will fit into 2000 characters for most non-complex signatures.
 *   "svg" (alias `image/svg+xml`) (EXPORT ONLY) (VECTOR)  data format produces the signature as an SVG image (SVG XML text). All strokes are denoised and smoothed.
-    This format is a good medium between "easy to view" and "hightly scalable." Viewing SVGs is natively supported in majority of today`s browsers and, yet, this format can be infinitely scaled and enhanced for print. Data is textual, allowing for easy storage and transfer.
+    This format is a good medium between "easy to view" and "hightly scalable." Viewing SVGs is natively supported in majority of today's browsers and, yet, this format can be infinitely scaled and enhanced for print. Data is textual, allowing for easy storage and transfer.
     The call to `jSIgnature(`getData`,`svg`)` returns an array of form `['image/svg+xml','svg xml here']`. 
 *   "svgbase64" (alias `image/svg+xml;base64`) (EXPORT ONLY) (VECTOR)  This is same as "svg" plugin, but the SVG XML text is compressed using base64 encoding. Although many browsers now have built-in base64 encoder ( `btoa()` ), some, like Internet Explorer do not. This plugin has its own (short and efficient) copy of software-based base64 encoded to which is invoked on the browsers lacking `btoa()`. 
     The call to `jSIgnature(`getData`,`svgbase64`)` returns an array of form `['image/svg+xml;base64','base64-encoded svg xml here']`. This two-member array is rather easy to turn into `data url` formatted string (`"data:" + data.join(",")`) or turn into args and pass to server as form values.
