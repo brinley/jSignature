@@ -124,9 +124,10 @@ var Initializer = function($){
 		this.x = x
 		this.y = y
 		this.reverse = function(){
-			this.x = this.x * -1
-			this.y = this.y * -1
-			return this
+			return new this.constructor( 
+				this.x * -1
+				, this.y * -1
+			)
 		}
 		this._length = null
 		this.getLength = function(){
@@ -212,7 +213,9 @@ var Initializer = function($){
 	 * 
 	 */
 	function DataEngine(storageObject){
-		this._storageObject = storageObject // we expect this to be an instance of Array
+		this.data = storageObject // we expect this to be an instance of Array
+
+		this.changed = function(){}
 		
 		this.startStrokeFn = function(){}
 		this.addToStrokeFn = function(){}
@@ -225,7 +228,7 @@ var Initializer = function($){
 		this.startStroke = function(point){
 			if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
 				this._stroke = {'x':[point.x], 'y':[point.y]}
-				this._storageObject.push(this._stroke)
+				this.data.push(this._stroke)
 				this._lastPoint = point
 				this.inStroke = true
 				// 'this' does not work same inside setTimeout(
@@ -276,10 +279,17 @@ var Initializer = function($){
 			this._lastPoint = null
 			if (c){
 				var fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
-					, stroke = this._stroke
+				, stroke = this._stroke
 				setTimeout(
 					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
 					function(){ fn(stroke) }
+					, 3
+				)
+				
+				var changedfn = this.changed
+				setTimeout(
+					// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+					changedfn
 					, 3
 				)
 				return true
@@ -458,6 +468,7 @@ var Initializer = function($){
 			dataEngine.startStrokeFn = strokeStartCallback
 			dataEngine.addToStrokeFn = strokeAddCallback
 			dataEngine.endStrokeFn = strokeEndCallback
+			dataEngine.changed = function(){ $parent.trigger('change') }
 			
 			$canvas.data(apinamespace+'.data', data)
 			
@@ -608,7 +619,7 @@ var Initializer = function($){
 					} else {
 						ABvector = new Vector(0,0)
 					}
-					var halflen = BCvector.getLength() / 2
+					var halflen = BCvector.getLength() * 0.35
 						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
 						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
 					basicCurve(
@@ -698,6 +709,8 @@ var Initializer = function($){
 		} else {
 			canvas.ontouchstart = function(e) {
 				canvas.onmousedown = null
+				canvas.onmouseup = null
+				canvas.onmousemove = null
 				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
 				drawStartHandler(e)
 				canvas.ontouchend = drawEndHandler
@@ -706,6 +719,8 @@ var Initializer = function($){
 			}
 			canvas.onmousedown = function(e) {
 				canvas.ontouchstart = null
+				canvas.ontouchend = null
+				canvas.ontouchmove = null
 				drawStartHandler(e)
 				canvas.onmousedown = drawStartHandler
 				canvas.onmouseup = drawEndHandler
@@ -800,8 +815,10 @@ var Initializer = function($){
 		}
 		, setData : function(data, formattype) {
 			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
-			if (formattype === undef && typeof data === 'string') {
-				formattype = data.split(',')[0]
+			if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
+				formattype = data.slice(5).split(',')[0]
+				// 5 chars of "data:" + mimetype len + 1 "," char = all skipped.
+				data = data.slice(6 + formattype.length) 
 				if (formattype === data) return
 			}
 			if ($canvas.length !== 0 && importplugins.hasOwnProperty(formattype)){

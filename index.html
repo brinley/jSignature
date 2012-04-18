@@ -159,22 +159,35 @@ $(document).ready(function() {
 	})
 
 	$.subscribe(pubsubprefix + 'image/svg+xml', function(data) {
-		if (typeof btoa === 'undefined'){
-			// IE, what else?
-			// besides lacking btoa, IE also limits the len of URL (data url in our case) to ~2k char.
-			// breakage at every stop.
-			$('<span>Looks like this browser does not support Base64 encoding, and, possibly, much other functionality needed to display inline SVG images.<br>Please, try with modern browser to see SVG in-line.<br>(This is not a limitation for jSignature. Just a limitation on display-ability of particular the export format in your particular browser.)</span>').appendTo($extraarea)
-		} else {
-			var i = new Image()
-			i.src = 'data:' + data[0] + ';base64,' + btoa( data[1] )
-			$(i).appendTo($extraarea)
-		}
+		var i = new Image()
+		i.src = 'data:' + data[0] + ';base64,' + btoa( data[1] )
+		$(i).appendTo($extraarea)
+		
+		var message = [
+			"If you don't see an image immediately above, it means your browser is unable to display in-line (data-url-formatted) SVG."
+			, "This is NOT an issue with jSignature, as we can export proper SVG document regardless of browser's ability to display it."
+			, "Try this page in a modern browser to see the SVG on the page, or export data as plain SVG, save to disk as text file and view in any SVG-capabale viewer."
+           ]
+		$( "<div>" + message.join("<br/>") + "</div>" ).appendTo( $extraarea )
 	});
 
+	$.subscribe(pubsubprefix + 'image/svg+xml;base64', function(data) {
+		var i = new Image()
+		i.src = 'data:' + data[0] + ',' + data[1]
+		$(i).appendTo($extraarea)
+		
+		var message = [
+			"If you don't see an image immediately above, it means your browser is unable to display in-line (data-url-formatted) SVG."
+			, "This is NOT an issue with jSignature, as we can export proper SVG document regardless of browser's ability to display it."
+			, "Try this page in a modern browser to see the SVG on the page, or export data as plain SVG, save to disk as text file and view in any SVG-capabale viewer."
+           ]
+		$( "<div>" + message.join("<br/>") + "</div>" ).appendTo( $extraarea )
+	});
+	
 	$.subscribe(pubsubprefix + 'image/png;base64', function(data) {
 		var i = new Image()
 		i.src = 'data:' + data[0] + ',' + data[1]
-		$('<span><b>As you can see, one of the problems of "image" extraction (besides not working on some Androids, elsewhere) is that it extracts A LOT OF DATA and includes all the decoration that is not part of the signature.</b></span>').appendTo($extraarea)
+		$('<span><b>As you can see, one of the problems of "image" extraction (besides not working on some old Androids, elsewhere) is that it extracts A LOT OF DATA and includes all the decoration that is not part of the signature.</b></span>').appendTo($extraarea)
 		$(i).appendTo($extraarea)
 	});
 	
