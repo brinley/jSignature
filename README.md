@@ -66,22 +66,22 @@ The following method becomes exposed on top of jQuery objects: `.jSignature(Stri
         var $sigdiv = $("#signature")
         $sigdiv.jSignature() // inits the jSignature widget.
         // after some doodling...
-        $sigdiv.jSignature(`reset`) // clears the canvas and rerenders the decor on it.
+        $sigdiv.jSignature("reset") // clears the canvas and rerenders the decor on it.
         
         // Getting signature as SVG and rendering the SVG within the browser. 
         // (!!! inline SVG rendering from IMG element does not work in all browsers !!!)
         // this export plugin returns an array of [mimetype, base64-encoded string of SVG of the signature strokes]
-        var datapair = $sigdiv.jSignature(`getData`, `svgbase64`) 
+        var datapair = $sigdiv.jSignature("getData", "svgbase64") 
         var i = new Image()
-        i.src = `data:` + datapair[0] + `,` + datapair[1] 
-        $(i).appendTo($(`#someelement`) // append the image (SVG) to DOM.
+        i.src = "data:" + datapair[0] + "," + datapair[1] 
+        $(i).appendTo($("#someelement") // append the image (SVG) to DOM.
         
-        // Getting signature as `base30` data pair
-        // array of [mimetype, string of jSIgnature's custom Base30-compressed format]
-        datapair = $sigdiv.jSignature(`getData`,`base30`) 
+        // Getting signature as "base30" data pair
+        // array of [mimetype, string of jSIgnature"s custom Base30-compressed format]
+        datapair = $sigdiv.jSignature("getData","base30") 
         // reimporting the data into jSignature.
         // import plugins understand data-url-formatted strings like "data:mime;encoding,data"
-        $sigdiv.jSignature(`setData`, 'data:' + datapair.join(",")) 
+        $sigdiv.jSignature("setData", "data:" + datapair.join(",")) 
 
 
 See tests and index.html for more examples.
@@ -90,20 +90,20 @@ See tests and index.html for more examples.
 
 The following plugins (data formats) are part of mainline jSignature minified distributable:
 
-*   "default" (EXPORT ONLY) (BITMAP) data format is compatible with output format jSignature produced in earlier versions when `getData` was called without arguments. "Default" is now invoked (obviously) by default whenever you `$obj.jSignature(`getData`)` The data format is that produced natively by Canvas - `data url` formatted, base64 encoded (likely PNG) bitmap data that looks like this: `data:image/png;base64,i1234lkj123;k4;l1j34l1kj3j...` 
+*   `default` (EXPORT ONLY) (BITMAP) data format is compatible with output format jSignature produced in earlier versions when `getData` was called without arguments. "Default" is now invoked (obviously) by default whenever you `$obj.jSignature("getData")` The data format is that produced natively by Canvas - data-url-formatted, base64 encoded (likely PNG) bitmap data that looks like this: `data:image/png;base64,i1234lkj123;k4;l1j34l1kj3j...` 
     This export call returns a single data-url-formatted string.
-*   "native" (EXPORT AND IMPORT) (VECTOR) data format is custom representation of drawing strokes as an array of objects with props .x, .y, each of which is an array. This JavaScript objects structure is the actual data structure where each of the drawing strokes is stored in jSignature. The structure is designed specifically for speed and efficiency of **collecting** strokes data points. (Although it is a bit counter-intuitive, octopus-looking structure, it (a) allows to pile up two-axis coordinates fast without a need to create `point` objects for each data point and (b) provides for very easy loop-based processing of data.)
+*   `native` (EXPORT AND IMPORT) (VECTOR) data format is custom representation of drawing strokes as an array of objects with props `.x`, `.y`, each of which is an array. This JavaScript objects structure is the actual data structure where each of the drawing strokes is stored in jSignature. The structure is designed specifically for speed and efficiency of **collecting** strokes data points. (Although it is a bit counter-intuitive, octopus-looking structure, it (a) allows to pile up two-axis coordinates fast without a need to create a Point objects for each data point and (b) provides for very easy loop-based processing of data.)
     Although you could JSONify that, pass it around, parse, render from this, it may not be the most efficient way to store data, as internal format may change in other major versions of jSignature. I recommend looking at `base30` format as a direct, but compact equivalent to "native"-as-JSON. 
     What this data is good for is running stats (size, position of signature on the canvas) and editing strokes (allowing for "undo last stroke," for example).
-*   "base30" (alias `image/jSignature;base30`) (EXPORT AND IMPORT) (VECTOR) data format is a Base64-spirited compression format tuned for absurd compactness and native url-compatibility. It is "native" data structure compressed into a compact string representation of all vectors. 
+*   `base30` (alias `image/jSignature;base30`) (EXPORT AND IMPORT) (VECTOR) data format is a Base64-spirited compression format tuned for absurd compactness and native url-compatibility. It is "native" data structure compressed into a compact string representation of all vectors. 
     Code examples (.Net, Python) detailing decompression of this format into render-able form (SVG, language-native coordinate arrays) are provided in the `extras` folder.
     One of possible ways of communicating the data to the server is JSONP, which has a practical URL length limit (imposed by IE, of course) of no more than 2000+ characters. This compression format is natively URL-compatible without a need for re-encoding, yet will fit into 2000 characters for most non-complex signatures.
-*   "svg" (alias `image/svg+xml`) (EXPORT ONLY) (VECTOR)  data format produces the signature as an SVG image (SVG XML text). All strokes are denoised and smoothed.
+*   `svg` (alias `image/svg+xml`) (EXPORT ONLY) (VECTOR)  data format produces the signature as an SVG image (SVG XML text). All strokes are denoised and smoothed.
     This format is a good medium between "easy to view" and "hightly scalable." Viewing SVGs is natively supported in majority of today's browsers and, yet, this format can be infinitely scaled and enhanced for print. Data is textual, allowing for easy storage and transfer.
-    The call to `jSIgnature(`getData`,`svg`)` returns an array of form `['image/svg+xml','svg xml here']`. 
-*   "svgbase64" (alias `image/svg+xml;base64`) (EXPORT ONLY) (VECTOR)  This is same as "svg" plugin, but the SVG XML text is compressed using base64 encoding. Although many browsers now have built-in base64 encoder ( `btoa()` ), some, like Internet Explorer do not. This plugin has its own (short and efficient) copy of software-based base64 encoded to which is invoked on the browsers lacking `btoa()`. 
-    The call to `jSIgnature(`getData`,`svgbase64`)` returns an array of form `['image/svg+xml;base64','base64-encoded svg xml here']`. This two-member array is rather easy to turn into `data url` formatted string (`"data:" + data.join(",")`) or turn into args and pass to server as form values.
-*   "image" (EXPORT ONLY) (BITMAP) data format is essentially same as "default" above, but parsed apart so that mimetype and data are separate objects in an array structure similar to that produced by "svg" export. Example (shortened) `['image/png;base64','i123i412i341jijalsdfjijl234123i...']`. Because image export filter depends on (somewhat flaky) browser support and picks up needless data, recommend using this only for demonstration and during development. 
+    The call to `jSIgnature("getData","svg")` returns an array of form `["image/svg+xml","svg xml here"]`. 
+*   `svgbase64` (alias `image/svg+xml;base64`) (EXPORT ONLY) (VECTOR)  This is same as "svg" plugin, but the SVG XML text is compressed using base64 encoding. Although many browsers now have built-in base64 encoder ( `btoa()` ), some, like Internet Explorer do not. This plugin has its own (short and efficient) copy of software-based base64 encoded to which is invoked on the browsers lacking `btoa()`. 
+    The call to `jSIgnature("getData","svgbase64")` returns an array of form `["image/svg+xml;base64","base64-encoded svg xml here"]`. This two-member array is rather easy to turn into data-url-formatted string (`"data:" + data.join(",")`) or turn into args and pass to server as form values.
+*   `image` (EXPORT ONLY) (BITMAP) data format is essentially same as "default" above, but parsed apart so that mimetype and data are separate objects in an array structure similar to that produced by "svg" export. Example (shortened) `["image/png;base64","i123i412i341jijalsdfjijl234123i..."]`. Because image export filter depends on (somewhat flaky) browser support and picks up needless data, recommend using this only for demonstration and during development. 
 
 ## Choosing the export / storage format.
 
