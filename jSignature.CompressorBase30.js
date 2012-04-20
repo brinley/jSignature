@@ -10,7 +10,8 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 	var chunkSeparator = '_' 
 	, charmap = {} // {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l','7':'m','8':'n','9':'o','a':'p','b':'q','c':'r','d':'s','e':'t','f':'u','0':'v'}
 	, charmap_reverse = {} // will be filled by 'uncompress*" function
-	, allchars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX'
+	// need to split below for IE7 (possibly others), which does not understand string[position] it seems (returns undefined)
+	, allchars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX'.split('') 
 	, bitness = allchars.length / 2
 	, minus = 'Z'
 	, plus = 'Y'
@@ -20,8 +21,8 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		charmap_reverse[allchars[i+bitness]] = allchars[i]
 	} 
 	var remapTailChars = function(number){
-		// for any given number, returning string like so:
-		// 345 -> '3de'
+		// for any given number as string, returning string with trailing chars remapped something like so:
+		// '345' -> '3de'
 		var chars = number.split('') 
 		, l = chars.length
 		// we are skipping first char. standard hex number char = delimiter
@@ -216,5 +217,16 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
 		Initializer(this.jQuery)
 //	}
+
+	if (this.jSignatureDebug) {
+		this.jSignatureDebug['base30'] = {
+			'remapTailChars':remapTailChars
+			, 'compressstrokeleg':compressstrokeleg
+			, 'uncompressstrokeleg':uncompressstrokeleg
+			, 'compressstrokes':compressstrokes
+			, 'uncompressstrokes':uncompressstrokes
+			, 'charmap': charmap
+		}
+	}
 
 }).call(typeof window !== 'undefined'? window : this)
