@@ -58,34 +58,34 @@ Explained:
 
 The following method becomes exposed on top of jQuery objects: `.jSignature(String command, *args)`
 
-*   `command` when provided, is expected to be a string with a command for jSignature. Commands supported at this time: `init`, `reset`, `getData`, `setData`, `listPlugins`
-    *   `init` is the default, assumed action. `init` takes one argument - a settings Object. You can omit the command and just pass the settings object in upon init. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
-    *   `reset` just clears the signature pad, data store (and puts back signature line and other decor). Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
-    *   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
-    *   `setData` takes two arguments - data object, data format name. When data object is a string formatted in data-url pattern you don't need to specify the data dormat name. The data format name (mime) will be implied from the data-url prefix. See example below for that. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
-    *   `listPlugins` takes an argument - a string denoting the category (Only `export`, `import` supported at this time) of plugins to list. Returns an array of strings. 
+Arguments vary per `command`. When provided, `command` is expected to be a string with a command for jSignature. Commands supported at this time: `init`, `reset`, `getData`, `setData`, `listPlugins`
+*   `init` is the default, assumed action. `init` takes one argument - a settings Object. You can omit the command and just pass the settings object in upon init. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
+*   `reset` just clears the signature pad, data store (and puts back signature line and other decor). Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
+*   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
+*   `setData` takes two arguments - data object, data format name. When data object is a string formatted in data-url pattern you don't need to specify the data dormat name. The data format name (mime) will be implied from the data-url prefix. See example below for that. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
+*   `listPlugins` takes an argument - a string denoting the category (Only `export`, `import` supported at this time) of plugins to list. Returns an array of strings. 
 
-    Usage examples:
+Usage examples:
 
-        var $sigdiv = $("#signature")
-        $sigdiv.jSignature() // inits the jSignature widget.
-        // after some doodling...
-        $sigdiv.jSignature("reset") // clears the canvas and rerenders the decor on it.
-        
-        // Getting signature as SVG and rendering the SVG within the browser. 
-        // (!!! inline SVG rendering from IMG element does not work in all browsers !!!)
-        // this export plugin returns an array of [mimetype, base64-encoded string of SVG of the signature strokes]
-        var datapair = $sigdiv.jSignature("getData", "svgbase64") 
-        var i = new Image()
-        i.src = "data:" + datapair[0] + "," + datapair[1] 
-        $(i).appendTo($("#someelement") // append the image (SVG) to DOM.
-        
-        // Getting signature as "base30" data pair
-        // array of [mimetype, string of jSIgnature"s custom Base30-compressed format]
-        datapair = $sigdiv.jSignature("getData","base30") 
-        // reimporting the data into jSignature.
-        // import plugins understand data-url-formatted strings like "data:mime;encoding,data"
-        $sigdiv.jSignature("setData", "data:" + datapair.join(",")) 
+    var $sigdiv = $("#signature")
+    $sigdiv.jSignature() // inits the jSignature widget.
+    // after some doodling...
+    $sigdiv.jSignature("reset") // clears the canvas and rerenders the decor on it.
+    
+    // Getting signature as SVG and rendering the SVG within the browser. 
+    // (!!! inline SVG rendering from IMG element does not work in all browsers !!!)
+    // this export plugin returns an array of [mimetype, base64-encoded string of SVG of the signature strokes]
+    var datapair = $sigdiv.jSignature("getData", "svgbase64") 
+    var i = new Image()
+    i.src = "data:" + datapair[0] + "," + datapair[1] 
+    $(i).appendTo($("#someelement") // append the image (SVG) to DOM.
+    
+    // Getting signature as "base30" data pair
+    // array of [mimetype, string of jSIgnature"s custom Base30-compressed format]
+    datapair = $sigdiv.jSignature("getData","base30") 
+    // reimporting the data into jSignature.
+    // import plugins understand data-url-formatted strings like "data:mime;encoding,data"
+    $sigdiv.jSignature("setData", "data:" + datapair.join(",")) 
 
 
 See tests and index.html for more examples.
