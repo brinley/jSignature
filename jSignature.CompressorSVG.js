@@ -350,9 +350,14 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 			sizey.toString() +
 			'">'
 		)
-		answer.push(
-			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}]]></style>'
-		)
+		
+//		// This is a nice idea: use style declaration on top, and mark the lines with 'class="f"'
+//		// thus saving space in svg... 
+//		// alas, many SVG renderers don't understand "class" and render the strokes in default "fill = black, no stroke" style. Ugh!!!
+//		// TODO: Rewrite ImageMagic / GraphicsMagic, InkScape, http://svg.codeplex.com/ to support style + class. until then, we hardcode the stroke style within the path. 
+//		answer.push(
+//			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}]]></style>'
+//		)
 
 //		// This set is accompaniment to "simple line renderer" - compressstroke
 //		answer.push(
@@ -366,7 +371,7 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 
 		for(i = 0, l = simplifieddata.length; i < l; i++){
 			stroke = simplifieddata[i]
-			answer.push('<path class="f" d="'+ addstroke(stroke, shiftx, shifty) + '"/>')
+			answer.push('<path fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="'+ addstroke(stroke, shiftx, shifty) + '"/>')
 		}
 		answer.push('</svg>')
 		return answer.join('')
