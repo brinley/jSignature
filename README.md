@@ -15,7 +15,11 @@ See [demos here](http://walnutcomputing.com/demo/signature/ "Signature Capture D
 
 ## Adding jSignature to your page
 
-jSignature has three distinct pieces of code rolled into one minified (17k) deployable:
+jSignature depends on (more or less recent) **jQuery**,  and **(only for IE 7 and 8) on FlashCanvas**. Both are included, for convenience, in the `/libs` folder of this project, but you can certainly use your own versions. 
+
+Note that FlashCanvas is a group of two files, `flashcanvas.swf` and `flashcanvas.js`, both of which **must** be located together in the same folder. Do **not** host them from separate folders as `flashcanvas.js` looks for `flashcanvas.swf` in the same folder it was served from. 
+
+jSignature itself has three distinct pieces of code rolled into one minified (17k) deployable:
 
 1.  Code that prepares a Canvas element.
     It includes detection of browser features, maximizing a canvas within the confines of a div, setting up emulated Canvas using Flashcanvas, when needed.
@@ -27,9 +31,9 @@ If you are certain that your audience will be limited to a specific browser engi
 
 More custom data export/import plugins can be loaded separately without reminifying the main deployable. **Minified file ('jSignature.min.js') you see in the repository already includes all included in this repo export, import plugins.**
 
-For the "generic" deployment scenario (which includes support of old IE) do this:
+For the "generic" deployment scenario (which includes support of old IE) add this to your page:
 
-    <!-- you load jquery somewhere here ... -->
+    <!-- you load jquery somewhere above here ... -->
     <!--[if lt IE 9]>
     <script type="text/javascript" src="libs/flashcanvas.js"></script>
     <![endif]-->
@@ -44,7 +48,7 @@ For the "generic" deployment scenario (which includes support of old IE) do this
 
 Explained:
     
-*   The `[if lt IE 9]` part loads Flashcanvas library for IE less than 9. (To the best of my knowledge Flashcanvas is supported ONLY ON IE. No point doing feature detection.)
+*   The `[if lt IE 9]` part loads Flashcanvas library for IE less than 9. (Flashcanvas is supported **only on IE**, so, there is no point doing feature detection.)
 *   Then we load jSignature plugin.
 *   Next we have the `div` inside which the canvas element will be created (You cannot reuse a canvas element at this time. Plugin creates its own Canvas elem inside the DIV.)
 *   Lastly, the script invokes the signature widget within the specified DIV.
@@ -101,8 +105,8 @@ The following plugins (data formats) are part of mainline jSignature minified di
 *   `svg` (alias `image/svg+xml`) (EXPORT ONLY) (VECTOR)  data format produces the signature as an SVG image (SVG XML text). All strokes are denoised and smoothed.
     This format is a good medium between "easy to view" and "hightly scalable." Viewing SVGs is natively supported in majority of today's browsers and, yet, this format can be infinitely scaled and enhanced for print. Data is textual, allowing for easy storage and transfer.
     The call to `jSIgnature("getData","svg")` returns an array of form `["image/svg+xml","svg xml here"]`. 
-*   `svgbase64` (alias `image/svg+xml;base64`) (EXPORT ONLY) (VECTOR)  This is same as "svg" plugin, but the SVG XML text is compressed using base64 encoding. Although many browsers now have built-in base64 encoder ( `btoa()` ), some, like Internet Explorer do not. This plugin has its own (short and efficient) copy of software-based base64 encoded to which is invoked on the browsers lacking `btoa()`. 
-    The call to `jSIgnature("getData","svgbase64")` returns an array of form `["image/svg+xml;base64","base64-encoded svg xml here"]`. This two-member array is rather easy to turn into data-url-formatted string (`"data:" + data.join(",")`) or turn into args and pass to server as form values.
+*   `svgbase64` (alias `image/svg+xml;base64`) (EXPORT ONLY) (VECTOR)  This is same as "svg" plugin, but the SVG XML text is compressed using base64 encoding. Although many browsers now have built-in base64 encoder ( `btoa()` ), some, like Internet Explorer do not. This plugin has its own (short and efficient) copy of software-based base64 encoder which is invoked on the browsers lacking `btoa()`. 
+    The call to `jSignature("getData","svgbase64")` returns an array of form `["image/svg+xml;base64","base64-encoded svg xml here"]`. This two-member array is rather easy to turn into data-url-formatted string (`"data:" + data.join(",")`) or turn into args and pass to server as form values.
 *   `image` (EXPORT ONLY) (BITMAP) data format is essentially same as "default" above, but parsed apart so that mimetype and data are separate objects in an array structure similar to that produced by "svg" export. Example (shortened) `["image/png;base64","i123i412i341jijalsdfjijl234123i..."]`. Because image export filter depends on (somewhat flaky) browser support and picks up needless data, recommend using this only for demonstration and during development. 
 
 ## Choosing the export / storage format.
