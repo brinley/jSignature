@@ -1,199 +1,205 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <head>
-<script language="JavaScript" type="text/javascript" src="http://code.jquery.com/jquery-1.4.4.min.js"></script>
-<script language="JavaScript" type="text/javascript" src="jSignature.js"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-	$("#signature1").jSignature();
-	$("#signature2").jSignature({color:"#f00"});
-	$("#signature3").jSignature({color:"#00f",lineWidth:5});
-	$("#signature4").jSignature({width:300,height:200});
-	$("#signature5").jSignature({color:"#00f",bgcolor:"#0f0"});
-});
-
-function importImg(sig)
-{
-	sig.children("img.imported").remove();
-	$("<img class='imported'></img").attr("src",sig.jSignature('getData')).appendTo(sig);
-}
-
-function importData(sig)
-{
-	var dataurl=window.prompt("Paste the exported Image data string here to put it back on this canvas","");
-	sig.jSignature('importData',dataurl);
-}
-</script>
-
+<meta charset="utf-8">
+<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+   Remove this if you use the .htaccess -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="initial-scale=1.0, target-densitydpi=device-dpi" /><!-- this is for mobile (Android) Chrome -->
+<meta name="viewport" content="initial-scale=1.0, width=device-height"><!--  mobile Safari, FireFox, Opera Mobile  -->
+<script src="libs/modernizr.js"></script>
+<!--[if lt IE 9]>
+<script type="text/javascript" src="libs/flashcanvas.js"></script>
+<![endif]-->
 <style type="text/css">
-	canvas { border: 1px dotted #000; }
-	.imported { border:1px dotted #f00; margin-left: 40px; }
+	canvas { border: 1px dotted #000;}
+	
+	#signatureparent {color:darkblue;background-color:lightgrey;}
+	
+	div {
+		margin-top:1em;
+		margin-bottom:1em;
+	}
+	input {
+		padding: .5em;
+		margin: .5em;
+	}
+	select {
+		padding: .5em;
+		margin: .5em;
+	}
+	
+	/* Drawing the 'gripper' for touch-enabled devices */ 
+	html.touch #content {
+		float:left;
+		width:92%;
+	}
+	html.touch #scrollgrabber {
+		float:right;
+		width:4%;
+		margin-right:2%;
+		background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAFCAAAAACh79lDAAAAAXNSR0IArs4c6QAAABJJREFUCB1jmMmQxjCT4T/DfwAPLgOXlrt3IwAAAABJRU5ErkJggg==)
+	}
+	html.borderradius #scrollgrabber {
+		border-radius: 1em;
+	}
+	 
 </style>
 </head>
 <body>
-<h1>About</h1>
-<p>
-jSignature is a plugin for jQuery which simplifies the creation of a field that allows a user to enter 
-a signature either via a mouse, your finger on touch enabled devices or a pen input device. This plugin 
-is currently in alpha and is very much just a concept so it may not be ready for production.
-</p>
-<p>
-Note: This plugin requires a browser that supports HTML Canvas.
-</p>
-<p>
-Please report any bugs or suggestion to <a href="https://github.com/brinley/jSignature/issues">https://github.com/brinley/jSignature/issues</a>
-</p>
-<p>
-Released under the MIT License <<a href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a>> 
-</p>
+<div>
+<div id="content">
+	<div id="signatureparent"><div>jSignature inherits colors from parent element. Text = Pen color. Background = Background. (This works even when Flash-based Canvas emulation is used.)</div>
+		<div id="signature"></div>
+	</div>
+	<div id="tools"></div>
+	<div><p>Display Area:</p><div id="displayarea"></div></div>
+</div>
+<div id="scrollgrabber"></div>
+</div>
+<script src="libs/jquery.js"></script>
+<script>
+/*  @preserve
+jQuery pub/sub plugin by Peter Higgins (dante@dojotoolkit.org)
+Loosely based on Dojo publish/subscribe API, limited in scope. Rewritten blindly.
+Original is (c) Dojo Foundation 2004-2010. Released under either AFL or new BSD, see:
+http://dojofoundation.org/license for more information.
+*/
+(function($) {
+	var topics = {};
+	$.publish = function(topic, args) {
+	    if (topics[topic]) {
+	        var currentTopic = topics[topic],
+	        args = args || {};
+	
+	        for (var i = 0, j = currentTopic.length; i < j; i++) {
+	            currentTopic[i].call($, args);
+	        }
+	    }
+	};
+	$.subscribe = function(topic, callback) {
+	    if (!topics[topic]) {
+	        topics[topic] = [];
+	    }
+	    topics[topic].push(callback);
+	    return {
+	        "topic": topic,
+	        "callback": callback
+	    };
+	};
+	$.unsubscribe = function(handle) {
+	    var topic = handle.topic;
+	    if (topics[topic]) {
+	        var currentTopic = topics[topic];
+	
+	        for (var i = 0, j = currentTopic.length; i < j; i++) {
+	            if (currentTopic[i] === handle.callback) {
+	                currentTopic.splice(i, 1);
+	            }
+	        }
+	    }
+	};
+})(jQuery);
 
-<h1>To Dos</h1>
-<p>
-<ol>
-	<li>Support non-canvas browsers with flash, using something like http://www.azarask.in/blog/post/flash-canvas/</li>
-</ol>
-</p>
-
-<h1>Usage</h1>
-<p>
-The setup is quite straight forward, simply include jQuery and jSignature.js. At present, this plugin has only been tested with jQuery 1.4.4 
-
-<pre>
-&lt;script language="JavaScript" type="text/javascript" src="jSignature.js"&gt;&lt;/script&gt;
-
-&lt;script type="text/javascript"&gt;
+</script>
+<script src="jSignature.min.js"></script>
+<script>
 $(document).ready(function() {
-	$("#signature").jSignature({color:"#00f",lineWidth:5});
-});
-&lt;/script&gt;
-</pre>
-</p>
+	
+	// This is the part where jSignature is initialized.
+	var $sigdiv = $("#signature").jSignature()
+	
+	// All the code below is just code driving the demo. 
+	, $tools = $('#tools')
+	, $extraarea = $('#displayarea')
+	, pubsubprefix = 'jSignature.demo.'
+	
+	var export_plugins = $sigdiv.jSignature('listPlugins','export')
+	, chops = ['<span><b>Extract signature data as: </b></span><select>','<option value="">(select export format)</option>']
+	, name
+	for(var i in export_plugins){
+		if (export_plugins.hasOwnProperty(i)){
+			name = export_plugins[i]
+			chops.push('<option value="' + name + '">' + name + '</option>')
+		}
+	}
+	chops.push('</select><span><b> or: </b></span>')
+	
+	$(chops.join('')).bind('change', function(e){
+		if (e.target.value !== ''){
+			var data = $sigdiv.jSignature('getData', e.target.value)
+			$.publish(pubsubprefix + 'formatchanged')
+			if (typeof data === 'string'){
+				$('textarea', $tools).val(data)
+			} else if($.isArray(data) && data.length === 2){
+				$('textarea', $tools).val(data.join(','))
+				$.publish(pubsubprefix + data[0], data);
+			} else {
+				try {
+					$('textarea', $tools).val(JSON.stringify(data))
+				} catch (ex) {
+					$('textarea', $tools).val('Not sure how to stringify this, likely binary, format.')
+				}
+			}
+		}
+	}).appendTo($tools)
 
-<h2>Methods</h2>
-<table>
-<tr>
-	<td>Name</td>
-	<td>Usage</td>
-	<td>Description</td>
-</tr>
-<tr>
-	<td>clear</td>
-	<td>.jSignature("clear")</td>
-	<td>Empties and resets the canvas.</td>
-</tr>
-<tr>
-	<td>getData</td>
-	<td>.jSignature("getData")</td>
-	<td>Converts the canvas into a base64 encoded data string which can be saved as a string in any database during a form post or submit.</td>
-</tr>
-<tr>
-	<td>importData</td>
-	<td>.jSignature("importData",dataurl)</td>
-	<td>Updates an existing jSignature canvas with the dataurl extracted from the above getData method.</td>
-</tr>
-</table>
+	
+	$('<input type="button" value="Reset">').bind('click', function(e){
+		$sigdiv.jSignature('reset')
+	}).appendTo($tools)
+	
+	$('<div><textarea style="width:100%;height:7em;"></textarea></div>').appendTo($tools)
+	
+	$.subscribe(pubsubprefix + 'formatchanged', function(){
+		$extraarea.html('')
+	})
 
+	$.subscribe(pubsubprefix + 'image/svg+xml', function(data) {
+		var i = new Image()
+		i.src = 'data:' + data[0] + ';base64,' + btoa( data[1] )
+		$(i).appendTo($extraarea)
+		
+		var message = [
+			"If you don't see an image immediately above, it means your browser is unable to display in-line (data-url-formatted) SVG."
+			, "This is NOT an issue with jSignature, as we can export proper SVG document regardless of browser's ability to display it."
+			, "Try this page in a modern browser to see the SVG on the page, or export data as plain SVG, save to disk as text file and view in any SVG-capabale viewer."
+           ]
+		$( "<div>" + message.join("<br/>") + "</div>" ).appendTo( $extraarea )
+	});
 
-<h2>Options</h2>
-<table>
-<tr>
-	<td>Name</td>
-	<td>Description</td>
-	<td>Default</td>
-</tr>
-<tr>
-	<td>width</td>
-	<td>Defines the width of the canvas. Numerical value without % or px</td>
-	<td>250</td>
-</tr>
-<tr>
-	<td>height</td>
-	<td>Defines the height of the canvas. Numerical value without % or px</td>
-	<td>150</td>
-</tr>
-<tr>
-	<td>color</td>
-	<td>Defines the color of the strokes on the canvas. Accepts any color hex values.</td>
-	<td>#000</td>
-</tr>
-<tr>
-	<td>bgcolor</td>
-	<td>Defines the background color of the canvas. Accepts any color hex values.</td>
-	<td>#fff</td>
-</tr>
-<tr>
-	<td>lineWidth</td>
-	<td>Defines the thickness of the lines. Accepts any positive numerical value</td>
-	<td>1</td>
-</tr>
-<tr>
-	<td>cssclass</td>
-	<td>Defines a custom class for the canvas.</td>
-	<td>None</td>
-</tr>
-<tr>
-	<td>mousedown</td>
-	<td>
-		Defines a JavaScript function that gets called on mousedown or touchstart event. <br/>
-		Example usage: $("#signature").jSignature({ color:"#00f", lineWidth:5, mousedown: function(){ alert("Do something here"); } });
-	</td>
-	<td>None</td>
-</tr>
-<tr>
-	<td>mouseup</td>
-	<td>Defines a JavaScript function that gets called on mouseup or touchend event. See example usage for mousedown.</td>
-	<td>None</td>
-</tr>
-</table>
+	$.subscribe(pubsubprefix + 'image/svg+xml;base64', function(data) {
+		var i = new Image()
+		i.src = 'data:' + data[0] + ',' + data[1]
+		$(i).appendTo($extraarea)
+		
+		var message = [
+			"If you don't see an image immediately above, it means your browser is unable to display in-line (data-url-formatted) SVG."
+			, "This is NOT an issue with jSignature, as we can export proper SVG document regardless of browser's ability to display it."
+			, "Try this page in a modern browser to see the SVG on the page, or export data as plain SVG, save to disk as text file and view in any SVG-capabale viewer."
+           ]
+		$( "<div>" + message.join("<br/>") + "</div>" ).appendTo( $extraarea )
+	});
+	
+	$.subscribe(pubsubprefix + 'image/png;base64', function(data) {
+		var i = new Image()
+		i.src = 'data:' + data[0] + ',' + data[1]
+		$('<span><b>As you can see, one of the problems of "image" extraction (besides not working on some old Androids, elsewhere) is that it extracts A LOT OF DATA and includes all the decoration that is not part of the signature.</b></span>').appendTo($extraarea)
+		$(i).appendTo($extraarea)
+	});
+	
+	$.subscribe(pubsubprefix + 'image/jsignature;base30', function(data) {
+		$('<span><b>This is a vector format not natively render-able by browsers. Format is a compressed "movement coordinates arrays" structure tuned for use server-side. The bonus of this format is its tiny storage footprint and ease of deriving rendering instructions in programmatic, iterative manner.</b></span>').appendTo($extraarea)
+	});
 
-<h2>Basic example with default options</h2>
-<pre>
-$("#signature1").jSignature();
-</pre>
-<div id="signature1"></div>
-<button type="button" onclick="$('#signature1').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature1').jSignature('getData'))">Export</button>
-<button type="button" onclick="importImg($('#signature1'))">Import Data to Image</button>
-<button type="button" onclick="importData($('#signature1'))">Import Data to Canvas</button>
-
-<h2>Example 2 - Custom colours</h2>
-<pre>
-$("#signature2").jSignature({color:"#f00"});
-</pre>
-<div id="signature2"></div>
-<button type="button" onclick="$('#signature2').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature2').jSignature('getData'))">Export</button>
-<button type="button" onclick="importImg($('#signature2'))">Import Data to Image</button>
-<button type="button" onclick="importData($('#signature2'))">Import Data to Canvas</button>
-
-<h2>Example 3 - Custom line width</h2>
-<pre>
-$("#signature3").jSignature({color:"#00f",lineWidth:5});
-</pre>
-<div id="signature3"></div>
-<button type="button" onclick="$('#signature3').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature3').jSignature('getData'))">Export</button>
-<button type="button" onclick="importImg($('#signature3'))">Import Data to Image</button>
-<button type="button" onclick="importData($('#signature3'))">Import Data to Canvas</button>
-
-<h2>Example 4 - Custom dimensions</h2>
-<pre>
-$("#signature4").jSignature({width:300,height:200});
-</pre>
-<div id="signature4"></div>
-<button type="button" onclick="$('#signature4').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature4').jSignature('getData'))">Export</button>
-<button type="button" onclick="importImg($('#signature4'))">Import Data to Image</button>
-<button type="button" onclick="importData($('#signature4'))">Import Data to Canvas</button>
-
-<h2>Example 5 - Custom background</h2>
-<pre>
-$("#signature5").jSignature({color:"#00f",bgcolor:"#0f0"});
-</pre>
-<div id="signature5"></div>
-<button type="button" onclick="$('#signature5').jSignature('clear')">Clear</button>
-<button type="button" onclick="alert($('#signature5').jSignature('getData'))">Export</button>
-<button type="button" onclick="importImg($('#signature5'))">Import Data to Image</button>
-<button type="button" onclick="importData($('#signature5'))">Import Data to Canvas</button>
-
+	if (Modernizr.touch){
+		$('#scrollgrabber').height($('#content').height())		
+	}
+	
+})
+</script>
 </body>
 </html>
