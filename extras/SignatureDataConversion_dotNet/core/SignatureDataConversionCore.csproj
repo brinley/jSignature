@@ -8,8 +8,8 @@
     <ProjectGuid>{A439B878-B25B-4F05-8410-E9D3336B484F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>jSignature_ExportImport_dotNet</RootNamespace>
-    <AssemblyName>jSignature_ExportImport_dotNet</AssemblyName>
+    <RootNamespace>jSignature.Tools</RootNamespace>
+    <AssemblyName>jSignature.Tools</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
