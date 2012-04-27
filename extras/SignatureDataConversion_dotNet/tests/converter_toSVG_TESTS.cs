@@ -48,8 +48,10 @@ namespace jSignature.Tools.Tests
         {
             var data = new jSignature.Tools.Base30Converter().GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
 
-            string shouldbe = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?><svg xmlns=""http://www.w3.org/2000/svg"" version=""1.1"" width=""57"" height=""59""><path style=""fill:none;stroke:#000000;"" d=""M 53 7 l 1 2 3 4 -5 -6 5 -6""/><path style=""fill:none;stroke:#000000;"" d=""M 3 57 l 1 2 -3 -4""/></svg>";
+            string shouldbe = System.IO.File.ReadAllText(Common.SOURCE_PATH + "\\samples\\reference_svg_nonsmoothed.svg");
             string actual = jSignature.Tools.SVGConverter.ToSVG(data);
+
+            // System.IO.File.WriteAllText(Common.SOURCE_PATH + "\\samples\\reference_svg_nonsmoothed.svg", actual);
 
             Assert.AreEqual(
                 shouldbe
@@ -62,8 +64,9 @@ namespace jSignature.Tools.Tests
         {
             var data = new jSignature.Tools.Base30Converter().GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
 
-            string shouldbe = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?><svg xmlns=""http://www.w3.org/2000/svg"" version=""1.1"" width=""57"" height=""59""><path style=""fill:none;stroke:#000000;"" d=""M 53 7 l 1 2 3 4 -5 -6 5 -6""/><path style=""fill:none;stroke:#000000;"" d=""M 3 57 l 1 2 -3 -4""/></svg>";
-            string actual = jSignature.Tools.SVGConverter.ToSVG(data);
+            string shouldbe = System.IO.File.ReadAllText(Common.SOURCE_PATH + "\\samples\\reference_svg_smoothed.svg");
+            bool smoothing = true;
+            string actual = jSignature.Tools.SVGConverter.ToSVG(data, smoothing);
 
             Assert.AreEqual(
                 shouldbe

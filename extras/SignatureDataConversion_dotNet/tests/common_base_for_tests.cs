@@ -55,10 +55,6 @@ namespace jSignature.Tools.Tests
                 return _SOURCE_PATH;
             }
         }
-        public static string GetContents(string filename)
-        {
-            return System.IO.File.ReadAllText(SOURCE_PATH + "\\" + filename);
-        }
     }
 
 

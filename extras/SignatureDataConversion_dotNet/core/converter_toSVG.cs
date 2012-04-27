@@ -7,14 +7,17 @@ namespace jSignature.Tools
 {
     public static class SVGConverter
     {
-        private static string outersvgtemplate = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?><svg xmlns=""http://www.w3.org/2000/svg"" version=""1.1"" width=""{0}"" height=""{1}"">{2}</svg>";
-        private static string pathtemplate = @"<path style=""fill:none;stroke:#000000;"" d=""M {0} l {1}""/>";
-        private static string coordinatetemplate = "{0} {1}";
-
         public static string GetPathsSVGFragment(int[][][] data)
             {return GetPathsSVGFragment(data, 0, 0);}
         public static string GetPathsSVGFragment(int[][][] data, int shiftx, int shifty)
         {
+
+            // I was contemplating going the <style> tag + class attr way, but GraphicsMagic and .Net SVG renderer do not support that.
+            // hence, reiterating the style with every line
+            string pathtemplate = @"
+<path style='fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round' d='M {0} l {1}'/>".Replace('\'', '"');
+            string coordinatetemplate = "{0} {1}";
+
             List<string> paths = new List<string>();
             List<string> points;
 
@@ -42,10 +45,17 @@ namespace jSignature.Tools
         /// <param name="data"></param>
         /// <returns></returns>
         public static string ToSVG(int[][][] data)
+        { return ToSVG(data, false); }
+        public static string ToSVG(int[][][] data, bool smoothing)
         {
             var stats = new jSignature.Tools.Stats(data);
             var contentsize = stats.ContentSize;
             var limits = stats.ContentLimits;
+
+            string outersvgtemplate = @"<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'>
+<svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='{0}' height='{1}'>{2}
+</svg>".Replace('\'', '"');
 
             return String.Format(
                 outersvgtemplate
