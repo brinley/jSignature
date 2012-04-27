@@ -36,9 +36,9 @@ using NUnit.Framework;
     }
 
 */
-namespace jSignature.tests
+namespace jSignature.Tools.Tests
 {
-    using jSignature;
+    using jSignature.Tools;
 
     [TestFixture]
     public class ImageTools : TestBase
@@ -46,9 +46,9 @@ namespace jSignature.tests
         [Test]
         public void id001_Sizes()
         {
-            var c = new jSignature.Base30Converter();
+            var c = new jSignature.Tools.Base30Converter();
             var uncompresseddataobject = c.GetData(compressedtestdata);
-            var stats = new jSignature.Stats(uncompresseddataobject);
+            var stats = new jSignature.Tools.Stats(uncompresseddataobject);
 
             // above sig has the following limits
             // x 121 to 496

@@ -36,9 +36,9 @@ using NUnit.Framework;
     }
 
 */
-namespace jSignature.tests
+namespace jSignature.Tools.Tests
 {
-    using jSignature;
+    using jSignature.Tools;
 
     [TestFixture]
     public class Base30ConverterTests : TestBase
@@ -55,7 +55,7 @@ namespace jSignature.tests
                 last = leg1x[i];
             }
 
-            var c = new jSignature.Base30Converter();
+            var c = new jSignature.Tools.Base30Converter();
 
             Assert.AreEqual(
                 leg1xVectorized
@@ -85,7 +85,7 @@ namespace jSignature.tests
                 }
             };
 
-            var c = new jSignature.Base30Converter();
+            var c = new jSignature.Tools.Base30Converter();
 
             Assert.AreEqual(
                 shouldbe

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-namespace jSignature
+namespace jSignature.Tools
 {
     public static class SVGConverter
     {
@@ -43,7 +43,7 @@ namespace jSignature
         /// <returns></returns>
         public static string ToSVG(int[][][] data)
         {
-            var stats = new jSignature.Stats(data);
+            var stats = new jSignature.Tools.Stats(data);
             var contentsize = stats.ContentSize;
             var limits = stats.ContentLimits;
 

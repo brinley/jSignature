@@ -36,7 +36,7 @@ using NUnit.Framework;
     }
 
 */
-namespace jSignature.tests
+namespace jSignature.Tools.Tests
 {
     public static class Common
     {
