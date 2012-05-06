@@ -777,6 +777,10 @@ var Initializer = function($){
 		init : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
+                , clear : function( data ) {
+			// Added for v1 compatibility
+                        return this.jSignature("reset", data);
+                }
 		, reset : function( data ) {
 			this.find('canvas.'+apinamespace)
 			.add(this.filter('canvas.'+apinamespace))
@@ -813,6 +817,15 @@ var Initializer = function($){
 				)
 			}
 		}
+                , importData : function( data ) {
+			// Added for v1 compatibility
+                        var dataFormat = data.split(",");
+                        if (dataFormat.length > 1) {
+                                formattype = dataFormat[0];
+                                data = dataFormat[1];
+                        }
+                        return this.jSignature("setData", data, formattype);
+                }
 		, setData : function(data, formattype) {
 			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
 			if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
