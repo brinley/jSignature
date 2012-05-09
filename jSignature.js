@@ -355,23 +355,26 @@ var Initializer = function($){
 		$canvas.addClass(apinamespace)
 		
 		var canvas_emulator = (function(){
-			var zoom = 1
-
 			if (canvas.getContext){
 				return false
 			} else if (typeof FlashCanvas !== "undefined") {
-				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. It matches pixel-to-pixel to screen instead.
-				// all x, y coords need to be scaled from pagezoom to Flash window.
-				// since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
+				canvas = FlashCanvas.initElement(canvas)
+				
+				var zoom = 1
+				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. 
+				// It matches pixel-to-pixel to screen instead.
+				// Since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
 				if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
 					zoom = window.screen.deviceXDPI * 1.0 / window.screen.logicalXDPI
 				}
-				canvas = FlashCanvas.initElement(canvas)
-				// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
-				// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
 				if (zoom !== 1){
+					// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
+					// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
 					$canvas.children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
+					// And by applying "scale" transformation we can talk "browser pixels" to FlashCanvas
+					// and have it translate the "browser pixels" to "screen pixels"
 					canvas.getContext('2d').scale(zoom, zoom)
+					// Note to self: don't reuse Canvas element. Repeated "scale" are cumulative.
 				}
 				return true
 			} else {
