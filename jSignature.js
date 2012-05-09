@@ -764,12 +764,44 @@ var Initializer = function($){
 		}
 	}
 
+	function _renderImageOnCanvas( data, formattype, rerendercallable ) {
+		'use strict'
+		// #1. Do NOT rely on this. No worky on IE 
+		//   (url max len + lack of base64 decoder + possibly other issues)
+		// #2. This does NOT affect what is captured as "signature" as far as vector data is 
+		// concerned. This is treated same as "signature line" - i.e. completely ignored
+		// the only time you see imported image data exported is if you export as image.
+
+		// we do NOT call rerendercallable here (unlike in other import plugins)
+		// because importing image does absolutely nothing to the underlying vector data storage
+		// This could be a way to "import" old signatures stored as images
+		// This could also be a way to import extra decor into signature area.
+		
+		var img = new Image()
+		// this = Canvas DOM elem. Not jQuery object. Not Canvas's parent div.
+		, c = this
+
+		img.onload = function() {
+			var ctx = c.getContext("2d").drawImage( 
+				img, 0, 0
+				, ( img.width < c.width) ? img.width : c.width
+				, ( img.height < c.height) ? img.height : c.height
+			)
+		}
+
+		img.src = 'data:' + formattype + ',' + data
+	}
+
 	var importplugins = {
 		'native':function(data, formattype, rerendercallable){
 			// we expect data as Array of objects of arrays here - whatever 'default' EXPORT plugin spits out.
 			// returning Truthy to indicate we are good, all updated.
 			rerendercallable( data )
 		}
+		, 'image': _renderImageOnCanvas
+		, 'image/png;base64': _renderImageOnCanvas
+		, 'image/jpeg;base64': _renderImageOnCanvas
+		, 'image/jpg;base64': _renderImageOnCanvas
 	}
 
 	function _clearDrawingArea( data ) {
