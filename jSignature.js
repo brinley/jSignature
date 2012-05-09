@@ -740,26 +740,45 @@ var Initializer = function($){
 		// it is bettr than
 		// $canvas.bind('mouseout', drawEndHandler)
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
-			
-		;(function(){
-			var resizetimer
-			, runner = function(){
-				var h = $parent.height()
-				, w = $parent.width()
+		
+		if ((function(settingsWidth){
+				return ( settingsWidth === 'ratio' || settingsWidth.split('')[settingsWidth.length - 1] === '%' )
+			})(settings.width.toString(10))
+		) {
+
+			(function(originalParentWidth, sizeRatio){
+				'use strict'
+
+				var resizetimer
+				, parentWidth = originalParentWidth
+				, runner = function(){
+					var w = $parent.width()
+					if (w !== parentWidth) {
+	                	parentWidth = w
+	        			console.log("We have proportional signature pad: resized")
+	        			
+	        			settings.data = $canvas.data(apinamespace+'.data') 
+	        			
+	        			$canvas.remove()
+	        			
+	        			$parent[apinamespace](settings)
+	                }
+				}
 				
-				console.log("resized", h, w)
-			}
-			
-			$(window).bind('resize',function(){
-				if (resizetimer) {
-	                clearTimeout(resizetimer)
-               }
-				resizetimer = setTimeout( 
-					runner
-					, 500
-				)
-			})
-		})()
+				$(window).bind('resize', function(){
+					if (resizetimer) {
+		                clearTimeout(resizetimer)
+					}
+					resizetimer = setTimeout( 
+						runner
+						, 700
+					)
+				})
+			})(
+				$parent.width()
+				, canvas.width * 1.0 / canvas.height
+			)
+        }
 		
 		resetCanvas(settings.data)
 	} // end of initBase
