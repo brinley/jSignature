@@ -303,9 +303,9 @@ var Initializer = function($){
 	, initBase = function(options) {
 		
 		var settings = {
-			'width' : 'max'
-			,'height' : 'max'
-			,'sizeRatio': 4 // only used when width or height = 'max'
+			'width' : 'ratio'
+			,'height' : 'ratio'
+			,'sizeRatio': 4 // only used when height = 'ratio'
 			,'color' : '#000'
 			,'background-color': '#fff'
 			,'decor-color': '#eee'
@@ -318,40 +318,27 @@ var Initializer = function($){
 			$.extend(settings, options)
 		}
 		
-		if (settings.width == 'max' || settings.height == 'max'){
-			// this maxes the sig widget within the parent container.
-			var pw = $parent.width()
-				, ph = $parent.height()
-			if ((pw / settings.sizeRatio) > ph) {
-				ph = parseInt(pw/settings.sizeRatio, 10)
-			}
-			settings.width = pw
-			settings.height = ph					
-		}
+		// We cannot work with circular dependency
+		if (settings.width === settings.height && settings.height === 'ratio') {
+        	settings.width = '100%'
+        }
 		
-		if (settings.lineWidth == 0){
-			var width = parseInt(settings.width, 10)
-				, lineWidth = parseInt( width / 300 , 10) // +1 pixel for every extra 300px of width.
-			if (lineWidth < 2) {
-			    settings.lineWidth = 2 
-			} else {
-				settings.lineWidth = lineWidth
-			}
-		}
-	
-		var small_screen = parseInt(settings.width, 10) < 1000? true : false
+		var canvas = document.createElement('canvas')
+		canvas.style.width = settings.width === 'ratio' ? '1px' : settings.width.toString(10)
+		canvas.style.height = settings.height === 'ratio' ? '1px' : settings.height.toString(10) 
+		var $canvas = $(canvas)
+		$canvas.appendTo($parent)
 		
-		var $canvas = $parent.find('canvas')
-			, canvas
-		if (!$canvas.length){
-			canvas = document.createElement('canvas')
-			canvas.width = settings.width
-			canvas.height = settings.height
-			$canvas = $(canvas)
-			$canvas.appendTo($parent)
-		} else {
-			canvas = $canvas.get(0)
-		}
+		// we could not do this until canvas is rendered
+		if (settings.height === 'ratio') {
+			canvas.style.height = Math.round( canvas.offsetWidth / settings.sizeRatio ).toString(10) + 'px'
+        } else if (settings.width === 'ratio') {
+			canvas.style.width = Math.round( canvas.offsetHeight * settings.sizeRatio ).toString(10) + 'px'
+        }
+		
+		canvas.width = canvas.offsetWidth
+		canvas.height = canvas.offsetHeight
+		
 		$canvas.addClass(apinamespace)
 		
 		var canvas_emulator = (function(){
@@ -381,7 +368,20 @@ var Initializer = function($){
 				throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
 			}
 		})();
+
+		settings.lineWidth = (function(defaultLineWidth, canvasWidth){
+			if (defaultLineWidth === 0){
+				return Math.max(
+					Math.round(canvasWidth / 400) /*+1 pixel for every extra 300px of width.*/
+					, 2 /* minimum line width */
+				) 
+			} else {
+				return defaultLineWidth
+			}
+		})(settings.lineWidth, canvas.width);
 	
+		var small_screen = canvas.width < 600 ? true : false
+		
 		// normally select preventer would be short, but
 		// vml-based Canvas emulator on IE does NOT provide value for Event. Hence this convoluted line.
 		canvas.onselectstart = function(e){if(e && e.preventDefault){e.preventDefault()}; if(e && e.stopPropagation){e.stopPropagation()}; return false;}
