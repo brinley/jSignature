@@ -36,48 +36,88 @@ using NUnit.Framework;
     }
 
 */
-namespace jSignature.tests
+namespace jSignature.Tools.Tests
 {
-    using jSignature;
+    using jSignature.Tools;
+
+    class PrivateMethodsAccessorForSVGConverter : jSignature.Tools.SVGConverter 
+    { 
+        public static string TestSegmentToCurve(int[][] stroke, int positionInStroke, int lineCurveThreshold)
+        {
+            return segmentToCurve(stroke, positionInStroke, lineCurveThreshold);
+        }
+
+        public static string TestLastSegmentToCurve(int[][] stroke, int lineCurveThreshold)
+        {
+            return lastSegmentToCurve(stroke, lineCurveThreshold);
+        }
+    }
 
     [TestFixture]
     public class SVGConverterTests : TestBase
     {
         [Test]
-        public void id002_ToSVG()
+        public void id002_ToSVG_Internal()
         {
-            // [[[100,50],[1,2],[3,4],[-5,-6],[5,-6]], [[50,100],[1,2],[-3,-4]]];
-            // [{'x':[100,101,104,99,104],'y':[50,52,56,50,44]},{'x':[50,51,48],'y':[100,102,98]}]
-            // "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"
+            int[][] stroke = new int[][] {
+                new int[] {53, 7}
+                , new int[] {1, 2}
+                , new int[] {3, 4}
+                , new int[] {5, -6}
+                , new int[] {-5, -6}
+            };
 
-            // min x, y = 48, 44
-            // ToSVG adjusts the image (moves it up and to left) so that empty space is not there.
+            string[] smoothedcurves = new string[] {
+                "this will not be looked at"
+                , "c 0.02 0.04 0.59 1.39 1 2"
+                , "c 0.92 1.37 2.28 4.18 3 4"
+                , "c 1.13 -0.28 5 -4.48 5 -6"
+                , "c 0 -1.52 -5 -6 -5 -6"
+            };
 
-            //int[][][] shouldbe = new int[][][] { 
-            //    new int[][] {
-            //        new int[] {100 - 47, 50 - 43}
-            //        ,new int[] {1, 2}
-            //        ,new int[] {3, 4}
-            //        ,new int[] {-5, -6}
-            //        ,new int[] {5, -6}
-            //    }
-            //    , new int[][] {
-            //        new int[] {50 - 47, 100 - 43}
-            //        ,new int[] {1, 2}
-            //        ,new int[] {-3, -4}
-            //    }
-            //};
+            // NON-smoothed (by way of cranking line-curve-threshold way up.)
+            for (int i = 1; i < stroke.Length -1; i++)
+            {
+                //System.Diagnostics.Debug.WriteLine("This is elem " + i.ToString());
+                Assert.AreEqual(
+                    String.Format("l {0} {1}", stroke[i][0], stroke[i][1])
+                    , PrivateMethodsAccessorForSVGConverter.TestSegmentToCurve(stroke, i, 1000)
+                );
+            }
+            Assert.AreEqual(
+                String.Format("l {0} {1}", stroke[stroke.Length - 1][0], stroke[stroke.Length - 1][1])
+                , PrivateMethodsAccessorForSVGConverter.TestLastSegmentToCurve(stroke, 1000)
+            );
 
+            // smoothed (by way of lowering line-curve-threshold to 1 pixel).
+            for (int i = 1; i < stroke.Length - 1; i++)
+            {
+                Assert.AreEqual(
+                    smoothedcurves[i]
+                    , PrivateMethodsAccessorForSVGConverter.TestSegmentToCurve(stroke, i, 1)
+                );
+            }
+            Assert.AreEqual(
+                smoothedcurves[stroke.Length - 1]
+                , PrivateMethodsAccessorForSVGConverter.TestLastSegmentToCurve(stroke, 1)
+            );
+        }
 
-            var data = new jSignature.Base30Converter().GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
+        [Test]
+        public void id003_ToSVG_External()
+        {
+            var data = new jSignature.Tools.Base30Converter().GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
 
-            string shouldbe = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?><svg xmlns=""http://www.w3.org/2000/svg"" version=""1.1"" width=""57"" height=""59""><path style=""fill:none;stroke:#000000;"" d=""M 53 7 l 1 2 3 4 -5 -6 5 -6""/><path style=""fill:none;stroke:#000000;"" d=""M 3 57 l 1 2 -3 -4""/></svg>";
-            string actual = jSignature.SVGConverter.ToSVG(data);
+            string actual = jSignature.Tools.SVGConverter.ToSVG(data);
 
+            // System.IO.File.WriteAllText(Common.SOURCE_PATH + "\\samples\\reference_svg_smoothed.svg", actual);
+
+            string shouldbe = System.IO.File.ReadAllText(Common.SOURCE_PATH + "\\samples\\reference_svg_smoothed.svg");
             Assert.AreEqual(
                 shouldbe
                 , actual
             );
         }
+
     }
 }

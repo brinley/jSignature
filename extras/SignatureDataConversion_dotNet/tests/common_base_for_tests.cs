@@ -36,7 +36,7 @@ using NUnit.Framework;
     }
 
 */
-namespace jSignature.tests
+namespace jSignature.Tools.Tests
 {
     public static class Common
     {
@@ -54,10 +54,6 @@ namespace jSignature.tests
                 }
                 return _SOURCE_PATH;
             }
-        }
-        public static string GetContents(string filename)
-        {
-            return System.IO.File.ReadAllText(SOURCE_PATH + "\\" + filename);
         }
     }
 
