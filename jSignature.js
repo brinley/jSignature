@@ -740,7 +740,8 @@ var Initializer = function($){
 		
 		resetCanvas(settings.data)
 	} // end of initBase
-	, exportplugins = {
+	
+	var exportplugins = {
 		'default':function(data){return this.toDataURL()}
 		, 'native':function(data){return data}
 		, 'image':function(data){
@@ -762,28 +763,57 @@ var Initializer = function($){
 			return []
 		}
 	}
-	, importplugins = {
+
+	var importplugins = {
 		'native':function(data, formattype, rerendercallable){
 			// we expect data as Array of objects of arrays here - whatever 'default' EXPORT plugin spits out.
 			// returning Truthy to indicate we are good, all updated.
 			rerendercallable( data )
 		}
 	}
+
+	function _clearDrawingArea( data ) {
+		this.find('canvas.'+apinamespace)
+		.add(this.filter('canvas.'+apinamespace))
+		.data(apinamespace+'.reset')( data )
+		return this
+	}
+
+	function _setDrawingData( data, formattype ) {
+		var undef
+
+		if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
+			formattype = data.slice(5).split(',')[0]
+			// 5 chars of "data:" + mimetype len + 1 "," char = all skipped.
+			data = data.slice(6 + formattype.length) 
+			if (formattype === data) return
+		}
+
+		var $canvas = this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
+
+		if (!importplugins.hasOwnProperty(formattype)){
+			throw new Error(apinamespace + " is unable to find import plugin with for format '"+ String(formattype) +"'")
+		} else if ($canvas.length !== 0){
+			importplugins[formattype].call(
+				$canvas[0]
+				, data
+				, formattype
+				, $canvas.data(apinamespace+'.reset')
+			)
+		}
+
+		return this
+	}
+
 	//These are exposed as methods under $obj.jSignature('methodname', *args)
-	, methods = {
+	var methods = {
 		init : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
-                , clear : function( data ) {
-			// Added for v1 compatibility
-                        return this.jSignature("reset", data);
-                }
-		, reset : function( data ) {
-			this.find('canvas.'+apinamespace)
-			.add(this.filter('canvas.'+apinamespace))
-			.data(apinamespace+'.reset')( data )
-			return this
-		}
+		// around since v1
+		, clear : _clearDrawingArea
+		// was mistakenly introduced instead of 'clear' in v2
+		, reset : _clearDrawingArea
 		, addPlugin : function(pluginType, pluginName, callable){
 			var plugins = {'export':exportplugins, 'import':importplugins}
 			if (plugins.hasOwnProperty(pluginType)){
@@ -814,34 +844,11 @@ var Initializer = function($){
 				)
 			}
 		}
-                , importData : function( data ) {
-			// Added for v1 compatibility
-                        var dataFormat = data.split(",");
-                        if (dataFormat.length > 1) {
-                                formattype = dataFormat[0];
-                                data = dataFormat[1];
-                        }
-                        return this.jSignature("setData", data, formattype);
-                }
-		, setData : function(data, formattype) {
-			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
-			if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
-				formattype = data.slice(5).split(',')[0]
-				// 5 chars of "data:" + mimetype len + 1 "," char = all skipped.
-				data = data.slice(6 + formattype.length) 
-				if (formattype === data) return
-			}
-			if ($canvas.length !== 0 && importplugins.hasOwnProperty(formattype)){
-				importplugins[formattype].call(
-					$canvas.get(0) // canvas dom elem
-					, data
-					, formattype
-					, $canvas.data(apinamespace+'.reset')
-				)
-			}
-			return this
-		}
-	} // end of methods dclaration.
+		// around since v1. Took only one arg - data-url-formatted string with (likely png of) signature image
+		, importData : _setDrawingData
+		// was mistakenly introduced instead of 'importData' in v2
+		, setData : _setDrawingData
+	} // end of methods declaration.
 	
 	$.fn[apinamespace] = function(method) {
 		if ( methods[method] ) {
