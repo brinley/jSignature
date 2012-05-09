@@ -354,32 +354,30 @@ var Initializer = function($){
 		}
 		$canvas.addClass(apinamespace)
 		
-		var canvas_emulator = false
-			, zoom = 1
-		if (!canvas.getContext){
-			if (typeof FlashCanvas !== "undefined") {
+		var canvas_emulator = (function(){
+			var zoom = 1
+
+			if (canvas.getContext){
+				return false
+			} else if (typeof FlashCanvas !== "undefined") {
 				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. It matches pixel-to-pixel to screen instead.
 				// all x, y coords need to be scaled from pagezoom to Flash window.
 				// since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
 				if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
-					zoom = window.screen.deviceXDPI / window.screen.logicalXDPI
+					zoom = window.screen.deviceXDPI * 1.0 / window.screen.logicalXDPI
 				}
 				canvas = FlashCanvas.initElement(canvas)
 				// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
 				// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
-				if (zoom != 1){
+				if (zoom !== 1){
 					$canvas.children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
+					canvas.getContext('2d').scale(zoom, zoom)
 				}
-				canvas_emulator = true
-			} else if ( typeof G_vmlCanvasManager != 'undefined'){
-				canvas = G_vmlCanvasManager.initElement(canvas)
-				canvas_emulator = true
+				return true
+			} else {
+				throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
 			}
-		}
-	
-		if (!canvas.getContext){
-			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
-		}
+		})();
 	
 		// normally select preventer would be short, but
 		// vml-based Canvas emulator on IE does NOT provide value for Event. Hence this convoluted line.
@@ -418,16 +416,16 @@ var Initializer = function($){
 			var cw = canvas.width
 			, ch = canvas.height
 			
-			ctx.clearRect(0, 0, cw * zoom + 30, ch * zoom + 30)
+			ctx.clearRect(0, 0, cw + 30, ch + 30)
 
 			ctx.shadowColor = ctx.fillStyle = settings['background-color']
 			if (canvas_emulator){
-				// FLashCanvas on IE9 fills with Black by default, covering up the parent div's background
+				// FLashCanvas fills with Black by default, covering up the parent div's background
 				// hence we refill 
-				ctx.fillRect(0,0,cw * zoom + 30, ch * zoom + 30)
+				ctx.fillRect(0,0,cw + 30, ch + 30)
 			}
 
-			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
+			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10))
 			ctx.lineCap = ctx.lineJoin = "round"
 			
 			// signature line
@@ -508,11 +506,10 @@ var Initializer = function($){
 			// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
 			// Windows: Chrome, FF, IE9, Safari
 			// None of that scroll shift calc vs screenXY other sigs do is needed.
-			// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
 			// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
 			return new Point(
-				Math.round((firstEvent.pageX + shiftX) * zoom)
-				, Math.round((firstEvent.pageY + shiftY) * zoom) + fatFingerCompensation
+				Math.round(firstEvent.pageX + shiftX)
+				, Math.round(firstEvent.pageY + shiftY) + fatFingerCompensation
 			)
 		}
 		, drawStartHandler = function(e) {
