@@ -354,32 +354,30 @@ var Initializer = function($){
 		}
 		$canvas.addClass(apinamespace)
 		
-		var canvas_emulator = false
-			, zoom = 1
-		if (!canvas.getContext){
-			if (typeof FlashCanvas !== "undefined") {
+		var canvas_emulator = (function(){
+			var zoom = 1
+
+			if (canvas.getContext){
+				return false
+			} else if (typeof FlashCanvas !== "undefined") {
 				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. It matches pixel-to-pixel to screen instead.
 				// all x, y coords need to be scaled from pagezoom to Flash window.
 				// since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
 				if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
-					zoom = window.screen.deviceXDPI / window.screen.logicalXDPI
+					zoom = window.screen.deviceXDPI * 1.0 / window.screen.logicalXDPI
 				}
 				canvas = FlashCanvas.initElement(canvas)
 				// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
 				// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
-				if (zoom != 1){
+				if (zoom !== 1){
 					$canvas.children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
+					canvas.getContext('2d').scale(zoom, zoom)
 				}
-				canvas_emulator = true
-			} else if ( typeof G_vmlCanvasManager != 'undefined'){
-				canvas = G_vmlCanvasManager.initElement(canvas)
-				canvas_emulator = true
+				return true
+			} else {
+				throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
 			}
-		}
-	
-		if (!canvas.getContext){
-			throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
-		}
+		})();
 	
 		// normally select preventer would be short, but
 		// vml-based Canvas emulator on IE does NOT provide value for Event. Hence this convoluted line.
@@ -418,16 +416,16 @@ var Initializer = function($){
 			var cw = canvas.width
 			, ch = canvas.height
 			
-			ctx.clearRect(0, 0, cw * zoom + 30, ch * zoom + 30)
+			ctx.clearRect(0, 0, cw + 30, ch + 30)
 
 			ctx.shadowColor = ctx.fillStyle = settings['background-color']
 			if (canvas_emulator){
-				// FLashCanvas on IE9 fills with Black by default, covering up the parent div's background
+				// FLashCanvas fills with Black by default, covering up the parent div's background
 				// hence we refill 
-				ctx.fillRect(0,0,cw * zoom + 30, ch * zoom + 30)
+				ctx.fillRect(0,0,cw + 30, ch + 30)
 			}
 
-			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10) * zoom)
+			ctx.lineWidth = Math.ceil(parseInt(settings.lineWidth, 10))
 			ctx.lineCap = ctx.lineJoin = "round"
 			
 			// signature line
@@ -508,11 +506,10 @@ var Initializer = function($){
 			// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
 			// Windows: Chrome, FF, IE9, Safari
 			// None of that scroll shift calc vs screenXY other sigs do is needed.
-			// The only strange case is FlashCanvas. It uses Flash, which does not scale with the page zoom. * zoom is for that.
 			// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
 			return new Point(
-				Math.round((firstEvent.pageX + shiftX) * zoom)
-				, Math.round((firstEvent.pageY + shiftY) * zoom) + fatFingerCompensation
+				Math.round(firstEvent.pageX + shiftX)
+				, Math.round(firstEvent.pageY + shiftY) + fatFingerCompensation
 			)
 		}
 		, drawStartHandler = function(e) {
@@ -743,7 +740,8 @@ var Initializer = function($){
 		
 		resetCanvas(settings.data)
 	} // end of initBase
-	, exportplugins = {
+	
+	var exportplugins = {
 		'default':function(data){return this.toDataURL()}
 		, 'native':function(data){return data}
 		, 'image':function(data){
@@ -765,28 +763,89 @@ var Initializer = function($){
 			return []
 		}
 	}
-	, importplugins = {
+
+	function _renderImageOnCanvas( data, formattype, rerendercallable ) {
+		'use strict'
+		// #1. Do NOT rely on this. No worky on IE 
+		//   (url max len + lack of base64 decoder + possibly other issues)
+		// #2. This does NOT affect what is captured as "signature" as far as vector data is 
+		// concerned. This is treated same as "signature line" - i.e. completely ignored
+		// the only time you see imported image data exported is if you export as image.
+
+		// we do NOT call rerendercallable here (unlike in other import plugins)
+		// because importing image does absolutely nothing to the underlying vector data storage
+		// This could be a way to "import" old signatures stored as images
+		// This could also be a way to import extra decor into signature area.
+		
+		var img = new Image()
+		// this = Canvas DOM elem. Not jQuery object. Not Canvas's parent div.
+		, c = this
+
+		img.onload = function() {
+			var ctx = c.getContext("2d").drawImage( 
+				img, 0, 0
+				, ( img.width < c.width) ? img.width : c.width
+				, ( img.height < c.height) ? img.height : c.height
+			)
+		}
+
+		img.src = 'data:' + formattype + ',' + data
+	}
+
+	var importplugins = {
 		'native':function(data, formattype, rerendercallable){
 			// we expect data as Array of objects of arrays here - whatever 'default' EXPORT plugin spits out.
 			// returning Truthy to indicate we are good, all updated.
 			rerendercallable( data )
 		}
+		, 'image': _renderImageOnCanvas
+		, 'image/png;base64': _renderImageOnCanvas
+		, 'image/jpeg;base64': _renderImageOnCanvas
+		, 'image/jpg;base64': _renderImageOnCanvas
 	}
+
+	function _clearDrawingArea( data ) {
+		this.find('canvas.'+apinamespace)
+		.add(this.filter('canvas.'+apinamespace))
+		.data(apinamespace+'.reset')( data )
+		return this
+	}
+
+	function _setDrawingData( data, formattype ) {
+		var undef
+
+		if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
+			formattype = data.slice(5).split(',')[0]
+			// 5 chars of "data:" + mimetype len + 1 "," char = all skipped.
+			data = data.slice(6 + formattype.length) 
+			if (formattype === data) return
+		}
+
+		var $canvas = this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
+
+		if (!importplugins.hasOwnProperty(formattype)){
+			throw new Error(apinamespace + " is unable to find import plugin with for format '"+ String(formattype) +"'")
+		} else if ($canvas.length !== 0){
+			importplugins[formattype].call(
+				$canvas[0]
+				, data
+				, formattype
+				, $canvas.data(apinamespace+'.reset')
+			)
+		}
+
+		return this
+	}
+
 	//These are exposed as methods under $obj.jSignature('methodname', *args)
-	, methods = {
+	var methods = {
 		init : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
-                , clear : function( data ) {
-			// Added for v1 compatibility
-                        return this.jSignature("reset", data);
-                }
-		, reset : function( data ) {
-			this.find('canvas.'+apinamespace)
-			.add(this.filter('canvas.'+apinamespace))
-			.data(apinamespace+'.reset')( data )
-			return this
-		}
+		// around since v1
+		, clear : _clearDrawingArea
+		// was mistakenly introduced instead of 'clear' in v2
+		, reset : _clearDrawingArea
 		, addPlugin : function(pluginType, pluginName, callable){
 			var plugins = {'export':exportplugins, 'import':importplugins}
 			if (plugins.hasOwnProperty(pluginType)){
@@ -817,34 +876,11 @@ var Initializer = function($){
 				)
 			}
 		}
-                , importData : function( data ) {
-			// Added for v1 compatibility
-                        var dataFormat = data.split(",");
-                        if (dataFormat.length > 1) {
-                                formattype = dataFormat[0];
-                                data = dataFormat[1];
-                        }
-                        return this.jSignature("setData", data, formattype);
-                }
-		, setData : function(data, formattype) {
-			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
-			if (formattype === undef && typeof data === 'string' && data.substr(0,5) === 'data:') {
-				formattype = data.slice(5).split(',')[0]
-				// 5 chars of "data:" + mimetype len + 1 "," char = all skipped.
-				data = data.slice(6 + formattype.length) 
-				if (formattype === data) return
-			}
-			if ($canvas.length !== 0 && importplugins.hasOwnProperty(formattype)){
-				importplugins[formattype].call(
-					$canvas.get(0) // canvas dom elem
-					, data
-					, formattype
-					, $canvas.data(apinamespace+'.reset')
-				)
-			}
-			return this
-		}
-	} // end of methods dclaration.
+		// around since v1. Took only one arg - data-url-formatted string with (likely png of) signature image
+		, importData : _setDrawingData
+		// was mistakenly introduced instead of 'importData' in v2
+		, setData : _setDrawingData
+	} // end of methods declaration.
 	
 	$.fn[apinamespace] = function(method) {
 		if ( methods[method] ) {

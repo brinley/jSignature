@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace jSignature
+namespace jSignature.Tools
 {
     /// <summary>
     /// This class Converts jSignature data into compressed alphanum base30 string and back.
