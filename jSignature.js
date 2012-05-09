@@ -737,6 +737,26 @@ var Initializer = function($){
 		// it is bettr than
 		// $canvas.bind('mouseout', drawEndHandler)
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
+			
+		;(function(){
+			var resizetimer
+			, runner = function(){
+				var h = $parent.height()
+				, w = $parent.width()
+				
+				console.log("resized", h, w)
+			}
+			
+			$(window).bind('resize',function(){
+				if (resizetimer) {
+	                clearTimeout(resizetimer)
+               }
+				resizetimer = setTimeout( 
+					runner
+					, 500
+				)
+			})
+		})()
 		
 		resetCanvas(settings.data)
 	} // end of initBase
