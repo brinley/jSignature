@@ -925,12 +925,13 @@ var Initializer = function($){
 	} // end of methods declaration.
 	
 	$.fn[apinamespace] = function(method) {
-		if ( methods[method] ) {
-			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
-		} else if ( typeof method === 'object' || ! method ) {
+		'use strict'
+		if ( !method || typeof method === 'object' ) {
 			return methods.init.apply( this, arguments )
+		} else if ( typeof method === 'string' && methods[method] ) {
+			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
 		} else {
-			$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
+			$.error( 'Method ' +  String(method) + ' does not exist on jQuery.' + apinamespace )
 		}
 	}
 	
