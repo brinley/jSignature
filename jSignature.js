@@ -1005,8 +1005,7 @@ var Initializer = function($){
 			$.error( 'Method ' +  String(method) + ' does not exist on jQuery.' + apinamespace )
 		}
 	}
-	
-	return $
+
 } // end of Initializer
 
 ////Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
