@@ -280,7 +280,7 @@ var Initializer = function($){
 				typeof(point.x) === "number" && 
 				typeof(point.y) === "number" &&
 				// calculates absolute shift in diagonal pixels away from original point
-				(Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 2
+				(Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 4
 			){
 				var positionInStroke = this._stroke.x.length
 				this._stroke.x.push(point.x)
@@ -617,15 +617,13 @@ var Initializer = function($){
 			// mousemoved before we draw this curve.
 			
 			// So for "prior curve" to be calc'ed we need 4 points 
-			// 	A, B, C, D
+			// 	A, B, C, D (we are on D now, A is 3 points in the past.)
 			// and 3 lines:
 			//  pre-line (from points A to B), 
 			//  this line (from points B to C), (we call it "this" because if it was not yet, it's the only one we can draw for sure.) 
-			//  post-line (from points C to D) (even through it's 'current' line we don't know if we can draw it yet)
+			//  post-line (from points C to D) (even through D point is 'current' we don't know how we can draw it yet)
 			//
 			// Well, actually, we don't need to *know* the point A, just the vector A->B
-			// 
-			// 'Dpoint' we get in the args is the D point.
 			var Cpoint = new Point(stroke.x[positionInStroke-1], stroke.y[positionInStroke-1])
 				, Dpoint = new Point(stroke.x[positionInStroke], stroke.y[positionInStroke])
 				, CDvector = Cpoint.getVectorToPoint(Dpoint)
@@ -640,8 +638,8 @@ var Initializer = function($){
 			if(positionInStroke > 1) {
 				// we are here when there are at least 3 points in stroke array.
 				var Bpoint = new Point(stroke.x[positionInStroke-2], stroke.y[positionInStroke-2])
-					, BCvector = Bpoint.getVectorToPoint(Cpoint)
-					, ABvector
+				, BCvector = Bpoint.getVectorToPoint(Cpoint)
+				, ABvector
 				if(BCvector.getLength() > lineCurveThreshold){
 					// Yey! Pretty curves, here we come!
 					if(positionInStroke > 2) {
@@ -650,9 +648,18 @@ var Initializer = function($){
 					} else {
 						ABvector = new Vector(0,0)
 					}
-					var halflen = BCvector.getLength() * 0.35
-						, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(halflen)
-						, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(halflen)
+
+					var minlenfraction = 0.05
+					, maxlen = BCvector.getLength() * 0.35
+					, ABCangle = BCvector.angleTo(ABvector.reverse())
+					, BCDangle = CDvector.angleTo(BCvector.reverse())
+					, BCP1vector = new Vector(ABvector.x + BCvector.x, ABvector.y + BCvector.y).resizeTo(
+						Math.max(minlenfraction, ABCangle) * maxlen
+					)
+					, CCP2vector = (new Vector(BCvector.x + CDvector.x, BCvector.y + CDvector.y)).reverse().resizeTo(
+						Math.max(minlenfraction, BCDangle) * maxlen
+					)
+					
 					basicCurve(
 						Bpoint.x
 						, Bpoint.y
