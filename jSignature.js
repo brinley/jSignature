@@ -508,7 +508,7 @@ var Initializer = function($){
 			return true
 		}
 		, timer = null // used for endign stroke when no movement occurs for some time.
-		, clearIdeeTimeout = function(){
+		, clearIdleTimeout = function(){
 			clearTimeout(timer)
 		}
 		, drawEndHandler = function(e) {
@@ -516,7 +516,7 @@ var Initializer = function($){
 				e.preventDefault()						
 			} catch (ex) {
 			}
-			clearIdeeTimeout()
+			clearIdleTimeout()
 			dataEngine.endStroke()
 		}
 		, resetIdleTimeout = function(){
