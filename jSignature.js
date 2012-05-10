@@ -749,7 +749,7 @@ var Initializer = function($){
 				canvas.onmousedown = null
 				canvas.onmouseup = null
 				canvas.onmousemove = null
-				fatFingerCompensation = (settings.lineWidth*-5 < -15) ? settings.lineWidth * -5 : -15 // ngative to shift up.
+				fatFingerCompensation = settings.lineWidth * -5 - 15 // ngative to shift up.
 				drawStartHandler(e)
 				canvas.ontouchend = drawEndHandler
 				canvas.ontouchstart = drawStartHandler
