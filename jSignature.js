@@ -300,12 +300,15 @@ var Initializer = function($){
 	}
 	
 	var apinamespace = 'jSignature'
+	, boundevents = {}
 	, initBase = function(options) {
 		
+		var pubsubtokens = {}
+		
 		var settings = {
-			'width' : 'max'
-			,'height' : 'max'
-			,'sizeRatio': 4 // only used when width or height = 'max'
+			'width' : 'ratio'
+			,'height' : 'ratio'
+			,'sizeRatio': 4 // only used when height = 'ratio'
 			,'color' : '#000'
 			,'background-color': '#fff'
 			,'decor-color': '#eee'
@@ -318,67 +321,70 @@ var Initializer = function($){
 			$.extend(settings, options)
 		}
 		
-		if (settings.width == 'max' || settings.height == 'max'){
-			// this maxes the sig widget within the parent container.
-			var pw = $parent.width()
-				, ph = $parent.height()
-			if ((pw / settings.sizeRatio) > ph) {
-				ph = parseInt(pw/settings.sizeRatio, 10)
-			}
-			settings.width = pw
-			settings.height = ph					
-		}
+		// We cannot work with circular dependency
+		if (settings.width === settings.height && settings.height === 'ratio') {
+        	settings.width = '100%'
+        }
 		
-		if (settings.lineWidth == 0){
-			var width = parseInt(settings.width, 10)
-				, lineWidth = parseInt( width / 300 , 10) // +1 pixel for every extra 300px of width.
-			if (lineWidth < 2) {
-			    settings.lineWidth = 2 
-			} else {
-				settings.lineWidth = lineWidth
-			}
-		}
-	
-		var small_screen = parseInt(settings.width, 10) < 1000? true : false
+		var canvas = document.createElement('canvas')
+		canvas.style.width = settings.width === 'ratio' ? '1px' : settings.width.toString(10)
+		canvas.style.height = settings.height === 'ratio' ? '1px' : settings.height.toString(10) 
+		var $canvas = $(canvas)
+		$canvas.appendTo($parent)
 		
-		var $canvas = $parent.find('canvas')
-			, canvas
-		if (!$canvas.length){
-			canvas = document.createElement('canvas')
-			canvas.width = settings.width
-			canvas.height = settings.height
-			$canvas = $(canvas)
-			$canvas.appendTo($parent)
-		} else {
-			canvas = $canvas.get(0)
-		}
+		// we could not do this until canvas is rendered
+		if (settings.height === 'ratio') {
+			canvas.style.height = Math.round( canvas.offsetWidth / settings.sizeRatio ).toString(10) + 'px'
+        } else if (settings.width === 'ratio') {
+			canvas.style.width = Math.round( canvas.offsetHeight * settings.sizeRatio ).toString(10) + 'px'
+        }
+		
+		canvas.width = canvas.offsetWidth
+		canvas.height = canvas.offsetHeight
+		
 		$canvas.addClass(apinamespace)
 		
 		var canvas_emulator = (function(){
-			var zoom = 1
-
 			if (canvas.getContext){
 				return false
 			} else if (typeof FlashCanvas !== "undefined") {
-				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. It matches pixel-to-pixel to screen instead.
-				// all x, y coords need to be scaled from pagezoom to Flash window.
-				// since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
+				canvas = FlashCanvas.initElement(canvas)
+				
+				var zoom = 1
+				// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. 
+				// It matches pixel-to-pixel to screen instead.
+				// Since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
 				if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
 					zoom = window.screen.deviceXDPI * 1.0 / window.screen.logicalXDPI
 				}
-				canvas = FlashCanvas.initElement(canvas)
-				// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
-				// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
 				if (zoom !== 1){
+					// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
+					// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
 					$canvas.children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
+					// And by applying "scale" transformation we can talk "browser pixels" to FlashCanvas
+					// and have it translate the "browser pixels" to "screen pixels"
 					canvas.getContext('2d').scale(zoom, zoom)
+					// Note to self: don't reuse Canvas element. Repeated "scale" are cumulative.
 				}
 				return true
 			} else {
 				throw new Error("Canvas element does not support 2d context. "+apinamespace+" cannot proceed.")			
 			}
 		})();
+
+		settings.lineWidth = (function(defaultLineWidth, canvasWidth){
+			if (defaultLineWidth === 0){
+				return Math.max(
+					Math.round(canvasWidth / 400) /*+1 pixel for every extra 300px of width.*/
+					, 2 /* minimum line width */
+				) 
+			} else {
+				return defaultLineWidth
+			}
+		})(settings.lineWidth, canvas.width);
 	
+		var small_screen = canvas.width < 600 ? true : false
+		
 		// normally select preventer would be short, but
 		// vml-based Canvas emulator on IE does NOT provide value for Event. Hence this convoluted line.
 		canvas.onselectstart = function(e){if(e && e.preventDefault){e.preventDefault()}; if(e && e.stopPropagation){e.stopPropagation()}; return false;}
@@ -469,6 +475,8 @@ var Initializer = function($){
 			dataEngine.changed = function(){ $parent.trigger('change') }
 			
 			$canvas.data(apinamespace+'.data', data)
+			settings.data = data
+			$canvas.data(apinamespace+'.settings', settings)
 			
 			// import filters will be passing this back as indication of "we rendered"
 			return true
@@ -731,12 +739,125 @@ var Initializer = function($){
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
 		// $canvas.data(apinamespace+'.settings', settings)
 		$canvas.data(apinamespace+'.reset', resetCanvas)
-		
+
+		// If we have proportional width, we sign up to events broadcasting "window resized" and checking if
+		// parent's width changed. If so, we (1) extract settings + data from current signature pad,
+		// (2) remove signature pad from parent, and (3) reinit new signature pad at new size with same settings, (rescaled) data.
+		if ((function(settingsWidth){
+				return ( settingsWidth === 'ratio' || settingsWidth.split('')[settingsWidth.length - 1] === '%' )
+			})(settings.width.toString(10))
+		) {
+
+			pubsubtokens[apinamespace + '.parentresized'] = $.fn[apinamespace]('PubSub').subscribe(
+				apinamespace + '.parentresized'
+				, (function(pubsubtokens, apinamespace, $parent, originalParentWidth, sizeRatio){
+					'use strict'
+	
+					return function(){
+						'use strict'
+						var w = $parent.width()
+						if (w !== originalParentWidth) {
+						
+							// UNsubscribing this particular instance of signature pad only.
+							// there is a separate `pubsubtokens` per each instance of signature pad 
+							var pubsub = $parent[apinamespace]('PubSub')
+							for (var key in pubsubtokens){
+								if (pubsubtokens.hasOwnProperty(key)) {
+									pubsub.unsubscribe(pubsubtokens[key])
+									delete pubsubtokens[key]               	
+	                            }
+							}
+	
+							// $parent sits in upper closue because it's part of upper self-exec'ing function's args.
+							// we support separate parent for each instance of signature pad.
+							// in other words, you can still have more than one signature pad per page.
+							var $canvas = $parent.find('canvas')
+							, settings = $canvas.data(apinamespace+'.settings')
+							$canvas.remove()
+							
+							// scale data to new signature pad size
+							settings.data = (function(data, scale){
+								var newData = []
+								var o, i, l, j, m, stroke
+								for ( i = 0, l = data.length; i < l; i++) {
+                                	stroke = data[i]
+                                	
+                                	o = {'x':[],'y':[]}
+                                	
+                                	for ( j = 0, m = stroke.x.length; j < m; j++) {
+                                    	o.x.push(stroke.x[j] * scale)
+                                    	o.y.push(stroke.y[j] * scale)
+                                    }
+                                
+                                	newData.push(o)
+                                }
+								return newData
+							})(
+								settings.data
+								, w * 1.0 / originalParentWidth
+							)
+							
+							$parent[apinamespace](settings)
+				        }
+					}
+				})(
+					pubsubtokens
+					, apinamespace
+					, $parent
+					, $parent.width()
+					, canvas.width * 1.0 / canvas.height
+				)
+			)
+        }
+
+		// we have one (aka `singleton`) `boundevents' per whole jSignature. 
+		if (! boundevents['windowresize']) {
+			boundevents['windowresize'] = true
+			
+			;(function(apinamespace, $, window){
+				'use strict'
+
+				var resizetimer
+				, runner = function(){
+					$.fn[apinamespace]('PubSub').publish(
+						apinamespace + '.parentresized'
+					)
+				}
+
+				$(window).bind('resize.'+apinamespace, function(){
+					if (resizetimer) {
+		                clearTimeout(resizetimer)
+					}
+					resizetimer = setTimeout( 
+						runner
+						, 700
+					)
+				})
+			})(apinamespace, $, window)
+		} 
+
 		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
-		$(document).bind('mouseup.'+apinamespace, drawEndHandler)
 		// it is bettr than
 		// $canvas.bind('mouseout', drawEndHandler)
 		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
+		pubsubtokens[apinamespace + '.windowmouseup'] = $.fn[apinamespace]('PubSub').subscribe(
+			apinamespace + '.windowmouseup'
+			, drawEndHandler
+		)
+		
+		if (! boundevents['windowmouseup']) {
+			boundevents['windowmouseup'] = true
+
+			;(function(apinamespace, $, window){
+				'use strict'
+				$(window).bind('mouseup.'+apinamespace, function(e){
+					$.fn[apinamespace]('PubSub').publish(
+						apinamespace + '.windowmouseup'
+						, e
+					)
+				})
+			})(apinamespace, $, window)
+		}
 		
 		resetCanvas(settings.data)
 	} // end of initBase
@@ -837,23 +958,97 @@ var Initializer = function($){
 		return this
 	}
 
+	var PubSubInstance = new (function(){
+	    'use strict'
+	    /*  @preserve 
+	    -----------------------------------------------------------------------------------------------
+	    PubSub
+	    2012 (c) ddotsenko@willowsystems.com
+	    based on Peter Higgins (dante@dojotoolkit.org)
+	    Loosely based on Dojo publish/subscribe API, limited in scope. Rewritten blindly.
+	    Original is (c) Dojo Foundation 2004-2010. Released under either AFL or new BSD, see:
+	    http://dojofoundation.org/license for more information.
+	    -----------------------------------------------------------------------------------------------
+	    */
+	    this.topics = {};
+	    /**
+	     * Allows caller to emit an event and pass arguments to event listeners.
+	     * @public
+	     * @function
+	     * @param topic {String} Name of the channel on which to voice this event
+	     * @param **arguments Any number of arguments you want to pass to the listeners of this event.
+	     */
+	    this.publish = function(topic, arg1, arg2, etc) {
+	        'use strict'
+	        if (this.topics[topic]) {
+	            var currentTopic = this.topics[topic]
+	            , args = Array.prototype.slice.call(arguments, 1)
+	            
+	            for (var i = 0, l = currentTopic.length; i < l; i++) {
+	                currentTopic[i].apply(null, args);
+	            }
+	        }
+	    };
+	    /**
+	     * Allows listener code to subscribe to channel and be called when data is available 
+	     * @public
+	     * @function
+	     * @param topic {String} Name of the channel on which to voice this event
+	     * @param callback {Function} Executable (function pointer) that will be ran when event is voiced on this channel.
+	     * @returns {Object} A token object that cen be used for unsubscribing.  
+	     */
+	    this.subscribe = function(topic, callback) {
+	        'use strict'
+	        if (!this.topics[topic]) {
+	            this.topics[topic] = [callback];
+	        } else {
+	            this.topics[topic].push(callback);
+	        }
+	        return {
+	            "topic": topic,
+	            "callback": callback
+	        };
+	    };
+	    /**
+	     * Allows listener code to unsubscribe from a channel 
+	     * @public
+	     * @function
+	     * @param token {Object} A token object that was returned by `subscribe` method 
+	     */
+	    this.unsubscribe = function(token) {
+	        if (this.topics[token.topic]) {
+	            var currentTopic = this.topics[token.topic]
+	            
+	            for (var i = 0, l = currentTopic.length; i < l; i++) {
+	                if (currentTopic[i] === token.callback) {
+	                    currentTopic.splice(i, 1)
+	                }
+	            }
+	        }
+	    }
+	})();
+	
 	//These are exposed as methods under $obj.jSignature('methodname', *args)
 	var methods = {
-		init : function( options ) {
+		'init' : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
+		, 'getSettings' : function() {
+			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
+			return $canvas.data(apinamespace+'.settings')
+		}
 		// around since v1
-		, clear : _clearDrawingArea
+		, 'clear' : _clearDrawingArea
 		// was mistakenly introduced instead of 'clear' in v2
-		, reset : _clearDrawingArea
-		, addPlugin : function(pluginType, pluginName, callable){
+		, 'reset' : _clearDrawingArea
+		, 'addPlugin' : function(pluginType, pluginName, callable){
 			var plugins = {'export':exportplugins, 'import':importplugins}
 			if (plugins.hasOwnProperty(pluginType)){
 				plugins[pluginType][pluginName] = callable
 			}
 			return this
 		}
-		, listPlugins : function(pluginType){
+		, 'listPlugins' : function(pluginType){
 			var plugins = {'export':exportplugins, 'import':importplugins}
 			, answer = []
 			if (plugins.hasOwnProperty(pluginType)){
@@ -866,7 +1061,7 @@ var Initializer = function($){
 			}
 			return answer
 		}
-		, getData : function( formattype ) {
+		, 'getData' : function( formattype ) {
 			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
 			if (formattype === undef) formattype = 'default'
 			if ($canvas.length !== 0 && exportplugins.hasOwnProperty(formattype)){				
@@ -877,22 +1072,23 @@ var Initializer = function($){
 			}
 		}
 		// around since v1. Took only one arg - data-url-formatted string with (likely png of) signature image
-		, importData : _setDrawingData
+		, 'importData' : _setDrawingData
 		// was mistakenly introduced instead of 'importData' in v2
-		, setData : _setDrawingData
+		, 'setData' : _setDrawingData
+		, 'PubSub' : function(){return PubSubInstance} 
 	} // end of methods declaration.
 	
 	$.fn[apinamespace] = function(method) {
-		if ( methods[method] ) {
-			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
-		} else if ( typeof method === 'object' || ! method ) {
+		'use strict'
+		if ( !method || typeof method === 'object' ) {
 			return methods.init.apply( this, arguments )
+		} else if ( typeof method === 'string' && methods[method] ) {
+			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ))
 		} else {
-			$.error( 'Method ' +  method + ' does not exist on jQuery.' + apinamespace )
+			$.error( 'Method ' +  String(method) + ' does not exist on jQuery.' + apinamespace )
 		}
 	}
-	
-	return $
+
 } // end of Initializer
 
 ////Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
