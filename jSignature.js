@@ -757,10 +757,7 @@ var Initializer = function($){
 						'use strict'
 						var w = $parent.width()
 						if (w !== originalParentWidth) {
-
-							// this one sits in upper closue because it's part of upper self-exec'ing function's args.
-							originalParentWidth = w
-							
+						
 							// UNsubscribing this particular instance of signature pad only.
 							// there is a separate `pubsubtokens` per each instance of signature pad 
 							var pubsub = $parent[apinamespace]('PubSub')
@@ -771,14 +768,35 @@ var Initializer = function($){
 	                            }
 							}
 	
-							console.log("We have proportional signature pad: resized")
-	
 							// $parent sits in upper closue because it's part of upper self-exec'ing function's args.
 							// we support separate parent for each instance of signature pad.
 							// in other words, you can still have more than one signature pad per page.
 							var $canvas = $parent.find('canvas')
 							, settings = $canvas.data(apinamespace+'.settings')
 							$canvas.remove()
+							
+							// scale data to new signature pad size
+							settings.data = (function(data, scale){
+								var newData = []
+								var o, i, l, j, m, stroke
+								for ( i = 0, l = data.length; i < l; i++) {
+                                	stroke = data[i]
+                                	
+                                	o = {'x':[],'y':[]}
+                                	
+                                	for ( j = 0, m = stroke.x.length; j < m; j++) {
+                                    	o.x.push(stroke.x[j] * scale)
+                                    	o.y.push(stroke.y[j] * scale)
+                                    }
+                                
+                                	newData.push(o)
+                                }
+								return newData
+							})(
+								settings.data
+								, w * 1.0 / originalParentWidth
+							)
+							
 							$parent[apinamespace](settings)
 				        }
 					}
