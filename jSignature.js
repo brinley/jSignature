@@ -881,21 +881,21 @@ var Initializer = function($){
 
 	//These are exposed as methods under $obj.jSignature('methodname', *args)
 	var methods = {
-		init : function( options ) {
+		'init' : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
 		}
 		// around since v1
-		, clear : _clearDrawingArea
+		, 'clear' : _clearDrawingArea
 		// was mistakenly introduced instead of 'clear' in v2
-		, reset : _clearDrawingArea
-		, addPlugin : function(pluginType, pluginName, callable){
+		, 'reset' : _clearDrawingArea
+		, 'addPlugin' : function(pluginType, pluginName, callable){
 			var plugins = {'export':exportplugins, 'import':importplugins}
 			if (plugins.hasOwnProperty(pluginType)){
 				plugins[pluginType][pluginName] = callable
 			}
 			return this
 		}
-		, listPlugins : function(pluginType){
+		, 'listPlugins' : function(pluginType){
 			var plugins = {'export':exportplugins, 'import':importplugins}
 			, answer = []
 			if (plugins.hasOwnProperty(pluginType)){
@@ -908,7 +908,7 @@ var Initializer = function($){
 			}
 			return answer
 		}
-		, getData : function( formattype ) {
+		, 'getData' : function( formattype ) {
 			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
 			if (formattype === undef) formattype = 'default'
 			if ($canvas.length !== 0 && exportplugins.hasOwnProperty(formattype)){				
@@ -919,9 +919,9 @@ var Initializer = function($){
 			}
 		}
 		// around since v1. Took only one arg - data-url-formatted string with (likely png of) signature image
-		, importData : _setDrawingData
+		, 'importData' : _setDrawingData
 		// was mistakenly introduced instead of 'importData' in v2
-		, setData : _setDrawingData
+		, 'setData' : _setDrawingData
 	} // end of methods declaration.
 	
 	$.fn[apinamespace] = function(method) {
