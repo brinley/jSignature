@@ -54,7 +54,7 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 			// coords are converted into series of vectors:
 			// [512, 514, 520]
 			// [512, +2, +6]
-			nwhole = data[i]
+			nwhole = Math.round(data[i])
 			n = nwhole - lastwhole			
 			lastwhole = nwhole
 

@@ -275,8 +275,8 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		// see SVG documentation for Path element's 'd' argument.
 		var lines = [
 			'M' // move to
-			, x = (stroke.x[0] - shiftx)
-			, y = (stroke.y[0] - shifty)
+			, x = round( (stroke.x[0] - shiftx), 2)
+			, y = round( (stroke.y[0] - shifty), 2)
 		]
 		// processing all points but first and last. 
 		, i = 1 // index zero item in there is STARTING point. we already extracted it.
