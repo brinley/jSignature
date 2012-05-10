@@ -300,7 +300,10 @@ var Initializer = function($){
 	}
 	
 	var apinamespace = 'jSignature'
+	, boundevents = {}
 	, initBase = function(options) {
+		
+		var pubsubtokens = {}
 		
 		var settings = {
 			'width' : 'ratio'
@@ -472,6 +475,8 @@ var Initializer = function($){
 			dataEngine.changed = function(){ $parent.trigger('change') }
 			
 			$canvas.data(apinamespace+'.data', data)
+			settings.data = data
+			$canvas.data(apinamespace+'.settings', settings)
 			
 			// import filters will be passing this back as indication of "we rendered"
 			return true
@@ -734,38 +739,74 @@ var Initializer = function($){
 		//  $canvas.data('signature.data', data) is set every time we reset canvas. See resetCanvas
 		// $canvas.data(apinamespace+'.settings', settings)
 		$canvas.data(apinamespace+'.reset', resetCanvas)
-		
-		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
-		$(document).bind('mouseup.'+apinamespace, drawEndHandler)
-		// it is bettr than
-		// $canvas.bind('mouseout', drawEndHandler)
-		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
-		
+
+		// If we have proportional width, we sign up to events broadcasting "window resized" and checking if
+		// parent's width changed. If so, we (1) extract settings + data from current signature pad,
+		// (2) remove signature pad from parent, and (3) reinit new signature pad at new size with same settings, (rescaled) data.
 		if ((function(settingsWidth){
 				return ( settingsWidth === 'ratio' || settingsWidth.split('')[settingsWidth.length - 1] === '%' )
 			})(settings.width.toString(10))
 		) {
 
-			(function(originalParentWidth, sizeRatio){
+			pubsubtokens[apinamespace + '.parentresized'] = $.fn[apinamespace]('PubSub').subscribe(
+				apinamespace + '.parentresized'
+				, (function(pubsubtokens, apinamespace, $parent, originalParentWidth, sizeRatio){
+					'use strict'
+	
+					return function(){
+						'use strict'
+						var w = $parent.width()
+						if (w !== originalParentWidth) {
+
+							// this one sits in upper closue because it's part of upper self-exec'ing function's args.
+							originalParentWidth = w
+							
+							// UNsubscribing this particular instance of signature pad only.
+							// there is a separate `pubsubtokens` per each instance of signature pad 
+							var pubsub = $parent[apinamespace]('PubSub')
+							for (var key in pubsubtokens){
+								if (pubsubtokens.hasOwnProperty(key)) {
+									pubsub.unsubscribe(pubsubtokens[key])
+									delete pubsubtokens[key]               	
+	                            }
+							}
+	
+							console.log("We have proportional signature pad: resized")
+	
+							// $parent sits in upper closue because it's part of upper self-exec'ing function's args.
+							// we support separate parent for each instance of signature pad.
+							// in other words, you can still have more than one signature pad per page.
+							var $canvas = $parent.find('canvas')
+							, settings = $canvas.data(apinamespace+'.settings')
+							$canvas.remove()
+							$parent[apinamespace](settings)
+				        }
+					}
+				})(
+					pubsubtokens
+					, apinamespace
+					, $parent
+					, $parent.width()
+					, canvas.width * 1.0 / canvas.height
+				)
+			)
+        }
+
+		// we have one (aka `singleton`) `boundevents' per whole jSignature. 
+		if (! boundevents['windowresize']) {
+			boundevents['windowresize'] = true
+			
+			;(function(apinamespace, $, window){
 				'use strict'
 
 				var resizetimer
-				, parentWidth = originalParentWidth
 				, runner = function(){
-					var w = $parent.width()
-					if (w !== parentWidth) {
-	                	parentWidth = w
-	        			console.log("We have proportional signature pad: resized")
-	        			
-	        			settings.data = $canvas.data(apinamespace+'.data') 
-	        			
-	        			$canvas.remove()
-	        			
-	        			$parent[apinamespace](settings)
-	                }
+					$.fn[apinamespace]('PubSub').publish(
+						apinamespace + '.parentresized'
+					)
 				}
-				
-				$(window).bind('resize', function(){
+
+				$(window).bind('resize.'+apinamespace, function(){
 					if (resizetimer) {
 		                clearTimeout(resizetimer)
 					}
@@ -774,11 +815,31 @@ var Initializer = function($){
 						, 700
 					)
 				})
-			})(
-				$parent.width()
-				, canvas.width * 1.0 / canvas.height
-			)
-        }
+			})(apinamespace, $, window)
+		} 
+
+		// on mouseout + mouseup canvas did not know that mouseUP fired. Continued to draw despite mouse UP.
+		// it is bettr than
+		// $canvas.bind('mouseout', drawEndHandler)
+		// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
+		pubsubtokens[apinamespace + '.windowmouseup'] = $.fn[apinamespace]('PubSub').subscribe(
+			apinamespace + '.windowmouseup'
+			, drawEndHandler
+		)
+		
+		if (! boundevents['windowmouseup']) {
+			boundevents['windowmouseup'] = true
+
+			;(function(apinamespace, $, window){
+				'use strict'
+				$(window).bind('mouseup.'+apinamespace, function(e){
+					$.fn[apinamespace]('PubSub').publish(
+						apinamespace + '.windowmouseup'
+						, e
+					)
+				})
+			})(apinamespace, $, window)
+		}
 		
 		resetCanvas(settings.data)
 	} // end of initBase
@@ -953,6 +1014,10 @@ var Initializer = function($){
 	var methods = {
 		'init' : function( options ) {
 			return this.each( function() {initBase.call(this, options)} ) // end Each
+		}
+		, 'getSettings' : function() {
+			var undef, $canvas=this.find('canvas.'+apinamespace).add(this.filter('canvas.'+apinamespace))
+			return $canvas.data(apinamespace+'.settings')
 		}
 		// around since v1
 		, 'clear' : _clearDrawingArea
