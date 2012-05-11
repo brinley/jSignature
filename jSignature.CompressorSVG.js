@@ -288,6 +288,9 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		}
 		if (l > 0 /* effectively more than 1, since we "-1" above */){
 			lines.push.apply(lines, lastSegmentToCurve(stroke, i, lineCurveThreshold))
+		} else if (l === 0){
+			// meaning we only have ONE point in the stroke (and otherwise refer to the stroke as "dot")
+			lines.push.apply(lines, ['l' , 1, 1])
 		}
 		return lines.join(' ')
 	}
