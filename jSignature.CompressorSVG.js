@@ -1,20 +1,18 @@
 /** @license
-==============
 jSignature v2 SVG export plugin.
 Copyright (c) 2012 Willow Systems Corp http://willow-systems.com
 MIT License <http://www.opensource.org/licenses/mit-license.php>
-============== 
- */
 
-(function(){
+*/
+
+;(function(){
 	
-	/** @preserve
-	 ==============
-	 Simplify.js BSD 
-	 (c) 2012, Vladimir Agafonkin
-	 mourner.github.com/simplify-js
-	 ==============
-	*/
+/** @preserve
+Simplify.js BSD 
+(c) 2012, Vladimir Agafonkin
+mourner.github.com/simplify-js
+
+*/
 	(function(a,b){function c(a,b){var c=a.x-b.x,d=a.y-b.y;return c*c+d*d}function d(a,b,c){var d=b.x,e=b.y,f=c.x-d,g=c.y-e,h;if(f!==0||g!==0)h=((a.x-d)*f+(a.y-e)*g)/(f*f+g*g),h>1?(d=c.x,e=c.y):h>0&&(d+=f*h,e+=g*h);return f=a.x-d,g=a.y-e,f*f+g*g}function e(a,b){var d,e=a.length,f,g=a[0],h=[g];for(d=1;d<e;d++)f=a[d],c(f,g)>b&&(h.push(f),g=f);return g!==f&&h.push(f),h}function f(a,c){var e=a.length,f=typeof Uint8Array!=b+""?Uint8Array:Array,g=new f(e),h=0,i=e-1,j,k,l,m,n=[],o=[],p=[];g[h]=g[i]=1;while(i){k=0;for(j=h+1;j<i;j++)l=d(a[j],a[h],a[i]),l>k&&(m=j,k=l);k>c&&(g[m]=1,n.push(h),o.push(m),n.push(m),o.push(i)),h=n.pop(),i=o.pop()}for(j=0;j<e;j++)g[j]&&p.push(a[j]);return p}"use strict";var g=typeof exports!=b+""?exports:a;g.simplify=function(a,c,d){var g=c!==b?c*c:1;return d||(a=e(a,g)),a=f(a,g),a}})(this);
 	
 	function Vector(x,y){
@@ -383,22 +381,19 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 	if (typeof btoa !== 'function')
 	{
 		function btoa(data) {
-			/** @preserve
-			====================================================================
-			base64 encoder
-			MIT, GPL
-		
-			version: 1109.2015
-			discuss at: http://phpjs.org/functions/base64_encode
-			+   original by: Tyler Akins (http://rumkin.com)
-			+   improved by: Bayron Guevara
-			+   improved by: Thunder.m
-			+   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-			+   bugfixed by: Pellentesque Malesuada
-			+   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-			+   improved by: Rafal Kukawski (http://kukawski.pl)
-			====================================================================
-			*/
+/** @preserve
+base64 encoder
+MIT, GPL
+http://phpjs.org/functions/base64_encode
++   original by: Tyler Akins (http://rumkin.com)
++   improved by: Bayron Guevara
++   improved by: Thunder.m
++   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
++   bugfixed by: Pellentesque Malesuada
++   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
++   improved by: Rafal Kukawski (http://kukawski.pl)
+
+*/
 		    var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 		    , b64a = b64.split('')
 		    , o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
@@ -474,4 +469,4 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
 Initializer(this.jQuery)
 
-}).call(typeof window !== 'undefined'? window : this)
+}).call(typeof window !== 'undefined'? window : this);
