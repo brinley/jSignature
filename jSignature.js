@@ -339,6 +339,7 @@ var Initializer = function($){
 			,'background-color': '#fff'
 			,'decor-color': '#eee'
 			,'lineWidth' : 0
+			,'minFatFingerCompensation' : -10
 		}
 		
 		var $parent = $(this)
@@ -749,7 +750,10 @@ var Initializer = function($){
 				canvas.onmousedown = null
 				canvas.onmouseup = null
 				canvas.onmousemove = null
-				fatFingerCompensation = settings.lineWidth * -5 - 15 // ngative to shift up.
+				fatFingerCompensation = (
+					settings.minFatFingerCompensation && 
+					settings.lineWidth * -3 > settings.minFatFingerCompensation
+				) ? settings.lineWidth * -3 : settings.minFatFingerCompensation
 				drawStartHandler(e)
 				canvas.ontouchend = drawEndHandler
 				canvas.ontouchstart = drawStartHandler
