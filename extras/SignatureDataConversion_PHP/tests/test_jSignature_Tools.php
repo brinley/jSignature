@@ -69,5 +69,35 @@ class jSignature_Tools_Tests extends PHPUnit_Framework_TestCase
 
     }
 
+    public function testSVG_to_PNG() {
+
+        // this just calls GraphicsMagic / ImageMagic executable directly.
+        // it's fricken difficult to get gmagick or imagick DLL on Windows,
+        // and I don't intend to bend over backwards to get there.
+
+        // If you want to add imagick, or gmagick based semi-pure-PHP test, you go ahead.
+
+        $input = 'test.svg';
+        $expected = 'test.png';
+        $actual = 'tmp.png';
+
+        if (file_exists($actual)) {
+            unlink($actual); // boy, what a strange way to call "delete file" function.
+        }
+
+        $renderer_executable = '\bin\gm\gm.exe'; // GraphicsMagic, Windows.
+        $maxsize = 200;
+
+        $command = $renderer_executable.' convert '.$input.' -scale '.$maxsize.'x'.$maxsize.' -render '.$actual ;
+        
+        exec($command);
+
+        $this->assertFileEquals(
+            $expected
+            , $actual
+        );
+
+    }
+
 }
 ?>
