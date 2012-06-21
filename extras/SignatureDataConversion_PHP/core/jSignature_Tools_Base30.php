@@ -1,7 +1,9 @@
 <?php
-
-// Converts 'base30' strings into 
-
+/** @license
+jSignature v2 SVG export plugin.
+Copyright (c) 2012 Willow Systems Corp http://willow-systems.com
+MIT License <http://www.opensource.org/licenses/mit-license.php>
+*/
 class jSignature_Tools_Base30 {
 
     // private $acceptedformat = 'image/jsignature;base30';
