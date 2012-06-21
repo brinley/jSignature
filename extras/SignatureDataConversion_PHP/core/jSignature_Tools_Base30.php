@@ -39,11 +39,11 @@ class jSignature_Tools_Base30 {
 
     $leg = '7UZ32232263353223222333242';
 
-    $a = $c->uncompressstrokeleg($leg);
+    $a = $c->uncompress_stroke_leg($leg);
 
     $t == $a
     */
-    public function uncompressstrokeleg($datastring){
+    private function uncompress_stroke_leg($datastring){
         global $charmap, $charmap_reverse, $bitness, $minus, $plus;
 
         // we convert half-stroke (only 'x' series or only 'y' series of numbers)
@@ -129,11 +129,11 @@ class jSignature_Tools_Base30 {
         )
     );
 
-    $a = $c->uncompressstrokes($signature);
+    $a = $c->Base64ToNative($signature);
 
     $t == $a
     */
-    public function uncompressstrokes($datastring){
+    public function Base64ToNative($datastring){
         global $chunkSeparator;
 
         $data = array();
@@ -141,8 +141,8 @@ class jSignature_Tools_Base30 {
         $l = sizeof($chunks) / 2;
         for ($i = 0; $i < $l; $i++){
             array_push( $data, array(
-                'x' => $this->uncompressstrokeleg($chunks[$i*2])
-                , 'y' => $this->uncompressstrokeleg($chunks[$i*2+1])
+                'x' => $this->uncompress_stroke_leg($chunks[$i*2])
+                , 'y' => $this->uncompress_stroke_leg($chunks[$i*2+1])
             ));
         }
         return $data;

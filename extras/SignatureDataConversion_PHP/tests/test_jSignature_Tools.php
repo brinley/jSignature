@@ -4,20 +4,22 @@ require_once '../core/jSignature_Tools_SVG.php';
 
 class jSignature_Tools_Tests extends PHPUnit_Framework_TestCase
 {
-    public function testBase30_to_Native_Leg() {
+    // // method uncompress_stroke_leg is private now. Cannot test without
+    // // bending over backwards.
+    // public function testBase30_to_Native_Leg() {
 
-        $converter = new jSignature_Tools_Base30();
+    //     $converter = new jSignature_Tools_Base30();
 
-        $expected = array(236, 233, 231, 229, 226, 224, 222, 216, 213, 210, 205, 202, 200, 198, 195, 193, 191, 189, 186, 183, 180, 178, 174, 172);
+    //     $expected = array(236, 233, 231, 229, 226, 224, 222, 216, 213, 210, 205, 202, 200, 198, 195, 193, 191, 189, 186, 183, 180, 178, 174, 172);
 
-        $leg = '7UZ32232263353223222333242';
-        $actual = $converter->uncompressstrokeleg($leg);
+    //     $leg = '7UZ32232263353223222333242';
+    //     $actual = $converter->uncompress_stroke_leg($leg);
 
-        $this->assertEquals(
-            $expected
-            , $actual
-        );
-    }
+    //     $this->assertEquals(
+    //         $expected
+    //         , $actual
+    //     );
+    // }
 
     public function testBase30_to_Native_Full() {
 
@@ -35,7 +37,7 @@ class jSignature_Tools_Tests extends PHPUnit_Framework_TestCase
             )
         );
 
-        $actual = $converter->uncompressstrokes($signature);
+        $actual = $converter->Base64ToNative($signature);
 
         $this->assertEquals(
             $expected
