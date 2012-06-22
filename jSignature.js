@@ -499,23 +499,8 @@ var Initializer = function($){
 			dataEngine.startStrokeFn = strokeStartCallback
 			dataEngine.addToStrokeFn = strokeAddCallback
 			dataEngine.endStrokeFn = strokeEndCallback
-
-			// there are two ways to trigger 'change' ('onchange') events
-			// The jQuery way:
-			dataEngine.changed = function(){ $parent.trigger('change.'+apinamespace) }
-			// and the native, DOM way. See http://stackoverflow.com/a/2490876/366864
-			// The bonus of jQuery way is that the event is guaranteed to bubble up, 
-			// as some native events don't bubble on IE, for example.
-			// The negative of the jQuery way is that it does not trigger (all) event
-			// handlers attached natively (addEventListener, attachEvent etc)
-			// Another negative of native events is their inability to handle "namespaced"
-			// (for example "change.MyApplication") events. They just die.
-			// So, although i would like to emit native events here, so that all
-			// types of listeners would hear, in reality, only jQuery listeners would
-			// *realiably* hear the events, and I get "namespaced" as bonus.
-			// With namespaces, jQuery-attached listeners, regardless if they are
-			// attached as "change" or "change.jSignature" they will be triggered
-
+			dataEngine.changed = function(){ $parent.trigger('change') }
+			
 			$canvas.data(apinamespace+'.data', data)
 			settings.data = data
 			$canvas.data(apinamespace+'.settings', settings)
