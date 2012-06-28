@@ -15,10 +15,7 @@
 <script type="text/javascript" src="libs/flashcanvas.js"></script>
 <![endif]-->
 <style type="text/css">
-	canvas { border: 1px dotted #000;}
-	
-	#signatureparent {color:darkblue;background-color:lightgrey;}
-	
+
 	div {
 		margin-top:1em;
 		margin-bottom:1em;
@@ -32,6 +29,19 @@
 		margin: .5em;
 	}
 	
+	#signatureparent {
+		color:darkblue;
+		background-color:darkgrey;
+		/*max-width:600px;*/
+		padding:20px;
+	}
+	
+	/*This is the div within which the signature canvas is fitted*/
+	#signature {
+		border: 2px dotted black;
+		background-color:lightgrey;
+	}
+
 	/* Drawing the 'gripper' for touch-enabled devices */ 
 	html.touch #content {
 		float:left;
@@ -52,9 +62,9 @@
 <body>
 <div>
 <div id="content">
-	<div id="signatureparent"><div>jSignature inherits colors from parent element. Text = Pen color. Background = Background. (This works even when Flash-based Canvas emulation is used.)</div>
-		<div id="signature"></div>
-	</div>
+	<div id="signatureparent">
+		<div>jSignature inherits colors from parent element. Text = Pen color. Background = Background. (This works even when Flash-based Canvas emulation is used.)</div>
+		<div id="signature"></div></div>
 	<div id="tools"></div>
 	<div><p>Display Area:</p><div id="displayarea"></div></div>
 </div>
@@ -110,7 +120,7 @@ http://dojofoundation.org/license for more information.
 $(document).ready(function() {
 	
 	// This is the part where jSignature is initialized.
-	var $sigdiv = $("#signature").jSignature()
+	var $sigdiv = $("#signature").jSignature() // {'width':200,'height':300}
 	
 	// All the code below is just code driving the demo. 
 	, $tools = $('#tools')

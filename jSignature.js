@@ -352,24 +352,50 @@ var Initializer = function($){
 		if (settings.width === settings.height && settings.height === 'ratio') {
         	settings.width = '100%'
         }
-		
+
 		var canvas = document.createElement('canvas')
-		canvas.style.width = settings.width === 'ratio' ? '1px' : settings.width.toString(10)
-		canvas.style.height = settings.height === 'ratio' ? '1px' : settings.height.toString(10) 
-		var $canvas = $(canvas)
+		, $canvas = $(canvas)
+
+		$canvas.css(
+			'margin'
+			, 0
+		).css(
+			'padding'
+			, 0
+		).css(
+			'border'
+			, 'none'
+		).css(
+			'height'
+			, settings.height === 'ratio' || !settings.height ? 1 : settings.height.toString(10)
+		).css(
+			'width'
+			, settings.width === 'ratio' || !settings.width ? 1 : settings.width.toString(10)
+		)
+
 		$canvas.appendTo($parent)
-		
-		// we could not do this until canvas is rendered
+
+		// we could not do this until canvas is rendered (appended to DOM)
 		if (settings.height === 'ratio') {
-			canvas.style.height = Math.round( canvas.offsetWidth / settings.sizeRatio ).toString(10) + 'px'
+			$canvas.css(
+				'height'
+				, Math.round( $canvas.width() / settings.sizeRatio )
+			)
         } else if (settings.width === 'ratio') {
-			canvas.style.width = Math.round( canvas.offsetHeight * settings.sizeRatio ).toString(10) + 'px'
+			$canvas.css(
+				'width'
+				, Math.round( $canvas.height() * settings.sizeRatio )
+			)
         }
-		
-		canvas.width = canvas.offsetWidth
-		canvas.height = canvas.offsetHeight
-		
+
 		$canvas.addClass(apinamespace)
+
+		// canvas's drawing area resolution is independent from canvas's size.
+		// pixels are just scaled up or down when internal resolution does not
+		// match external size. So...
+
+		canvas.width = $canvas.width()
+		canvas.height = $canvas.height()
 		
 		var canvas_emulator = (function(){
 			if (canvas.getContext){
