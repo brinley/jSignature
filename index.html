@@ -120,7 +120,7 @@ http://dojofoundation.org/license for more information.
 $(document).ready(function() {
 	
 	// This is the part where jSignature is initialized.
-	var $sigdiv = $("#signature").jSignature() // {'width':200,'height':300}
+	var $sigdiv = $("#signature").jSignature({'showUndoButton':true}) // {'width':200,'height':300}
 	
 	// All the code below is just code driving the demo. 
 	, $tools = $('#tools')

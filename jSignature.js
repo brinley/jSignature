@@ -666,6 +666,7 @@ function jSignatureClass(parent, options) {
 		,'decor-color': '#eee'
 		,'lineWidth' : 0
 		,'minFatFingerCompensation' : -10
+		,'showUndoButton': false
 		,'data': []
 	}
 	
@@ -674,6 +675,18 @@ function jSignatureClass(parent, options) {
 		$.extend(settings, options)
 	}
 	this.settings = settings
+
+	// these, when enabled, will hover above the sig area. Hence we append them to DOM before canvas.
+	var $controlbar = (function(showUndoButton){
+		if (showUndoButton) {
+			var controlbarstyle = 'padding:0 !important;margin:0 !important;'+
+				'width: 100% !important; height: 0 !important;'+
+				'margin-top:-1em !important;margin-bottom:1em !important;'
+			return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
+		} else {
+			return [] // simulating jQuery-like with ".length" property. don't know why yet.
+		}
+	})(settings.showUndoButton);
 
 	this.isCanvasEmulator = false // will be flipped by initializer when needed.
 	var canvas = this.canvas = this.initializeCanvas(settings)
@@ -819,7 +832,54 @@ function jSignatureClass(parent, options) {
 		apinamespace + '.windowmouseup'
 		, movementHandlers.drawEndHandler
 	)
-	
+
+	// hooking up "undo" button	
+	;(function(jSignatureInstance, controlsBar, apinamespace) {
+
+		if (this.settings.showUndoButton) {
+			var undoButtonSytle = 'position:absolute;display:none;margin:0 !important;top:auto'
+			var $undoButton = $('<input type="button" value="Undo last stroke" style="'+undoButtonSytle+'" />')
+					.appendTo(controlsBar)
+					.bind('click', function(){
+						jSignatureInstance.events.publish(apinamespace + '.undo')
+					})
+			// this centers the button against the canvas.
+			var buttonWidth = $undoButton.width()
+			$undoButton.css(
+				'left'
+				, Math.round(( this.canvas.width - buttonWidth ) / 2)
+			)
+			// IE 7 grows the button.
+			if ( buttonWidth !== $undoButton.width() ) {
+				$undoButton.width(buttonWidth)
+			}
+
+			this.pubsubtokens[apinamespace + '.undo'] = this.events.subscribe(
+				apinamespace + '.undo'
+				, function(){
+					var data = jSignatureInstance.dataEngine.data
+					if (data.length) {
+						data.pop()
+						jSignatureInstance.resetCanvas(data)
+						if (!data.length) {
+							$undoButton.hide()
+						}
+					}
+				}
+			)
+
+			this.pubsubtokens[apinamespace + '.change'] = this.events.subscribe(
+				apinamespace + '.change'
+				, function(){
+					if (jSignatureInstance.dataEngine.data.length) {
+						$undoButton.show()
+					}
+				}
+			)
+		}
+
+	}).call( this, this, $controlbar, apinamespace)
+
 	// If we have proportional width, we sign up to events broadcasting "window resized" and checking if
 	// parent's width changed. If so, we (1) extract settings + data from current signature pad,
 	// (2) remove signature pad from parent, and (3) reinit new signature pad at new size with same settings, (rescaled) data.
