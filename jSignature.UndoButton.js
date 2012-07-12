@@ -17,6 +17,8 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 				, function(){
 					if (jSignatureInstance.dataEngine.data.length) {
 						$undoButton.show()
+					} else {
+						$undoButton.hide()
 					}
 				}
 			)
@@ -30,7 +32,8 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 				jSignatureInstance.events.publish(eventName)
 			})
 
-			// this.eventTokens[eventName + Date.now().toString()] = 
+			// This one creates new "undo" event listener to jSignature instance
+			// It handles the actual undo-ing.
 			jSignatureInstance.events.subscribe(
 				eventName
 				, function(){
@@ -38,13 +41,9 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 					if (data.length) {
 						data.pop()
 						jSignatureInstance.resetCanvas(data)
-						if (!data.length) {
-							$undoButton.hide()
-						}
 					}
 				}
 			)
-			
 		})( 
 			this
 			, $undoButton
