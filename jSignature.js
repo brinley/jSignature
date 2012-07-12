@@ -990,6 +990,10 @@ jSignatureClass.prototype.resetCanvas = function(data){
 		, strokeEndCallback
 	)
 
+	settings.data = data  // onwindowresize handler uses it, i think.
+	$(canvas).data(apinamespace+'.data', data)
+		.data(apinamespace+'.settings', settings)
+
 	// we fire "change" event on every change in data.
 	// setting this up:
 	dataEngine.changed = (function(target, events, apinamespace) {
@@ -1001,10 +1005,6 @@ jSignatureClass.prototype.resetCanvas = function(data){
 	})(this.$parent, this.events, apinamespace)
 	// let's trigger change on all data reloads
 	dataEngine.changed()
-
-	$(canvas).data(apinamespace+'.data', data)
-		.data(apinamespace+'.settings', settings)
-	settings.data = data  // onwindowresize handler uses it, i think.
 
 	// import filters will be passing this back as indication of "we rendered"
 	return true
