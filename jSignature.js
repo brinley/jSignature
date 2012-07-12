@@ -650,11 +650,78 @@ var getDataStats = function(){
 }
 */
 
+function conditionallyLinkCanvasResizeToWindowResize(jSignatureInstance, settingsWidth, apinamespace, globalEvents){
+	'use strict'
+	if ( settingsWidth === 'ratio' || settingsWidth.split('')[settingsWidth.length - 1] === '%' ) {
+		
+		this.eventTokens[apinamespace + '.parentresized'] = globalEvents.subscribe(
+			apinamespace + '.parentresized'
+			, (function(eventTokens, $parent, originalParentWidth, sizeRatio){
+				'use strict'
 
-function jSignatureClass(parent, options) {
+				return function(){
+					'use strict'
+
+					var w = $parent.width()
+					if (w !== originalParentWidth) {
+					
+						// UNsubscribing this particular instance of signature pad only.
+						// there is a separate `eventTokens` per each instance of signature pad 
+						for (var key in eventTokens){
+							if (eventTokens.hasOwnProperty(key)) {
+								globalEvents.unsubscribe(eventTokens[key])
+								delete eventTokens[key]
+                            }
+						}
+
+						var settings = jSignatureInstance.settings
+						jSignatureInstance.$parent.children().remove()
+						for (var key in jSignatureInstance){
+							if (jSignatureInstance.hasOwnProperty(key)) {
+								delete jSignatureInstance[key]
+							}
+						}
+						
+						// scale data to new signature pad size
+						settings.data = (function(data, scale){
+							var newData = []
+							var o, i, l, j, m, stroke
+							for ( i = 0, l = data.length; i < l; i++) {
+                            	stroke = data[i]
+                            	
+                            	o = {'x':[],'y':[]}
+                            	
+                            	for ( j = 0, m = stroke.x.length; j < m; j++) {
+                                	o.x.push(stroke.x[j] * scale)
+                                	o.y.push(stroke.y[j] * scale)
+                                }
+                            
+                            	newData.push(o)
+                            }
+							return newData
+						})(
+							settings.data
+							, w * 1.0 / originalParentWidth
+						)
+						
+						$parent[apinamespace](settings)
+			        }
+				}
+			})(
+				this.eventTokens
+				, this.$parent
+				, this.$parent.width()
+				, this.canvas.width * 1.0 / this.canvas.height
+			)
+		)
+	}
+}
+
+
+function jSignatureClass(parent, options, instanceExtensions) {
 
 	var $parent = this.$parent = $(parent)
-	, pubsubtokens = this.pubsubtokens = {}
+	, eventTokens = this.eventTokens = {}
 	, events = this.events = new PubSubClass(this)
 	, globalEvents = $.fn[apinamespace]('globalEvents')
 	, settings = {
@@ -676,21 +743,32 @@ function jSignatureClass(parent, options) {
 	}
 	this.settings = settings
 
-	// these, when enabled, will hover above the sig area. Hence we append them to DOM before canvas.
-	var $controlbar = (function(showUndoButton){
-		if (showUndoButton) {
-			var controlbarstyle = 'padding:0 !important;margin:0 !important;'+
-				'width: 100% !important; height: 0 !important;'+
-				'margin-top:-1em !important;margin-bottom:1em !important;'
-			return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
-		} else {
-			return [] // simulating jQuery-like with ".length" property. don't know why yet.
+	for (var extensionName in instanceExtensions){
+		if (instanceExtensions.hasOwnProperty(extensionName)) {
+			instanceExtensions[extensionName].call(this, extensionName)
 		}
-	})(settings.showUndoButton);
+	}
+
+	this.events.publish(apinamespace+'.initializing')
+
+	// these, when enabled, will hover above the sig area. Hence we append them to DOM before canvas.
+	this.$controlbarUpper = (function(){
+		var controlbarstyle = 'padding:0 !important;margin:0 !important;'+
+			'width: 100% !important; height: 0 !important;'+
+			'margin-top:-1em !important;margin-bottom:1em !important;'
+		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
+	})();
 
 	this.isCanvasEmulator = false // will be flipped by initializer when needed.
 	var canvas = this.canvas = this.initializeCanvas(settings)
 	, $canvas = $(canvas)
+
+	this.$controlbarLower = (function(){
+		var controlbarstyle = 'padding:0 !important;margin:0 !important;'+
+			'width: 100% !important; height: 0 !important;'+
+			'margin-top:-1.5em !important;margin-bottom:1.5em !important;'
+		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
+	})();
 
 	this.canvasContext = canvas.getContext("2d")
 
@@ -828,128 +906,33 @@ function jSignatureClass(parent, options) {
 	// it is bettr than
 	// $canvas.bind('mouseout', drawEndHandler)
 	// because we don't want to break the stroke where user accidentally gets ouside and wants to get back in quickly.
-	pubsubtokens[apinamespace + '.windowmouseup'] = globalEvents.subscribe(
+	eventTokens[apinamespace + '.windowmouseup'] = globalEvents.subscribe(
 		apinamespace + '.windowmouseup'
 		, movementHandlers.drawEndHandler
 	)
 
-	// hooking up "undo" button	
-	;(function(jSignatureInstance, controlsBar, apinamespace) {
-
-		if (this.settings.showUndoButton) {
-			var undoButtonSytle = 'position:absolute;display:none;margin:0 !important;top:auto'
-			var $undoButton = $('<input type="button" value="Undo last stroke" style="'+undoButtonSytle+'" />')
-					.appendTo(controlsBar)
-					.bind('click', function(){
-						jSignatureInstance.events.publish(apinamespace + '.undo')
-					})
-			// this centers the button against the canvas.
-			var buttonWidth = $undoButton.width()
-			$undoButton.css(
-				'left'
-				, Math.round(( this.canvas.width - buttonWidth ) / 2)
-			)
-			// IE 7 grows the button.
-			if ( buttonWidth !== $undoButton.width() ) {
-				$undoButton.width(buttonWidth)
-			}
-
-			this.pubsubtokens[apinamespace + '.undo'] = this.events.subscribe(
-				apinamespace + '.undo'
-				, function(){
-					var data = jSignatureInstance.dataEngine.data
-					if (data.length) {
-						data.pop()
-						jSignatureInstance.resetCanvas(data)
-						if (!data.length) {
-							$undoButton.hide()
-						}
-					}
-				}
-			)
-
-			this.pubsubtokens[apinamespace + '.change'] = this.events.subscribe(
-				apinamespace + '.change'
-				, function(){
-					if (jSignatureInstance.dataEngine.data.length) {
-						$undoButton.show()
-					}
-				}
-			)
-		}
-
-	}).call( this, this, $controlbar, apinamespace)
+	this.events.publish(apinamespace+'.attachingEventHandlers')
 
 	// If we have proportional width, we sign up to events broadcasting "window resized" and checking if
 	// parent's width changed. If so, we (1) extract settings + data from current signature pad,
 	// (2) remove signature pad from parent, and (3) reinit new signature pad at new size with same settings, (rescaled) data.
-	;(function(jSignatureInstance, settingsWidth, apinamespace, globalEvents){
-		if ( settingsWidth === 'ratio' || settingsWidth.split('')[settingsWidth.length - 1] === '%' ) {
-			
-			this.pubsubtokens[apinamespace + '.parentresized'] = globalEvents.subscribe(
-				apinamespace + '.parentresized'
-				, (function(pubsubtokens, $parent, originalParentWidth, sizeRatio){
-					'use strict'
-
-					return function(){
-						'use strict'
-
-						var w = $parent.width()
-						if (w !== originalParentWidth) {
-						
-							// UNsubscribing this particular instance of signature pad only.
-							// there is a separate `pubsubtokens` per each instance of signature pad 
-							for (var key in pubsubtokens){
-								if (pubsubtokens.hasOwnProperty(key)) {
-									globalEvents.unsubscribe(pubsubtokens[key])
-									delete pubsubtokens[key]
-	                            }
-							}
-
-							var settings = jSignatureInstance.settings
-							jSignatureInstance.$parent.children().remove()
-							for (var key in jSignatureInstance){
-								if (jSignatureInstance.hasOwnProperty(key)) {
-									delete jSignatureInstance[key]
-								}
-							}
-							
-							// scale data to new signature pad size
-							settings.data = (function(data, scale){
-								var newData = []
-								var o, i, l, j, m, stroke
-								for ( i = 0, l = data.length; i < l; i++) {
-	                            	stroke = data[i]
-	                            	
-	                            	o = {'x':[],'y':[]}
-	                            	
-	                            	for ( j = 0, m = stroke.x.length; j < m; j++) {
-	                                	o.x.push(stroke.x[j] * scale)
-	                                	o.y.push(stroke.y[j] * scale)
-	                                }
-	                            
-	                            	newData.push(o)
-	                            }
-								return newData
-							})(
-								settings.data
-								, w * 1.0 / originalParentWidth
-							)
-							
-							$parent[apinamespace](settings)
-				        }
-					}
-				})(
-					this.pubsubtokens
-					, this.$parent
-					, this.$parent.width()
-					, this.canvas.width * 1.0 / this.canvas.height
-				)
-			)
-		}
-	}).call(this, this, settings.width.toString(10), apinamespace, globalEvents)
+	conditionallyLinkCanvasResizeToWindowResize.call(
+		this
+		, this
+		, settings.width.toString(10)
+		, apinamespace, globalEvents
+	)
 	
+	// end of event handlers.
+	// ===============================
+
 	this.resetCanvas(settings.data)
+
+	// resetCanvas renders the data on the screen and fires ONE "change" event
+	// if there is data. If you have controls that rely on "change" firing
+	// attach them to something that runs before this.resetCanvas, like
+	// apinamespace+'.attachingEventHandlers' that fires a bit higher.
+	this.events.publish(apinamespace+'.initialized')
 
 	return this
 } // end of initBase
@@ -1163,6 +1146,49 @@ var GlobalJSignatureObjectInitializer = function($){
 
 	})(globalEvents, apinamespace, $, window)
 
+	var jSignatureInstanceExtensions = {
+		'exampleExtension':function(extensionName){
+			// we are called very early in instance's life.
+			// right after the settings are resolved and 
+			// jSignatureInstance.events is created 
+			// and right before first ("jSignature.initializing") event is called.
+			// You don't really need to manupilate 
+			// jSignatureInstance directly, just attach
+			// a bunch of events to jSignatureInstance.events
+			// (look at the source of jSignatureClass to see when these fire)
+			// and your special pieces of code will attach by themselves.
+
+			// this function runs every time a new instance is set up.
+			// this means every var you create will live only for one instance
+			// unless you attach it to something outside, like "window."
+			// and pick it up later from there.
+
+			// when globalEvents' events fire, 'this' is globalEvents object
+			// when jSignatureInstance's events fire, 'this' is jSignatureInstance
+
+			// Here,
+			// this = is new jSignatureClass's instance.
+
+			// The way you COULD approch setting this up is:
+			// if you have multistep set up, attach event to "jSignature.initializing"
+			// that attaches other events to be fired further lower the init stream.
+			// Or, if you know for sure you rely on only one jSignatureInstance's event,
+			// just attach to it directly
+
+			this.events.subscribe(
+				// name of the event
+				apinamespace + '.initializing'
+				// event handlers, can pass args too, but in majority of cases,
+				// 'this' which is jSignatureClass object instance pointer is enough to get by.
+				, function(){
+					if (this.settings.hasOwnProperty('non-existent setting category?')) {
+						console.log(extensionName + ' is here')
+					}
+				}
+			)
+		}
+	}
+
 	var exportplugins = {
 		'default':function(data){return this.toDataURL()}
 		, 'native':function(data){return data}
@@ -1263,10 +1289,11 @@ var GlobalJSignatureObjectInitializer = function($){
 	}
 
 	//These are exposed as methods under $obj.jSignature('methodname', *args)
-	var methods = {
+	var plugins = {'export':exportplugins, 'import':importplugins, 'instance': jSignatureInstanceExtensions}
+	, methods = {
 		'init' : function( options ) {
 			return this.each( function() {
-				new jSignatureClass(this, options)
+				new jSignatureClass(this, options, jSignatureInstanceExtensions)
 				// it attaches itself to canvas elem as
 				// $(canvas).data(apinamespace+'.this') = instance
 			}) // end Each
@@ -1281,15 +1308,13 @@ var GlobalJSignatureObjectInitializer = function($){
 		// was mistakenly introduced instead of 'clear' in v2
 		, 'reset' : _clearDrawingArea
 		, 'addPlugin' : function(pluginType, pluginName, callable){
-			var plugins = {'export':exportplugins, 'import':importplugins}
 			if (plugins.hasOwnProperty(pluginType)){
 				plugins[pluginType][pluginName] = callable
 			}
 			return this
 		}
 		, 'listPlugins' : function(pluginType){
-			var plugins = {'export':exportplugins, 'import':importplugins}
-			, answer = []
+			var answer = []
 			if (plugins.hasOwnProperty(pluginType)){
 				var o = plugins[pluginType]
 				for (var k in o){
