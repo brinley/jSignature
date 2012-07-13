@@ -6,13 +6,14 @@ def default(context):
 
 def minifyfiles(context):
     src = context.Node('jSignature.js')
-    src_p1 = src - '.js' + '.CompressorBase30.js'
-    src_p2 = src - '.js' + '.CompressorSVG.js'
 
     minified = src - '.js' + '.min.js'
     print("=== Compressing " + src.name + " into " + minified.name)
-    minified.text = compress_with_closure_compiler( 
-        src.text + src_p1.text + src_p2.text
+    minified.text = compress_with_closure_compiler(
+        src.text + \
+        (src - '.js' + '.CompressorBase30.js').text + \
+        (src - '.js' + '.CompressorSVG.js').text + \
+        (src - '.js' + '.UndoButton.js').text
     )
 
 def localsitedeploy(context):

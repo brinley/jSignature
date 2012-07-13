@@ -116,11 +116,18 @@ http://dojofoundation.org/license for more information.
 
 </script>
 <script src="jSignature.min.js"></script>
+<!-- 
+<script src="jSignature.js"></script>
+<script src="jSignature.CompressorBase30.js"></script>
+<script src="jSignature.CompressorSVG.js"></script>
+<script src="jSignature.UndoButton.js"></script> 
+-->
+<script src="plugins/signhere/jSignature.SignHere.js"></script> 
 <script>
 $(document).ready(function() {
 	
 	// This is the part where jSignature is initialized.
-	var $sigdiv = $("#signature").jSignature() // {'width':200,'height':300}
+	var $sigdiv = $("#signature").jSignature({'UndoButton':true})
 	
 	// All the code below is just code driving the demo. 
 	, $tools = $('#tools')
