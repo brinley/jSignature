@@ -1014,7 +1014,7 @@ jSignatureClass.prototype.resetCanvas = function(data){
 function initializeCanvasEmulator(canvas){
 	if (canvas.getContext){
 		return false
-	} else if (typeof FlashCanvas !== "undefined") {
+	} else if (typeof FlashCanvas === "function") {
 		canvas = FlashCanvas.initElement(canvas)
 		
 		var zoom = 1
@@ -1107,7 +1107,7 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 }
 
 
-var GlobalJSignatureObjectInitializer = function($){
+var GlobalJSignatureObjectInitializer = function(){
 
 	var globalEvents = new PubSubClass()
 	
@@ -1362,17 +1362,6 @@ var GlobalJSignatureObjectInitializer = function($){
 
 } // end of GlobalJSignatureObjectInitializer
 
-////Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
-////Need to revisit this later.
-
-//if ( typeof define === "function" && define.amd != null) {
-//	// AMD-loader compatible resource declaration
-//	// you need to call this one with jQuery as argument.
-//	define(function(){return GlobalJSignatureObjectInitializer} )
-//} else {
-	// global-polluting outcome.
-	if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
-	GlobalJSignatureObjectInitializer(this.jQuery)
-//}
+GlobalJSignatureObjectInitializer()
 
 })();
