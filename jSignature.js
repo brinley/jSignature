@@ -1280,7 +1280,7 @@ var GlobalJSignatureObjectInitializer = function($){
 				, data
 				, formattype
 				, (function(jSignatureInstance){ 
-					return function(){ return jSignatureInstance.resetCanvas((typeof arguments[0] == 'object')? arguments[0] : arguments) }
+					return function(){ return jSignatureInstance.resetCanvas.apply(jSignatureInstance, arguments) }
 				})($canvas.data(apinamespace+'.this'))
 			)
 		}
