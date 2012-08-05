@@ -1014,7 +1014,7 @@ jSignatureClass.prototype.resetCanvas = function(data){
 function initializeCanvasEmulator(canvas){
 	if (canvas.getContext){
 		return false
-	} else if (typeof FlashCanvas === "function") {
+	} else if (typeof FlashCanvas !== "undefined") {
 		canvas = FlashCanvas.initElement(canvas)
 		
 		var zoom = 1
