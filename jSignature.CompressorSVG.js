@@ -6,15 +6,26 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 */
 
 ;(function(){
-	
+	'use strict'
+		
 /** @preserve
 Simplify.js BSD 
 (c) 2012, Vladimir Agafonkin
 mourner.github.com/simplify-js
 
 */
-	(function(a,b){function c(a,b){var c=a.x-b.x,d=a.y-b.y;return c*c+d*d}function d(a,b,c){var d=b.x,e=b.y,f=c.x-d,g=c.y-e,h;if(f!==0||g!==0)h=((a.x-d)*f+(a.y-e)*g)/(f*f+g*g),h>1?(d=c.x,e=c.y):h>0&&(d+=f*h,e+=g*h);return f=a.x-d,g=a.y-e,f*f+g*g}function e(a,b){var d,e=a.length,f,g=a[0],h=[g];for(d=1;d<e;d++)f=a[d],c(f,g)>b&&(h.push(f),g=f);return g!==f&&h.push(f),h}function f(a,c){var e=a.length,f=typeof Uint8Array!=b+""?Uint8Array:Array,g=new f(e),h=0,i=e-1,j,k,l,m,n=[],o=[],p=[];g[h]=g[i]=1;while(i){k=0;for(j=h+1;j<i;j++)l=d(a[j],a[h],a[i]),l>k&&(m=j,k=l);k>c&&(g[m]=1,n.push(h),o.push(m),n.push(m),o.push(i)),h=n.pop(),i=o.pop()}for(j=0;j<e;j++)g[j]&&p.push(a[j]);return p}"use strict";var g=typeof exports!=b+""?exports:a;g.simplify=function(a,c,d){var g=c!==b?c*c:1;return d||(a=e(a,g)),a=f(a,g),a}})(this);
-	
+	;(function(a,b){function c(a,b){var c=a.x-b.x,d=a.y-b.y;return c*c+d*d}function d(a,b,c){var d=b.x,e=b.y,f=c.x-d,g=c.y-e,h;if(f!==0||g!==0)h=((a.x-d)*f+(a.y-e)*g)/(f*f+g*g),h>1?(d=c.x,e=c.y):h>0&&(d+=f*h,e+=g*h);return f=a.x-d,g=a.y-e,f*f+g*g}function e(a,b){var d,e=a.length,f,g=a[0],h=[g];for(d=1;d<e;d++)f=a[d],c(f,g)>b&&(h.push(f),g=f);return g!==f&&h.push(f),h}function f(a,c){var e=a.length,f=typeof Uint8Array!=b+""?Uint8Array:Array,g=new f(e),h=0,i=e-1,j,k,l,m,n=[],o=[],p=[];g[h]=g[i]=1;while(i){k=0;for(j=h+1;j<i;j++)l=d(a[j],a[h],a[i]),l>k&&(m=j,k=l);k>c&&(g[m]=1,n.push(h),o.push(m),n.push(m),o.push(i)),h=n.pop(),i=o.pop()}for(j=0;j<e;j++)g[j]&&p.push(a[j]);return p}"use strict";var g=typeof exports!=b+""?exports:a;g.simplify=function(a,c,d){var g=c!==b?c*c:1;return d||(a=e(a,g)),a=f(a,g),a}})(window);
+
+
+	/**
+	Vector class. Allows us to simplify representation and manipulation of coordinate-pair
+	representing shift against (0, 0)
+
+	@public
+	@class
+	@param
+	@returns {Type}
+	*/
 	function Vector(x,y){
 		this.x = x
 		this.y = y
@@ -82,7 +93,7 @@ mourner.github.com/simplify-js
 			}
 		}
 	}
-	
+
 	function Point(x,y){
 		this.x = x
 		this.y = y
@@ -100,42 +111,55 @@ mourner.github.com/simplify-js
 			return this.getVectorToPoint(point).reverse()
 		}
 	}
-	
+
+	/**
+	Allows one to round a number to arbitrary precision.
+	Math.round() rounds to whole only.
+	Number.toFixed(precision) returns a string.
+	I need float to float, but with arbitrary precision, hence:
+
+	@public
+	@function
+	@param number {Number}
+	@param position {Number} number of digits right of decimal point to keep. If negative, rounding to the left of decimal.
+	@returns {Type}
+	*/
 	function round (number, position){
 		var tmp = Math.pow(10, position)
 		return Math.round( number * tmp ) / tmp
 	}
-//	/**
-//	 * This is a simple, points-to-lines (not curves) renderer. 
-//	 * Keeping it around so we can activate it from time to time and see
-//	 * if smoothing logic is off much.
-//	 * @public
-//	 * @function
-//	 * @returns {String} Like so "l 1 2 3 5' with stroke as long line chain. 
-//	 */
-//	function compressstroke(stroke, shiftx, shifty){
-//		// we combine strokes data into string like this:
-//		// 'M 53 7 l 1 2 3 4 -5 -6 5 -6'
-//		// see SVG documentation for Path element's 'd' argument.
-//		var lastx = stroke.x[0]
-//		, lasty = stroke.y[0]
-//		, i
-//		, l = stroke.x.length
-//		, answer = ['M', lastx - shiftx, lasty - shifty, 'l']
-//		
-//		if (l === 1){
-//			// meaning this was just a DOT, not a stroke.
-//			// instead of creating a circle, we just create a short line
-//			answer.concat(1, -1)
-//		} else {
-//			for(i = 1; i < l; i++){
-//				answer = answer.concat(stroke.x[i] - lastx, stroke.y[i] - lasty)
-//				lastx = stroke.x[i]
-//				lasty = stroke.y[i]
-//			}
-//		}
-//		return answer.join(' ')
-//	} 
+
+	//	/**
+	//	 * This is a simple, points-to-lines (not curves) renderer. 
+	//	 * Keeping it around so we can activate it from time to time and see
+	//	 * if smoothing logic is off much.
+	//	 * @public
+	//	 * @function
+	//	 * @returns {String} Like so "l 1 2 3 5' with stroke as long line chain. 
+	//	 */
+	//	function compressstroke(stroke, shiftx, shifty){
+	//		// we combine strokes data into string like this:
+	//		// 'M 53 7 l 1 2 3 4 -5 -6 5 -6'
+	//		// see SVG documentation for Path element's 'd' argument.
+	//		var lastx = stroke.x[0]
+	//		, lasty = stroke.y[0]
+	//		, i
+	//		, l = stroke.x.length
+	//		, answer = ['M', lastx - shiftx, lasty - shifty, 'l']
+	//		
+	//		if (l === 1){
+	//			// meaning this was just a DOT, not a stroke.
+	//			// instead of creating a circle, we just create a short line
+	//			answer.concat(1, -1)
+	//		} else {
+	//			for(i = 1; i < l; i++){
+	//				answer = answer.concat(stroke.x[i] - lastx, stroke.y[i] - lasty)
+	//				lastx = stroke.x[i]
+	//				lasty = stroke.y[i]
+	//			}
+	//		}
+	//		return answer.join(' ')
+	//	} 
 
 	function segmentToCurve(stroke, positionInStroke, lineCurveThreshold){
 		'use strict'
@@ -212,7 +236,7 @@ mourner.github.com/simplify-js
 			]
 		}
 	}
-	
+
 	function lastSegmentToCurve(stroke, lineCurveThreshold){
 		'use strict'
 		// Here we tidy up things left unfinished
@@ -265,7 +289,7 @@ mourner.github.com/simplify-js
 			]
 		}
 	}
-	
+
 	function addstroke(stroke, shiftx, shifty){
 		'use strict'
 		// we combine strokes data into string like this:
@@ -273,8 +297,8 @@ mourner.github.com/simplify-js
 		// see SVG documentation for Path element's 'd' argument.
 		var lines = [
 			'M' // move to
-			, x = round( (stroke.x[0] - shiftx), 2)
-			, y = round( (stroke.y[0] - shifty), 2)
+			, round( (stroke.x[0] - shiftx), 2)
+			, round( (stroke.y[0] - shifty), 2)
 		]
 		// processing all points but first and last. 
 		, i = 1 // index zero item in there is STARTING point. we already extracted it.
@@ -292,7 +316,7 @@ mourner.github.com/simplify-js
 		}
 		return lines.join(' ')
 	}
-	
+
 	function simplifystroke(stroke){
 		var d = []
 		, newstroke = {'x':[], 'y':[]}
@@ -308,13 +332,13 @@ mourner.github.com/simplify-js
 		}		
 		return newstroke
 	}
-	
+
 	function compressstrokes(data){
 		'use strict'
 		var answer = [
 			'<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
 			, '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
-        ]
+	    ]
 		, i , l = data.length
 		, stroke
 		, xlimits = []
@@ -352,23 +376,23 @@ mourner.github.com/simplify-js
 			'">'
 		)
 		
-//		// This is a nice idea: use style declaration on top, and mark the lines with 'class="f"'
-//		// thus saving space in svg... 
-//		// alas, many SVG renderers don't understand "class" and render the strokes in default "fill = black, no stroke" style. Ugh!!!
-//		// TODO: Rewrite ImageMagic / GraphicsMagic, InkScape, http://svg.codeplex.com/ to support style + class. until then, we hardcode the stroke style within the path. 
-//		answer.push(
-//			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}]]></style>'
-//		)
+	//		// This is a nice idea: use style declaration on top, and mark the lines with 'class="f"'
+	//		// thus saving space in svg... 
+	//		// alas, many SVG renderers don't understand "class" and render the strokes in default "fill = black, no stroke" style. Ugh!!!
+	//		// TODO: Rewrite ImageMagic / GraphicsMagic, InkScape, http://svg.codeplex.com/ to support style + class. until then, we hardcode the stroke style within the path. 
+	//		answer.push(
+	//			'<style type="text/css"><![CDATA[.f {fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}]]></style>'
+	//		)
 
-//		// This set is accompaniment to "simple line renderer" - compressstroke
-//		answer.push(
-//			'<style type="text/css"><![CDATA[.t {fill:none;stroke:#FF0000;stroke-width:2}]]></style>'
-//		)
-//		for(i = 0; i < l; i++){
-//			stroke = data[i]
-//			// This one is accompaniment to "simple line renderer"
-//			answer.push('<path class="t" d="'+ compressstroke(stroke, shiftx, shifty) +'"/>')
-//		}
+	//		// This set is accompaniment to "simple line renderer" - compressstroke
+	//		answer.push(
+	//			'<style type="text/css"><![CDATA[.t {fill:none;stroke:#FF0000;stroke-width:2}]]></style>'
+	//		)
+	//		for(i = 0; i < l; i++){
+	//			stroke = data[i]
+	//			// This one is accompaniment to "simple line renderer"
+	//			answer.push('<path class="t" d="'+ compressstroke(stroke, shiftx, shifty) +'"/>')
+	//		}
 
 		for(i = 0, l = simplifieddata.length; i < l; i++){
 			stroke = simplifieddata[i]
@@ -380,7 +404,7 @@ mourner.github.com/simplify-js
 
 	if (typeof btoa !== 'function')
 	{
-		function btoa(data) {
+		var btoa = function(data) {
 /** @preserve
 base64 encoder
 MIT, GPL
@@ -424,17 +448,17 @@ http://phpjs.org/functions/base64_encode
 		    // end of base64 encoder MIT, GPL
 		}
 	}
-	
+
 	var unencodedmime = 'image/svg+xml'
 	function getUnencodedSVG(data){
 		return [unencodedmime , compressstrokes(data)]
 	}
-	
+
 	var base64encodedmime = 'image/svg+xml;base64'
 	function getBase64encodedSVG(data){
 		return [base64encodedmime , btoa( compressstrokes(data) )] 
 	} 
-	
+
 	function Initializer($){
 		var mothership = $.fn['jSignature']
 		mothership(
@@ -463,10 +487,10 @@ http://phpjs.org/functions/base64_encode
 		)
 	}
 
-//  //Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
-//	//Need to revisit this later.
-	
-if(this.jQuery == null) {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
-Initializer(this.jQuery)
+	//  //Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
+	//	//Need to revisit this later.
+		
+	if(typeof $ === 'undefined') {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
+	Initializer($)
 
-}).call(typeof window !== 'undefined'? window : this);
+})();
