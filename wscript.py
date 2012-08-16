@@ -11,9 +11,10 @@ def minifyfiles(context):
     print("=== Compressing " + src.name + " into " + minified.name)
     minified.text = compress_with_closure_compiler(
         src.text + \
+        (src - '.js' + '.UndoButton.js').text + \
+        # context.Node('plugins/signhere/jSignature.SignHere.js') + \
         (src - '.js' + '.CompressorBase30.js').text + \
-        (src - '.js' + '.CompressorSVG.js').text + \
-        (src - '.js' + '.UndoButton.js').text
+        (src - '.js' + '.CompressorSVG.js').text
     )
 
 def localsitedeploy(context):
