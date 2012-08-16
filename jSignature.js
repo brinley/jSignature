@@ -126,24 +126,20 @@ function getColors($e){
 	, undef
 	, frontcolor = $e.css('color')
 	, backcolor
+	, e = $e[0]
 	
-	while(backcolor === undef && $e !== undef){
+	var toOfDOM = false
+	while(e && !backcolor && !toOfDOM){
 		try{
-			tmp = $e.css('background-color')				
+			tmp = $(e).css('background-color')
 		} catch (ex) {
 			tmp = 'transparent'
 		}
 		if (tmp !== 'transparent' && tmp !== 'rgba(0, 0, 0, 0)'){
 			backcolor = tmp
 		}
-		try{
-			$e = $e.parent()
-			if ($e[0] === document){
-				$e = undef
-			}
-		} catch (ec) {
-			$e = undef
-		}
+		toOfDOM = e.body
+		e = e.parentNode
 	}
 
 	var rgbaregex = /rgb[a]*\((\d+),\s*(\d+),\s*(\d+)/ // modern browsers
@@ -1010,7 +1006,6 @@ jSignatureClass.prototype.resetCanvas = function(data){
 	return true
 }
 
-
 function initializeCanvasEmulator(canvas){
 	if (canvas.getContext){
 		return false
@@ -1288,15 +1283,26 @@ var GlobalJSignatureObjectInitializer = function(){
 		return this
 	}
 
+	var elementIsOrphan = function(e){
+		var topOfDOM = false
+		e = e.parentNode
+		while (e && !topOfDOM){
+			topOfDOM = e.body
+			e = e.parentNode
+		}
+		return !topOfDOM
+	}
+
 	//These are exposed as methods under $obj.jSignature('methodname', *args)
 	var plugins = {'export':exportplugins, 'import':importplugins, 'instance': jSignatureInstanceExtensions}
 	, methods = {
 		'init' : function( options ) {
 			return this.each( function() {
-				new jSignatureClass(this, options, jSignatureInstanceExtensions)
-				// it attaches itself to canvas elem as
-				// $(canvas).data(apinamespace+'.this') = instance
-			}) // end Each
+				console.log("Initing jSignature")
+				if (!elementIsOrphan(this)) {
+					new jSignatureClass(this, options, jSignatureInstanceExtensions)					
+				}
+			})
 		}
 		, 'getSettings' : function() {
 			return this.find('canvas.'+apinamespace)
