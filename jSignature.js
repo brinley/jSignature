@@ -1142,6 +1142,7 @@ var GlobalJSignatureObjectInitializer = function(){
 	})(globalEvents, apinamespace, $, window)
 
 	var jSignatureInstanceExtensions = {
+		/*
 		'exampleExtension':function(extensionName){
 			// we are called very early in instance's life.
 			// right after the settings are resolved and 
@@ -1182,6 +1183,7 @@ var GlobalJSignatureObjectInitializer = function(){
 				}
 			)
 		}
+		*/
 	}
 
 	var exportplugins = {
@@ -1298,7 +1300,6 @@ var GlobalJSignatureObjectInitializer = function(){
 	, methods = {
 		'init' : function( options ) {
 			return this.each( function() {
-				console.log("Initing jSignature")
 				if (!elementIsOrphan(this)) {
 					new jSignatureClass(this, options, jSignatureInstanceExtensions)					
 				}
