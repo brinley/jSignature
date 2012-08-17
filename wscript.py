@@ -12,7 +12,7 @@ def minifyfiles(context):
     minified.text = compress_with_closure_compiler(
         src.text + \
         (src - '.js' + '.UndoButton.js').text + \
-        # context.Node('plugins/signhere/jSignature.SignHere.js') + \
+        # context.Node('plugins/signhere/jSignature.SignHere.js').text + \
         (src - '.js' + '.CompressorBase30.js').text + \
         (src - '.js' + '.CompressorSVG.js').text
     )
