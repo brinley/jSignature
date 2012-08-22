@@ -17,6 +17,8 @@ def minifyfiles(context):
         (src - '.js' + '.CompressorSVG.js').text
     )
 
+    (minified - '.js' + '.noconflict.js').text = ";(function($){\n" + minified.text + "\n})(jQuery);"
+
 def localsitedeploy(context):
 
     todeploy = [
