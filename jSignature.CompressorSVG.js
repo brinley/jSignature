@@ -490,7 +490,7 @@ http://phpjs.org/functions/base64_encode
 	//  //Because plugins are minified together with jSignature, multiple defines per (minified) file blow up and dont make sense
 	//	//Need to revisit this later.
 		
-	if(typeof $ === 'undefined') {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
-	Initializer($)
+	if(typeof jQuery === 'undefined') {throw new Error("We need jQuery for some of the functionality. jQuery is not detected. Failing to initialize...")}
+	Initializer(jQuery)
 
 })();

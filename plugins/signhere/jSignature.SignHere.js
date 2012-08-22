@@ -4,7 +4,7 @@ Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
 MIT License <http://www.opensource.org/licenses/mit-license.php>
 
 */
-;(function(){
+;(function($){
 
 	var apinamespace = 'jSignature'
 
@@ -117,4 +117,4 @@ MIT License <http://www.opensource.org/licenses/mit-license.php>
 		ExtensionAttacher()
 //	}
 
-})();
+})(jQuery);
