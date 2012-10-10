@@ -1,9 +1,12 @@
 /** @license
 jSignature v2 jSignature's Undo Button and undo functionality plugin
-Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
-MIT License <http://www.opensource.org/licenses/mit-license.php>
 
 */
+/**
+Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
+MIT License <http://www.opensource.org/licenses/mit-license.php>
+*/
+
 ;(function(){
 
 	var apinamespace = 'jSignature'

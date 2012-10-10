@@ -1,9 +1,12 @@
-/** @license
+/** @preserve
 jSignature v2 jSignature's custom "base30" format export and import plugins.
+
+*/
+/**
 Copyright (c) 2011 Willow Systems Corp http://willow-systems.com
 MIT License <http://www.opensource.org/licenses/mit-license.php>
+*/
 
- */
 ;(function(){
 
 	var chunkSeparator = '_' 

@@ -1,5 +1,5 @@
-/** @preserve
-jSignature v2
+/** @preserve 
+jSignature v2 "${buildDate}" "${commitID}"
 Copyright (c) 2012 Willow Systems Corp http://willow-systems.com
 Copyright (c) 2010 Brinley Ang http://www.unbolt.net
 MIT License <http://www.opensource.org/licenses/mit-license.php> 

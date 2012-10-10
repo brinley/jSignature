@@ -1,8 +1,10 @@
 /** @license
 jSignature v2 SVG export plugin.
+
+*/
+/**
 Copyright (c) 2012 Willow Systems Corp http://willow-systems.com
 MIT License <http://www.opensource.org/licenses/mit-license.php>
-
 */
 
 ;(function(){
