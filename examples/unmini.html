@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
@@ -10,9 +7,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 <meta name="viewport" content="initial-scale=1.0, target-densitydpi=device-dpi" /><!-- this is for mobile (Android) Chrome -->
 <meta name="viewport" content="initial-scale=1.0, width=device-height"><!--  mobile Safari, FireFox, Opera Mobile  -->
-<script src="libs/modernizr.js"></script>
+<script src="../libs/modernizr.js"></script>
 <!--[if lt IE 9]>
-<script type="text/javascript" src="libs/flashcanvas.js"></script>
+<script type="text/javascript" src="../libs/flashcanvas.js"></script>
 <![endif]-->
 <style type="text/css">
 
@@ -70,7 +67,7 @@
 </div>
 <div id="scrollgrabber"></div>
 </div>
-<script src="libs/jquery.js"></script>
+<script src="../libs/jquery.js"></script>
 <script>
 /*  @preserve
 jQuery pub/sub plugin by Peter Higgins (dante@dojotoolkit.org)
@@ -115,14 +112,11 @@ http://dojofoundation.org/license for more information.
 })(jQuery);
 
 </script>
-<script src="jSignature.min.js"></script>
-<!-- 
-<script src="jSignature.js"></script>
-<script src="jSignature.CompressorBase30.js"></script>
-<script src="jSignature.CompressorSVG.js"></script>
-<script src="jSignature.UndoButton.js"></script> 
--->
-<script src="plugins/signhere/jSignature.SignHere.js"></script> 
+<script src="../src/jSignature.js"></script>
+<script src="../src/plugins/jSignature.CompressorBase30.js"></script>
+<script src="../src/plugins/jSignature.CompressorSVG.js"></script>
+<script src="../src/plugins/jSignature.UndoButton.js"></script> 
+<script src="../src/plugins/signhere/jSignature.SignHere.js"></script> 
 <script>
 $(document).ready(function() {
 	
@@ -176,9 +170,14 @@ $(document).ready(function() {
 	})
 
 	$.subscribe(pubsubprefix + 'image/svg+xml', function(data) {
-		var i = new Image()
-		i.src = 'data:' + data[0] + ';base64,' + btoa( data[1] )
-		$(i).appendTo($extraarea)
+
+		try{
+			var i = new Image()
+			i.src = 'data:' + data[0] + ';base64,' + btoa( data[1] )
+			$(i).appendTo($extraarea)
+		} catch (ex) {
+
+		}
 		
 		var message = [
 			"If you don't see an image immediately above, it means your browser is unable to display in-line (data-url-formatted) SVG."
