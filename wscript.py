@@ -1,59 +1,52 @@
 #! /usr/bin/env python
+import subprocess
 
 def default(context):
     minifyfiles(context)
-    localsitedeploy(context)
 
 def minifyfiles(context):
-    src = context.Node('jSignature.js')
+    src = context.Node('src/jSignature.js')
 
-    minified = src - '.js' + '.min.js'
-    print("=== Compressing " + src.name + " into " + minified.name)
+    distfolder = context.Node('libs/')
+    pluginsfolder = context.Node('src/plugins/')
+
+    # Compressing jSignature + some plugins into one mini
+    minified = distfolder + src.name - '.js' + '.min.js'
+    print("=== Compressing " + src.name + " into " + minified.fullpath)
     minified.text = compress_with_closure_compiler(
-        src.text + \
-        (src - '.js' + '.UndoButton.js').text + \
+        src.text.replace(
+            "${buildDate}", timeUTC()
+        ).replace(
+            "${commitID}", getCommitIDstring()
+        ) + \
+        (pluginsfolder + 'jSignature.UndoButton.js').text + \
         # context.Node('plugins/signhere/jSignature.SignHere.js').text + \
-        (src - '.js' + '.CompressorBase30.js').text + \
-        (src - '.js' + '.CompressorSVG.js').text
+        (pluginsfolder + 'jSignature.CompressorBase30.js').text + \
+        (pluginsfolder + 'jSignature.CompressorSVG.js').text
     )
 
+    # wrapping that mini into "jQuery.NoConflict" prefix + suffix
+    # and hosting it as separate mini
     (minified - '.js' + '.noconflict.js').text = ";(function($){\n" + minified.text + "\n})(jQuery);"
 
-def localsitedeploy(context):
+def timeUTC():
+    import datetime
+    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
 
-    todeploy = [
-        ['jq', "libs/jquery.js", "js/libs/jquery.js"]
-        , ['fcj', "libs/flashcanvas.js", "js/libs/flashcanvas.js"]
-        , ['fcswf', "libs/flashcanvas.swf", "js/libs/flashcanvas.swf"]
-        , ['mzr', "libs/modernizr.js", "js/libs/modernizr.js"]
-        , ['jsig', "jSignature.min.js", "js/libs/jquery.jSignature.${CACHEBUST}.js"]
-        , ['index', "index.html", "index.html", ['jq','fcj','jsig','mzr']]
-    ]
-    todeploy_map = {} # used for string replacement in HTML files. See list above next to index.html
+def getCommitIDstring():
+    import subprocess
 
-    import time
-    cache_busting_string = "%s" % int(time.time())
-
-    served_folder = context.Node("release/")
-    served_folder.delete()
-
-    for item in todeploy:
-        name = item[0]
-        src = context.Node( item[1] )
-        trg = served_folder + item[2].replace("${CACHEBUST}", cache_busting_string) # + turns it into Node
-
-        todeploy_map[name] = {'src':src.path, 'trg':trg.path}
-
-        src.copy(trg)
-
-        # editing text file for changes to file names.
-        # only when we explicitely give list of nicknames of the filenames we need to replace.
-        if len(item) > 3:
-            content = trg.text
-            # for each file nickname
-            for nick in item[3]:
-                content = content.replace(todeploy_map[nick]['src'], todeploy_map[nick]['trg'])
-            trg.text = content + '<!-- autoedited for deployment -->'
+    if not subprocess.check_output:
+        # let's not bother emulating it. Not important
+        return ""
+    else:
+        return "commit ID " + subprocess.check_output(
+            [
+                'git'
+                , 'rev-parse'
+                , 'HEAD'
+            ]
+        ).strip()
 
 def compress_with_closure_compiler(code, compression_level = None):
     '''Sends text of JavaScript code to Google's Closure Compiler API
