@@ -19,11 +19,22 @@ See [demos here](http://willowsystems.github.com/jSignature/#/demo/ "Signature C
 
 ## Adding jSignature to your page
 
-jSignature depends on (more or less recent) **jQuery**,  and **(only for IE 7 and 8) on FlashCanvas**. Both are included, for convenience, in the `/libs` folder of this project, but you can certainly use your own versions. 
+Look into `libs` folder in the source tree. Pick 3 files from there:
 
-Note that FlashCanvas is a group of two files, `flashcanvas.swf` and `flashcanvas.js`, both of which **must** be located together in the same folder. Do **not** host them from separate folders as `flashcanvas.js` looks for `flashcanvas.swf` in the same folder it was served from. 
+1.  jSignature.min*.js (The '*' means you have choice. You can pick regular jQuery-centric build or a special jQuery.NoConflict build.)
 
-jSignature itself has three distinct pieces of code rolled into one minified (17k) deployable:
+2.  flashcanvas.js
+
+3.  flashcanvas.swf
+
+jSignature depends on (more or less recent) **jQuery**
+
+If you do **NOT** intend to support **IE 7 and 8** you don't need to download the FlashCanvas files. 
+
+Note that FlashCanvas is a cohesive group of two files, `flashcanvas.swf` and `flashcanvas.js`, both of which **must** be located together in the same folder. Do **not** host them from separate folders as `flashcanvas.js` looks for `flashcanvas.swf` in the same folder it was served from. Do **not** rename `flashcanvas.js` to anything else as it looks for itself in the DOM by that name to figure out where to load `flashcanvas.swf` from.
+
+
+jSignature itself has three distinct pieces of code rolled into one minified deployable:
 
 1.  Code that prepares a Canvas element.
     It includes detection of browser features, maximizing a canvas within the confines of a div, setting up emulated Canvas using Flashcanvas, when needed.
@@ -33,16 +44,19 @@ jSignature itself has three distinct pieces of code rolled into one minified (17
 
 If you are certain that your audience will be limited to a specific browser engine (you deploy through an embedded browser widget, using something like PhoneGap) you can roll up your sleeves and yank out the part #1. If you know you will need only one export / import plugin, remove the plugins you don't need from the minified deployable.
 
-More custom data export/import plugins can be loaded separately without reminifying the main deployable. **Minified file ('jSignature.min.js') you see in the repository already includes all included in this repo export, import plugins.**
+More custom data export/import plugins can be loaded separately without reminifying the main deployable. But, minifying is fun and easy to do. Just take a look at `wscript.py` file and change a few lines to include / exclude some parts.
 
 For the "generic" deployment scenario (which includes support of old IE) add this to your page:
 
-    <!-- you load jquery somewhere above here ... -->
+    <!-- this, preferably, goes inside head element: -->
     <!--[if lt IE 9]>
-    <script type="text/javascript" src="libs/flashcanvas.js"></script>
+    <script type="text/javascript" src="path/to/flashcanvas.js"></script>
     <![endif]-->
-    <script src="libs/jSignature.min.js"></script>
+    
     <div id="signature"></div>
+    
+    <!-- you load jquery somewhere before jSignature ... -->
+    <script src="path/to/jSignature.min.js"></script>
     <script>
         $(document).ready(function() {
             $("#signature").jSignature()
@@ -53,8 +67,8 @@ For the "generic" deployment scenario (which includes support of old IE) add thi
 Explained:
     
 *   The `[if lt IE 9]` part loads Flashcanvas library for IE less than 9. (Flashcanvas is supported **only on IE**, so, there is no point doing feature detection.)
-*   Then we load jSignature plugin.
-*   Next we have the `div` inside which the canvas element will be created (You cannot reuse a canvas element at this time. Plugin creates its own Canvas elem inside the DIV.)
+*   We mark a `div` inside which the canvas element will be created. Any ID or other jQuery selector will do.
+*   We load jSignature plugin.
 *   Lastly, the script invokes the signature widget within the specified DIV.
 
 
