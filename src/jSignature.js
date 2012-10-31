@@ -1135,7 +1135,6 @@ var GlobalJSignatureObjectInitializer = function(){
 		.bind('mouseup.'+apinamespace, function(e){
 			globalEvents.publish(
 				apinamespace + '.windowmouseup'
-				, e
 			)
 		})
 
