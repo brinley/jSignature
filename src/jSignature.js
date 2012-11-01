@@ -1009,29 +1009,48 @@ jSignatureClass.prototype.resetCanvas = function(data){
 function initializeCanvasEmulator(canvas){
 	if (canvas.getContext){
 		return false
-	} else if (typeof FlashCanvas !== "undefined") {
-		canvas = FlashCanvas.initElement(canvas)
-		
-		var zoom = 1
-		// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. 
-		// It matches pixel-to-pixel to screen instead.
-		// Since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
-		if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
-			zoom = window.screen.deviceXDPI * 1.0 / window.screen.logicalXDPI
-		}
-		if (zoom !== 1){
-			// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
-			// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
-			$(canvas).children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
-			// And by applying "scale" transformation we can talk "browser pixels" to FlashCanvas
-			// and have it translate the "browser pixels" to "screen pixels"
-			canvas.getContext('2d').scale(zoom, zoom)
-			// Note to self: don't reuse Canvas element. Repeated "scale" are cumulative.
-		}
-		return true
 	} else {
-		throw new Error("Canvas element does not support 2d context. jSignature cannot proceed.")
+		// for cases when jSignature, FlashCanvas is inserted
+		// from one window into another (child iframe)
+		// 'window' and 'FlashCanvas' may be stuck behind
+		// in that other parent window.
+		// we need to find it
+		var window = canvas.ownerDocument.parentWindow
+		var FC = window.FlashCanvas ?
+			canvas.ownerDocument.parentWindow.FlashCanvas :
+			(
+				typeof FlashCanvas === "undefined" ?
+				undefined :
+				FlashCanvas
+			)
+
+		if (FC) {
+			canvas = FC.initElement(canvas)
+			
+			var zoom = 1
+			// FlashCanvas uses flash which has this annoying habit of NOT scaling with page zoom. 
+			// It matches pixel-to-pixel to screen instead.
+			// Since we are targeting ONLY IE 7, 8 with FlashCanvas, we will test the zoom only the IE8, IE7 way
+			if (window && window.screen && window.screen.deviceXDPI && window.screen.logicalXDPI){
+				zoom = window.screen.deviceXDPI * 1.0 / window.screen.logicalXDPI
+			}
+			if (zoom !== 1){
+				try {
+					// We effectively abuse the brokenness of FlashCanvas and force the flash rendering surface to
+					// occupy larger pixel dimensions than the wrapping, scaled up DIV and Canvas elems.
+					$(canvas).children('object').get(0).resize(Math.ceil(canvas.width * zoom), Math.ceil(canvas.height * zoom))
+					// And by applying "scale" transformation we can talk "browser pixels" to FlashCanvas
+					// and have it translate the "browser pixels" to "screen pixels"
+					canvas.getContext('2d').scale(zoom, zoom)
+					// Note to self: don't reuse Canvas element. Repeated "scale" are cumulative.
+				} catch (ex) {}
+			}
+			return true
+		} else {
+			throw new Error("Canvas element does not support 2d context. jSignature cannot proceed.")
+		}
 	}
+
 }
 
 jSignatureClass.prototype.initializeCanvas = function(settings) {
@@ -1102,7 +1121,7 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 }
 
 
-var GlobalJSignatureObjectInitializer = function(){
+var GlobalJSignatureObjectInitializer = function(window){
 
 	var globalEvents = new PubSubClass()
 	
@@ -1368,6 +1387,6 @@ var GlobalJSignatureObjectInitializer = function(){
 
 } // end of GlobalJSignatureObjectInitializer
 
-GlobalJSignatureObjectInitializer()
+GlobalJSignatureObjectInitializer(window)
 
 })();
