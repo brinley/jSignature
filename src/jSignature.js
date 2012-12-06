@@ -667,7 +667,7 @@ function conditionallyLinkCanvasResizeToWindowResize(jSignatureInstance, setting
 							if (eventTokens.hasOwnProperty(key)) {
 								globalEvents.unsubscribe(eventTokens[key])
 								delete eventTokens[key]
-                            }
+							}
 						}
 
 						var settings = jSignatureInstance.settings
@@ -683,17 +683,17 @@ function conditionallyLinkCanvasResizeToWindowResize(jSignatureInstance, setting
 							var newData = []
 							var o, i, l, j, m, stroke
 							for ( i = 0, l = data.length; i < l; i++) {
-                            	stroke = data[i]
-                            	
-                            	o = {'x':[],'y':[]}
-                            	
-                            	for ( j = 0, m = stroke.x.length; j < m; j++) {
-                                	o.x.push(stroke.x[j] * scale)
-                                	o.y.push(stroke.y[j] * scale)
-                                }
-                            
-                            	newData.push(o)
-                            }
+								stroke = data[i]
+								
+								o = {'x':[],'y':[]}
+								
+								for ( j = 0, m = stroke.x.length; j < m; j++) {
+									o.x.push(stroke.x[j] * scale)
+									o.y.push(stroke.y[j] * scale)
+								}
+							
+								newData.push(o)
+							}
 							return newData
 						})(
 							settings.data
@@ -701,7 +701,7 @@ function conditionallyLinkCanvasResizeToWindowResize(jSignatureInstance, setting
 						)
 						
 						$parent[apinamespace](settings)
-			        }
+					}
 				}
 			})(
 				this.eventTokens
@@ -730,6 +730,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 		,'lineWidth' : 0
 		,'minFatFingerCompensation' : -10
 		,'showUndoButton': false
+		,'readOnly': false
 		,'data': []
 	}
 	
@@ -823,25 +824,31 @@ function jSignatureClass(parent, options, instanceExtensions) {
 		)
 
 		this.drawEndHandler = function(e) {
-			try { e.preventDefault() } catch (ex) {}
-			timer.clear()
-			jSignatureInstance.dataEngine.endStroke()
+		    if (!jSignatureInstance.settings.readOnly) {
+    			try { e.preventDefault() } catch (ex) {}
+    			timer.clear()
+    			jSignatureInstance.dataEngine.endStroke()
+		    }
 		}
 		this.drawStartHandler = function(e) {
-			e.preventDefault()
-			// for performance we cache the offsets
-			// we recalc these only at the beginning the stroke			
-			setStartValues()
-			jSignatureInstance.dataEngine.startStroke( getPointFromEvent(e) )
-			timer.kick()
+		    if (!jSignatureInstance.settings.readOnly) {
+		        e.preventDefault()
+    			// for performance we cache the offsets
+    			// we recalc these only at the beginning the stroke			
+    			setStartValues()
+    			jSignatureInstance.dataEngine.startStroke( getPointFromEvent(e) )
+    			timer.kick()
+		    }
 		}
 		this.drawMoveHandler = function(e) {
-			e.preventDefault()
-			if (!jSignatureInstance.dataEngine.inStroke){
-				return
-			} 
-			jSignatureInstance.dataEngine.addToStroke( getPointFromEvent(e) )
-			timer.kick()
+		    if (!jSignatureInstance.settings.readOnly) {
+    			e.preventDefault()
+    			if (!jSignatureInstance.dataEngine.inStroke){
+    				return
+    			} 
+    			jSignatureInstance.dataEngine.addToStroke( getPointFromEvent(e) )
+    			timer.kick()
+		    }
 		}
 
 		return this
@@ -1062,8 +1069,8 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 
 	// We cannot work with circular dependency
 	if (settings.width === settings.height && settings.height === 'ratio') {
-    	settings.width = '100%'
-    }
+		settings.width = '100%'
+	}
 
 	$canvas.css(
 		'margin'
@@ -1090,12 +1097,12 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 			'height'
 			, Math.round( $canvas.width() / settings.sizeRatio )
 		)
-    } else if (settings.width === 'ratio') {
+	} else if (settings.width === 'ratio') {
 		$canvas.css(
 			'width'
 			, Math.round( $canvas.height() * settings.sizeRatio )
 		)
-    }
+	}
 
 	$canvas.addClass(apinamespace)
 
@@ -1142,7 +1149,7 @@ var GlobalJSignatureObjectInitializer = function(window){
 		// window resize is the only way we can catch resize events though...
 		$(window).bind('resize.'+apinamespace, function(){
 			if (resizetimer) {
-                clearTimeout(resizetimer)
+				clearTimeout(resizetimer)
 			}
 			resizetimer = setTimeout( 
 				runner
@@ -1219,9 +1226,9 @@ var GlobalJSignatureObjectInitializer = function(window){
 				var splitterpos = imagestring.indexOf(',')
 
 				return [
-			        imagestring.slice(5, splitterpos)
-			        , imagestring.substr(splitterpos + 1)
-		        ]
+					imagestring.slice(5, splitterpos)
+					, imagestring.substr(splitterpos + 1)
+				]
 			}
 			return []
 		}
@@ -1366,6 +1373,18 @@ var GlobalJSignatureObjectInitializer = function(window){
 		, 'setData' : _setDrawingData
 		// this is one and same instance for all jSignature.
 		, 'globalEvents' : function(){return globalEvents}
+        , 'disable' : function() {
+            this.find('canvas.'+apinamespace)
+                .data(apinamespace+'.this')
+                .settings
+                .readOnly=true;
+        }
+        , 'enable' : function() {
+            this.find('canvas.'+apinamespace)
+                .data(apinamespace+'.this')
+                .settings
+                .readOnly=false;
+        }
 		// there will be a separate one for each jSignature instance.
 		, 'events' : function() {
 			return this.find('canvas.'+apinamespace)
