@@ -1374,13 +1374,17 @@ var GlobalJSignatureObjectInitializer = function(window){
 		// this is one and same instance for all jSignature.
 		, 'globalEvents' : function(){return globalEvents}
         , 'disable' : function() {
+            this.find("input").attr("disabled", 1);
             this.find('canvas.'+apinamespace)
+                .addClass("disabled")
                 .data(apinamespace+'.this')
                 .settings
                 .readOnly=true;
         }
         , 'enable' : function() {
+            this.find("input").removeAttr("disabled");
             this.find('canvas.'+apinamespace)
+                .removeClass("disabled")
                 .data(apinamespace+'.this')
                 .settings
                 .readOnly=false;

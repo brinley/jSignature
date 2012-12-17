@@ -82,6 +82,8 @@ Arguments vary per `command`. When provided, `command` is expected to be a strin
 *   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
 *   `setData` takes two arguments - data object, data format name. When data object is a string formatted in data-url pattern you don't need to specify the data dormat name. The data format name (mime) will be implied from the data-url prefix. See example below for that. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
 *   `listPlugins` takes an argument - a string denoting the category (Only `export`, `import` supported at this time) of plugins to list. Returns an array of strings. 
+*   `disable` makes the canvas read-only and disable the jSignature buttons 
+*   `enable` makes the canvas read-only and enable the jSignature buttons
 
 Usage examples:
 
@@ -99,7 +101,7 @@ Usage examples:
     $(i).appendTo($("#someelement") // append the image (SVG) to DOM.
     
     // Getting signature as "base30" data pair
-    // array of [mimetype, string of jSIgnature"s custom Base30-compressed format]
+    // array of [mimetype, string of jSignature's custom Base30-compressed format]
     datapair = $sigdiv.jSignature("getData","base30") 
     // reimporting the data into jSignature.
     // import plugins understand data-url-formatted strings like "data:mime;encoding,data"
