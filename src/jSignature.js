@@ -894,6 +894,11 @@ function jSignatureClass(parent, options, instanceExtensions) {
 				canvas.onmouseup = drawEndHandler
 				canvas.onmousemove = drawMoveHandler
 			}
+			if (window.navigator.msPointerEnabled) {
+				canvas.onmspointerdown = drawStartHandler;
+				canvas.onmspointerup = drawEndHandler;
+				canvas.onmspointermove = drawMoveHandler;
+			}
 		}
 	}).call( 
 		this
