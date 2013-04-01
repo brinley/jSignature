@@ -750,9 +750,9 @@ function jSignatureClass(parent, options, instanceExtensions) {
 
 	// these, when enabled, will hover above the sig area. Hence we append them to DOM before canvas.
 	this.$controlbarUpper = (function(){
-		var controlbarstyle = 'padding:0 !important;margin:0 !important;'+
-			'width: 100% !important; height: 0 !important;'+
-			'margin-top:-1em !important;margin-bottom:1em !important;'
+		var controlbarstyle = 'padding:0 !important; margin:0 !important;'+
+			'width: 100% !important; height: 0 !important; -ms-touch-action: none;'+
+			'margin-top:-1em !important; margin-bottom:1em !important;'
 		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
 	})();
 
@@ -761,9 +761,9 @@ function jSignatureClass(parent, options, instanceExtensions) {
 	, $canvas = $(canvas)
 
 	this.$controlbarLower = (function(){
-		var controlbarstyle = 'padding:0 !important;margin:0 !important;'+
-			'width: 100% !important; height: 0 !important;'+
-			'margin-top:-1.5em !important;margin-bottom:1.5em !important;'
+		var controlbarstyle = 'padding:0 !important; margin:0 !important;'+
+			'width: 100% !important; height: 0 !important; -ms-touch-action: none;'+
+			'margin-top:-1.5em !important; margin-bottom:1.5em !important;'
 		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
 	})();
 
@@ -1092,7 +1092,10 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 	).css(
 		'width'
 		, settings.width === 'ratio' || !settings.width ? 1 : settings.width.toString(10)
-	)
+	).css(
+	    '-ms-touch-action'
+	    , 'none'
+	);
 
 	$canvas.appendTo(this.$parent)
 
