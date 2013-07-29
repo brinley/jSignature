@@ -15,7 +15,7 @@ For example, on slow rendering devices (Android Browser, FlashCanvas-based Canva
 
 jSignature makes it easy to pluck itself into an existing styled site. jSignature automatically detects the colors used on the wrapping element (text color = pen color, background = background) and auto-picks a pleasing middle-shade for 'decor' (signature line). jSignature adapts well to fixed and variable width web page designs, and various size screens (phones, tablets, computer screens) and automatically rescales the drawing area and signature when parent element changes size.
 
-See [demos here](http://willowsystems.github.com/jSignature/#/demo/ "Signature Capture Demos").
+See [demos here](http://brinley.github.io/jSignature/ "Signature Capture Demos").
 
 ## Adding jSignature to your page
 
