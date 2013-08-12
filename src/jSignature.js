@@ -112,7 +112,7 @@ var PubSubClass = function(context){
 			var currentTopic = this.topics[token.topic]
 			
 			for (var i = 0, l = currentTopic.length; i < l; i++) {
-				if (currentTopic[i][0] === token.callback) {
+				if (currentTopic[i] && currentTopic[i][0] === token.callback) {
 					currentTopic.splice(i, 1)
 				}
 			}
