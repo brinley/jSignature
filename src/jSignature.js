@@ -763,7 +763,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 	this.$controlbarLower = (function(){
 		var controlbarstyle = 'padding:0 !important; margin:0 !important;'+
 			'width: 100% !important; height: 0 !important; -ms-touch-action: none;'+
-			'margin-top:-1.5em !important; margin-bottom:1.5em !important;'
+			'margin-top:-1.5em !important; margin-bottom:1.5em !important; position: relative;'
 		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent)
 	})();
 
@@ -948,7 +948,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 //=========================================================================
 // jSignatureClass's methods and supporting fn's
 
-jSignatureClass.prototype.resetCanvas = function(data){
+jSignatureClass.prototype.resetCanvas = function(data, dontClear){
 	var canvas = this.canvas
 	, settings = this.settings
 	, ctx = this.canvasContext
@@ -958,8 +958,9 @@ jSignatureClass.prototype.resetCanvas = function(data){
 	, ch = canvas.height
 	
 	// preparing colors, drawing area
-
-	ctx.clearRect(0, 0, cw + 30, ch + 30)
+	if (!dontClear){
+		ctx.clearRect(0, 0, cw + 30, ch + 30)
+	}
 
 	ctx.shadowColor = ctx.fillStyle = settings['background-color']
 	if (isCanvasEmulator){
@@ -1283,10 +1284,10 @@ var GlobalJSignatureObjectInitializer = function(window){
 		, 'image/jpg;base64': _renderImageOnCanvas
 	}
 
-	function _clearDrawingArea( data ) {
+	function _clearDrawingArea( data, dontClear ) {
 		this.find('canvas.'+apinamespace)
 			.add(this.filter('canvas.'+apinamespace))
-			.data(apinamespace+'.this').resetCanvas( data )
+			.data(apinamespace+'.this').resetCanvas( data, dontClear )
 		return this
 	}
 
@@ -1342,6 +1343,14 @@ var GlobalJSignatureObjectInitializer = function(window){
 			return this.find('canvas.'+apinamespace)
 				.add(this.filter('canvas.'+apinamespace))
 				.data(apinamespace+'.this').settings
+		}
+		, 'updateSetting' : function(param, val, forFuture) {
+			var $canvas = this.find('canvas.'+apinamespace)
+							.add(this.filter('canvas.'+apinamespace))
+							.data(apinamespace+'.this');
+			$canvas.settings[param] = val;
+			$canvas.resetCanvas(( forFuture ? null : $canvas.settings.data ), true);
+			return $canvas.settings;
 		}
 		// around since v1
 		, 'clear' : _clearDrawingArea

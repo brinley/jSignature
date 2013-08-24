@@ -76,14 +76,18 @@ Explained:
 
 The following method becomes exposed on top of jQuery objects: `.jSignature(String command, *args)`
 
-Arguments vary per `command`. When provided, `command` is expected to be a string with a command for jSignature. Commands supported at this time: `init`, `reset`, `getData`, `setData`, `listPlugins`
+Arguments vary per `command`. When provided, `command` is expected to be a string with a command for jSignature. Commands supported at this time:
 *   `init` is the default, assumed action. `init` takes one argument - a settings Object. You can omit the command and just pass the settings object in upon init. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
 *   `reset` just clears the signature pad, data store (and puts back signature line and other decor). Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
+*   `clear` alias of reset for legacy purposes.
 *   `getData` takes an argument - the name of the data format. Returns a data object appropriate for the data format.
 *   `setData` takes two arguments - data object, data format name. When data object is a string formatted in data-url pattern you don't need to specify the data dormat name. The data format name (mime) will be implied from the data-url prefix. See example below for that. Returns (in a traditional jQuery chainable way) jQuery object ref to the element onto which the plugin was applied.
+*   `importData` alias of setData for legacy purposes.
 *   `listPlugins` takes an argument - a string denoting the category (Only `export`, `import` supported at this time) of plugins to list. Returns an array of strings. 
 *   `disable` makes the canvas read-only and disable the jSignature buttons 
 *   `enable` makes the canvas read-only and enable the jSignature buttons
+*   `getSettings` returns the configurable settings of the jSignature instance. 
+*   `updateSetting` takes three arguments - setting name, new value, boolean value if the change should affect current signature or future strokes. This allows you to update certain settings like lineWidth or line color and with the third argument you can make the change apply to the existing strokes. At present, updating change to existing strokes only works with a few settings like color. Returns the updated value.
 
 Usage examples:
 
