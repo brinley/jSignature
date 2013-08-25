@@ -86,6 +86,7 @@ Arguments vary per `command`. When provided, `command` is expected to be a strin
 *   `listPlugins` takes an argument - a string denoting the category (Only `export`, `import` supported at this time) of plugins to list. Returns an array of strings. 
 *   `disable` makes the canvas read-only and disable the jSignature buttons 
 *   `enable` makes the canvas read-only and enable the jSignature buttons
+*   `isModified` returns a boolean true if the jSignature was modified, false otherwise.
 *   `getSettings` returns the configurable settings of the jSignature instance. 
 *   `updateSetting` takes three arguments - setting name, new value, boolean value if the change should affect current signature or future strokes. This allows you to update certain settings like lineWidth or line color and with the third argument you can make the change apply to the existing strokes. At present, updating change to existing strokes only works with a few settings like color. Returns the updated value.
 
