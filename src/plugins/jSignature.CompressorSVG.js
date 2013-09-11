@@ -335,7 +335,27 @@ mourner.github.com/simplify-js
 		return newstroke
 	}
 
-	function compressstrokes(data){
+	// generate SVG style from settings
+	function styleFromSettings(settings){
+		var styles = [];
+		var meta = [
+			// ["style attr", "key in settings", "default value"]
+			["fill", undefined, "none"],
+			["stroke", "color", "#000000"],
+			["stroke-width", "lineWidth", 2],
+			["stroke-linecap", undefined, "round"],
+			["stroke-linejoin", undefined, "round"]
+		];
+		for (var i = meta.length - 1; i >= 0; i--){
+			var attr = meta[i][0]
+			, key = meta[i][1]
+			, defaultVal = meta[i][2];
+			styles.push(attr + '="' + (key in settings ? settings[key] : defaultVal) + '"');
+		}
+		return styles.join(' ');
+	}
+
+	function compressstrokes(data, settings){
 		'use strict'
 		var answer = [
 			'<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
@@ -398,7 +418,7 @@ mourner.github.com/simplify-js
 
 		for(i = 0, l = simplifieddata.length; i < l; i++){
 			stroke = simplifieddata[i]
-			answer.push('<path fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="'+ addstroke(stroke, shiftx, shifty) + '"/>')
+			answer.push('<path ' + styleFromSettings(settings) + ' d="'+ addstroke(stroke, shiftx, shifty) + '"/>')
 		}
 		answer.push('</svg>')
 		return answer.join('')
@@ -452,13 +472,14 @@ http://phpjs.org/functions/base64_encode
 	}
 
 	var unencodedmime = 'image/svg+xml'
-	function getUnencodedSVG(data){
-		return [unencodedmime , compressstrokes(data)]
+	function getUnencodedSVG(data, settings){
+		return [unencodedmime , compressstrokes(data, settings)];
 	}
 
 	var base64encodedmime = 'image/svg+xml;base64'
-	function getBase64encodedSVG(data){
-		return [base64encodedmime , btoa( compressstrokes(data) )] 
+	function getBase64encodedSVG(data, settings){
+
+		return [base64encodedmime , btoa( compressstrokes(data, settings) )];
 	} 
 
 	function Initializer($){
