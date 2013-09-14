@@ -1389,6 +1389,7 @@ var GlobalJSignatureObjectInitializer = function(window){
 				return exportplugins[formattype].call(
 					$canvas.get(0) // canvas dom elem
 					, $canvas.data(apinamespace+'.data') // raw signature data as array of objects of arrays
+					, $canvas.data(apinamespace+'.settings')
 				);
 			}
 		}
