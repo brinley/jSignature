@@ -350,7 +350,7 @@ mourner.github.com/simplify-js
 			var attr = meta[i][0]
 			, key = meta[i][1]
 			, defaultVal = meta[i][2];
-			styles.push(attr + '="' + (key in settings ? settings[key] : defaultVal) + '"');
+			styles.push(attr + '="' + (key in settings && settings[key] ? settings[key] : defaultVal) + '"');
 		}
 		return styles.join(' ');
 	}
