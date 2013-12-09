@@ -460,12 +460,14 @@ var basicDot = function(ctx, x, y, size){
 	ctx.beginPath();
 	ctx.moveTo(startx, starty);
 	ctx.lineTo(endx, endy);
+	ctx.closePath();
 	ctx.stroke();
 }
 , basicCurve = function(ctx, startx, starty, endx, endy, cp1x, cp1y, cp2x, cp2y){
 	ctx.beginPath();
 	ctx.moveTo(startx, starty);
 	ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy);
+	ctx.closePath();
 	ctx.stroke();
 }
 , strokeStartCallback = function(stroke) {
@@ -558,7 +560,7 @@ var basicDot = function(ctx, x, y, size){
 	// this = jSignatureClass instance
 
 	// Here we tidy up things left unfinished in last strokeAddCallback run.
-	
+
 	// What's POTENTIALLY left unfinished there is the curve between the last points
 	// in the stroke, if the len of that line is more than lineCurveThreshold
 	// If the last line was shorter than lineCurveThreshold, it was drawn there, and there
