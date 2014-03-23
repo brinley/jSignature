@@ -1096,6 +1096,8 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 	    '-ms-touch-action'
 	    , 'none'
 	);
+	
+	$canvas.css('background-color', settings['background-color']);
 
 	$canvas.appendTo(this.$parent);
 
