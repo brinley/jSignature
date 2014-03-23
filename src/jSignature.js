@@ -1093,11 +1093,12 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 		'width'
 		, settings.width === 'ratio' || !settings.width ? 1 : settings.width.toString(10)
 	).css(
-	    '-ms-touch-action'
-	    , 'none'
+		'-ms-touch-action'
+		, 'none'
+	).css(
+		'background-color',
+		settings['background-color']
 	);
-	
-	$canvas.css('background-color', settings['background-color']);
 
 	$canvas.appendTo(this.$parent);
 
