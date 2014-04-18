@@ -62,6 +62,7 @@ var PubSubClass = function(context){
 			var currentTopic = this.topics[topic]
 			, args = Array.prototype.slice.call(arguments, 1)
 			, toremove = []
+			, torun = []
 			, fn
 			, i, l
 			, pair;
@@ -73,10 +74,16 @@ var PubSubClass = function(context){
 				  pair[0] = function(){};
 				  toremove.push(i);
 				}
-			   	fn.apply(this.context, args);
+				/* don't call the callback right now, it might decide to add or
+				 * remove subscribers which will wreak havoc on our index-based
+				 * iteration */
+				torun.push(fn);
 			}
 			for (i = 0, l = toremove.length; i < l; i++) {
 			  currentTopic.splice(toremove[i], 1);
+			}
+			for (i = 0, l = torun.length; i < l; i++) {
+			  torun[i].apply(this.context, args);
 			}
 		}
 	}
