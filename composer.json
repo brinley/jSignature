@@ -10,7 +10,7 @@
             "role": "Developer"
         }
     ],
-    extra": {
+    "extra": {
     "branch-alias": {
       "dev-master": "master"
     }
