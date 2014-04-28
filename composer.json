@@ -1,6 +1,5 @@
 {
     "name": "brinley/jsignature",
-    "type": "library",
     "description": "Signature For Javascript",
     "keywords": ["signature","jquery"],
     "homepage": "http://www.unbolt.net/jSignature",
@@ -10,5 +9,10 @@
             "name": "brinley",
             "role": "Developer"
         }
-    ]
+    ],
+    extra": {
+    "branch-alias": {
+      "dev-master": "master"
+    }
+  }
 }
