@@ -1,0 +1,23 @@
+{
+  "name": "jSignature",
+  "version": "2.0.0",
+  "homepage": "https://github.com/brinley/jSignature",
+  "description": "jQuery plugin for handling digital signatures",
+  "main": "jSignature.js",
+  "keywords": [
+    "jSignature",
+    "signature",
+    "jQuery"
+  ],
+  "authors": [
+    "Brinley Ang"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
