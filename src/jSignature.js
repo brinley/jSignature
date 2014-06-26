@@ -1270,12 +1270,16 @@ var GlobalJSignatureObjectInitializer = function(window){
 		// this = Canvas DOM elem. Not jQuery object. Not Canvas's parent div.
 		, c = this;
 
-		img.onload = function() {
-			var ctx = c.getContext("2d").drawImage( 
+		img.onload = function () {
+		    var ctx = c.getContext("2d");
+		    var oldShadowColor = ctx.shadowColor;
+            ctx.shadowColor = "transparent";
+		    ctx.drawImage( 
 				img, 0, 0
 				, ( img.width < c.width) ? img.width : c.width
 				, ( img.height < c.height) ? img.height : c.height
 			);
+		    ctx.shadowColor = oldShadowColor;
 		};
 
 		img.src = 'data:' + formattype + ',' + data;
