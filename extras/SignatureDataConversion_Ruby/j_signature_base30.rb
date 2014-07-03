@@ -14,7 +14,7 @@ class JSignatureBase30
   
   def initialize(datastring)
     @charmap, @charmap_reverse = [], []
-    @allchars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX'.bytes
+    @allchars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX'.bytes.to_a
 
     (BITNESS-1).downto(0) do |i|
       @charmap[@allchars[i]] = @allchars[i+BITNESS]
