@@ -7,7 +7,7 @@
     "src/jSignature.js",
     "src/plugins/jSignature.CompressorBase30.js",
     "src/plugins/jSignature.CompressorSVG.js",
-    "src/plugins/jSignature.UndoButton.js",
+    "src/plugins/jSignature.UndoButton.js"
   ],
   "keywords": [
     "jSignature",
