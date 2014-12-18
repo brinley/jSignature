@@ -740,6 +740,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 		,'minFatFingerCompensation' : -10
 		,'showUndoButton': false
 		,'readOnly': false
+		,'showLine': true
 		,'data': []
 	};
 	
@@ -977,7 +978,7 @@ jSignatureClass.prototype.resetCanvas = function(data, dontClear){
 	ctx.lineCap = ctx.lineJoin = "round";
 	
 	// signature line
-	if (null != settings['decor-color']) {
+	if (null != settings['decor-color'] && settings['showLine']) {
 		ctx.strokeStyle = settings['decor-color'];
 		ctx.shadowOffsetX = 0;
 		ctx.shadowOffsetY = 0;
