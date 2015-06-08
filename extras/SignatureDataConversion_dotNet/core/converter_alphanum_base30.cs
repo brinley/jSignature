@@ -52,6 +52,64 @@ namespace jSignature.Tools
             }
         }
 
+        private List<int> ToBase30(int val)
+        {
+            List<int> retVal = new List<int>();
+
+            //Determine the max power of bitness
+            int pow = 0;
+            while (Math.Pow(bitness, pow + 1) < val) pow++;
+            
+            //Iterate through each of the powers of the bitness to
+            int num = val;
+            while (pow >= 0)
+            {
+
+                int mag = Convert.ToInt32(Math.Pow(bitness,  pow));
+                int div = num / mag;
+                retVal.Add(div);
+                num = num - (div * mag);
+                pow--;
+            }
+
+            return retVal;
+        }
+
+        private string CompressStrokeLeg(int[] val)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            char polarity = PLUS;
+
+            foreach (int num in val)
+            {
+                //Put the number into base30 format
+                List<int> cell = ToBase30(Math.Abs(num));
+
+                //If the polarity has changed, then we need to lay down a polarity indicator
+                char newpolarity;
+                if (num == 0) newpolarity = polarity;  //Zero indicates no change in polarity
+                else newpolarity = (num >= 0) ? PLUS : MINUS;
+                if (newpolarity != polarity)
+                {
+                    sb.Append(newpolarity);
+                    polarity = newpolarity;
+                }
+
+                //Now convert into the jSignature Base30 compressed format
+                for (int i = 0; i < cell.Count; i++)
+                {
+                    //The first "bitness" characters in the character set are used for the first member of the 
+                    //number representation.  If the number representation has more than 1 character, the 
+                    //offset in the character set is shifted by "bitness"
+                    int charsetoffset = (i > 0) ? bitness : 0;
+                    sb.Append(ALLCHARS[cell[i] + charsetoffset]);
+                }
+            }
+
+            return sb.ToString();
+        }
+        
         public int[] DecompressStrokeLeg(string data)
         {
             List<int> leg = new List<int>();
@@ -138,6 +196,32 @@ namespace jSignature.Tools
                 ));
             }
             return ss.ToArray();
+        }
+		
+        public string NativeToBase30(int[][][] data)
+        {
+            StringBuilder sb = new StringBuilder();
+            List<int> LegX = new List<int>();
+            List<int> LegY = new List<int>();
+            foreach (int[][] stroke in data)
+            {
+                LegX.Clear();
+                LegY.Clear();
+                foreach (int[] line in stroke)
+                {
+                    if (line.Length != 2) throw new Exception("Invalid coordinate");
+                    LegX.Add(line[0]);
+                    LegY.Add(line[1]);
+                }
+
+                if (sb.Length > 0) sb.Append("_");
+                sb.Append(CompressStrokeLeg(LegX.ToArray()));
+                sb.Append("_");
+                sb.Append(CompressStrokeLeg(LegY.ToArray()));
+            }
+
+
+            return sb.ToString();
         }
     }
 }
