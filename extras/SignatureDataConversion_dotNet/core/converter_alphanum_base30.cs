@@ -197,7 +197,15 @@ namespace jSignature.Tools
             }
             return ss.ToArray();
         }
-		
+
+        /// <summary>
+        /// Returns a compressed string like this one: 
+        ///  "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"
+        /// Originating from a stroke list such as:
+        ///  [[[100,50],[1,2],[3,4],[-5,-6],[5,-6]], [[50,100],[1,2],[-3,-4]]]
+        /// </summary>
+        /// <param name="data">.Net-specific structure (of array or arrays of arrays)</param>
+        /// <returns></returns>
         public string NativeToBase30(int[][][] data)
         {
             StringBuilder sb = new StringBuilder();
