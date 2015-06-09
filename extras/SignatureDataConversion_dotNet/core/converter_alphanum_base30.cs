@@ -182,7 +182,7 @@ namespace jSignature.Tools
         /// </summary>
         /// <param name="data">string of data encoded in base30 format. Ex: "3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4"</param>
         /// <returns></returns>
-        public int[][][] GetData(string data){
+        public int[][][] Base30ToNative(string data){
             List<int[][]> ss = new List<int[][]>();
 
             string[] parts = data.Split('_');

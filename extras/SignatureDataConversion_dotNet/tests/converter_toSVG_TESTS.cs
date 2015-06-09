@@ -106,7 +106,7 @@ namespace jSignature.Tools.Tests
         [Test]
         public void id003_ToSVG_External()
         {
-            var data = new jSignature.Tools.Base30Converter().GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
+            var data = new jSignature.Tools.Base30Converter().Base30ToNative("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4");
 
             string actual = jSignature.Tools.SVGConverter.ToSVG(data);
 

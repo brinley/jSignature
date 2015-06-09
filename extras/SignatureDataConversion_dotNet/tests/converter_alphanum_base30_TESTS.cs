@@ -89,7 +89,7 @@ namespace jSignature.Tools.Tests
 
             Assert.AreEqual(
                 shouldbe
-                , c.GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4")
+                , c.Base30ToNative("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4")
             );
         }
 
@@ -102,7 +102,7 @@ namespace jSignature.Tools.Tests
             Base30Converter bc = new Base30Converter();
 
             //Perform the decompression
-            int[][][] dec = bc.GetData(compressedSig);
+            int[][][] dec = bc.Base30ToNative(compressedSig);
 
             //Now convert the output back to being compressed
             string comp = bc.NativeToBase30(dec);
