@@ -89,8 +89,26 @@ namespace jSignature.Tools.Tests
 
             Assert.AreEqual(
                 shouldbe
-                , c.GetData("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4")
+                , c.Base30ToNative("3E13Z5Y5_1O24Z66_1O1Z3_3E2Z4")
             );
+        }
+
+        [Test]
+        public void id003_DecompressSigCompressSig()
+        {
+            //The sample signature will be decompressed and then compression will take place 
+            //immediately after that.  The end result should be identical to the input.
+            string compressedSig = "4A8865240Z12020020110200Y1442346668865543232010Z14854Y3858a77d65653212001301002544463334324_1TZ243532Ydgeglgb9646Z7ajicob74522000Y114465865a5511016a7c7a5a410Z15463566Y3545541111Z1332653Y1_bS2Z112344200Y25845583464662200Z40000002330Y216333343234_5DZ374331Y3a8667a5110Z34abfbc896Y4885885333Z5351Y233553332_aF_3K";
+            Base30Converter bc = new Base30Converter();
+
+            //Perform the decompression
+            int[][][] dec = bc.Base30ToNative(compressedSig);
+
+            //Now convert the output back to being compressed
+            string comp = bc.NativeToBase30(dec);
+
+            //The orignal input should be the same as our latest result
+            Assert.AreEqual(compressedSig, comp);
         }
     }
 }

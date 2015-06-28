@@ -47,7 +47,7 @@ namespace jSignature.Tools.Tests
         public void id001_Sizes()
         {
             var c = new jSignature.Tools.Base30Converter();
-            var uncompresseddataobject = c.GetData(compressedtestdata);
+            var uncompresseddataobject = c.Base30ToNative(compressedtestdata);
             var stats = new jSignature.Tools.Stats(uncompresseddataobject);
 
             // above sig has the following limits
