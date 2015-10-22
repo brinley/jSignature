@@ -1354,6 +1354,18 @@ var GlobalJSignatureObjectInitializer = function(window){
 				}
 			})
 		}
+		, 'destroy': function() {
+			return this.each(function() {
+				if(!elementIsOrphan(this)) {
+					var sig = $(this).find('canvas').data(apinamespace + '.this');
+					if(sig) {
+						sig.$controlbarLower.remove();
+						sig.$controlbarUpper.remove();
+						$(sig.canvas).remove();
+					}
+				}
+			});
+		}
 		, 'getSettings' : function() {
 			return this.find('canvas.'+apinamespace)
 				.add(this.filter('canvas.'+apinamespace))
