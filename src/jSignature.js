@@ -761,7 +761,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 	// these, when enabled, will hover above the sig area. Hence we append them to DOM before canvas.
 	this.$controlbarUpper = (function(){
 		var controlbarstyle = 'padding:0 !important; margin:0 !important;'+
-			'width: 100% !important; height: 0 !important; -ms-touch-action: none;'+
+			'width: 100% !important; height: 0 !important; -ms-touch-action: none; touch-action: none;'+
 			'margin-top:-1em !important; margin-bottom:1em !important;';
 		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent);
 	})();
@@ -772,7 +772,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 
 	this.$controlbarLower = (function(){
 		var controlbarstyle = 'padding:0 !important; margin:0 !important;'+
-			'width: 100% !important; height: 0 !important; -ms-touch-action: none;'+
+			'width: 100% !important; height: 0 !important; -ms-touch-action: none; touch-action: none;'+
 			'margin-top:-1.5em !important; margin-bottom:1.5em !important; position: relative;';
 		return $('<div style="'+controlbarstyle+'"></div>').appendTo($parent);
 	})();
@@ -1088,26 +1088,16 @@ jSignatureClass.prototype.initializeCanvas = function(settings) {
 	}
 
 	$canvas.css(
-		'margin'
-		, 0
-	).css(
-		'padding'
-		, 0
-	).css(
-		'border'
-		, 'none'
-	).css(
-		'height'
-		, settings.height === 'ratio' || !settings.height ? 1 : settings.height.toString(10)
-	).css(
-		'width'
-		, settings.width === 'ratio' || !settings.width ? 1 : settings.width.toString(10)
-	).css(
-		'-ms-touch-action'
-		, 'none'
-	).css(
-		'background-color',
-		settings['background-color']
+		{
+			'margin': 0,
+			'padding': 0,
+			'border': 'none',
+			'height': settings.height === 'ratio' || !settings.height ? 1 : settings.height.toString(10),
+			'width': settings.width === 'ratio' || !settings.width ? 1 : settings.width.toString(10),
+			'-ms-touch-action': 'none',
+			'touch-action': 'none',
+			'background-color': settings['background-color']
+		}
 	);
 
 	$canvas.appendTo(this.$parent);
