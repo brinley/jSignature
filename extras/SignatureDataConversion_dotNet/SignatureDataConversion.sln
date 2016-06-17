@@ -1,9 +1,20 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignatureDataConversionCore", "core\SignatureDataConversionCore.csproj", "{A439B878-B25B-4F05-8410-E9D3336B484F}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{00703F8D-4A5A-4CD3-9C9D-8689AF2B50AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignatureDataConversionTests", "tests\SignatureDataConversionTests.csproj", "{BF40939D-D812-4999-B9B5-A21575D1A5E5}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DCC76D16-C161-4716-95A3-A839358B5EC9}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SignatureDataConversion.Core", "src\SignatureDataConversion.Core\SignatureDataConversion.Core.xproj", "{27485B07-9045-4FDA-8F9B-0447542345B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{44EFBB19-D55E-4070-A3D3-2F19D3C3B7D9}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SignatureDataConversion.Tests", "test\SignatureDataConversion.Tests\SignatureDataConversion.Tests.xproj", "{816840E4-D22F-41B5-AADD-0D82D52E7010}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,16 +22,20 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A439B878-B25B-4F05-8410-E9D3336B484F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A439B878-B25B-4F05-8410-E9D3336B484F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A439B878-B25B-4F05-8410-E9D3336B484F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A439B878-B25B-4F05-8410-E9D3336B484F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BF40939D-D812-4999-B9B5-A21575D1A5E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF40939D-D812-4999-B9B5-A21575D1A5E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF40939D-D812-4999-B9B5-A21575D1A5E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF40939D-D812-4999-B9B5-A21575D1A5E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27485B07-9045-4FDA-8F9B-0447542345B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27485B07-9045-4FDA-8F9B-0447542345B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27485B07-9045-4FDA-8F9B-0447542345B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27485B07-9045-4FDA-8F9B-0447542345B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{816840E4-D22F-41B5-AADD-0D82D52E7010}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{816840E4-D22F-41B5-AADD-0D82D52E7010}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{816840E4-D22F-41B5-AADD-0D82D52E7010}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{816840E4-D22F-41B5-AADD-0D82D52E7010}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{27485B07-9045-4FDA-8F9B-0447542345B5} = {00703F8D-4A5A-4CD3-9C9D-8689AF2B50AF}
+		{816840E4-D22F-41B5-AADD-0D82D52E7010} = {44EFBB19-D55E-4070-A3D3-2F19D3C3B7D9}
 	EndGlobalSection
 EndGlobal
