@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-
-using NUnit.Framework;
 using System.Reflection;
-
+using NUnit.Framework;
+                      
 /*
  * Note about these tests.
  * 

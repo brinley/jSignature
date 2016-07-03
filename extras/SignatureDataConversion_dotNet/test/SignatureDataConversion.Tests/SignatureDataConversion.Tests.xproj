@@ -6,7 +6,7 @@
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>816840e4-d22f-41b5-aadd-0d82d52e7010</ProjectGuid>
+    <ProjectGuid>9fef14c0-d0f8-4eb5-b588-4a73eff16588</ProjectGuid>
     <RootNamespace>jSignature.Tools.Tests</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">.\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">.\bin\</OutputPath>

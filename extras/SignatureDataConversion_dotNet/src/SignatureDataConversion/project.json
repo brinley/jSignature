@@ -1,0 +1,13 @@
+  "description": "jSignature Tools",
+  "copyright": "Copyright © 2016 by jSignature",
+  "version": "1.0.1",
+  "language": "en",
+
+  "dependencies": {
+    "NETStandard.Library": "1.6.0"
+  },
+
+  "frameworks": {
+    "netstandard1.6": {}
+  }
+}
