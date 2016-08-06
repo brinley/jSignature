@@ -2,7 +2,7 @@
   "title": "SignatureDataConversion Tests",
   "description": "jSignature Tools",
   "copyright": "Copyright © 2016 by jSignature",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "language": "en",
 
   "buildOptions": {
@@ -17,7 +17,7 @@
     },
     "NUnit": "3.4.1",
     "NUnitLite": "3.4.1",
-    "SignatureDataConversion": "1.0.1"
+    "SignatureDataConversion": "2.0.0"
   },
 
   "frameworks": {
