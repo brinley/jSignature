@@ -1,0 +1,15 @@
+{
+  "title": "SignatureDataConversion",
+  "description": "jSignature Tools",
+  "copyright": "Copyright © 2016 by jSignature",
+  "version": "2.0.0",
+  "language": "en",
+
+  "dependencies": {
+    "NETStandard.Library": "1.6.0"
+  },
+
+  "frameworks": {
+    "netstandard1.6": {}
+  }
+}

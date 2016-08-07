@@ -1,9 +1,0 @@
-﻿<NUnitProject>
-  <Settings activeconfig="Debug" />
-  <Config name="Debug" binpathtype="Auto">
-    <assembly path="tests\bin\Debug\SignatureDataConversionTests.dll" />
-  </Config>
-  <Config name="Release" binpathtype="Auto">
-    <assembly path="tests\bin\Release\SignatureDataConversionTests.dll" />
-  </Config>
-</NUnitProject>

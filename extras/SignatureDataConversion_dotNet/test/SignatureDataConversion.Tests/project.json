@@ -1,0 +1,28 @@
+{
+  "title": "SignatureDataConversion Tests",
+  "description": "jSignature Tools",
+  "copyright": "Copyright © 2016 by jSignature",
+  "version": "2.0.0",
+  "language": "en",
+
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "defines": [ "DEBUG" ]
+  },
+
+  "dependencies": {
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.0"
+    },
+    "NUnit": "3.4.1",
+    "NUnitLite": "3.4.1",
+    "SignatureDataConversion": "2.0.0"
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
+  }
+}
