@@ -1356,6 +1356,9 @@ var GlobalJSignatureObjectInitializer = function(window){
 						sig.$controlbarLower.remove();
 						sig.$controlbarUpper.remove();
 						$(sig.canvas).remove();
+						var globalEvents = $.fn[apinamespace]('globalEvents');
+						for (var e in sig.eventTokens)
+							globalEvents.unsubscribe(sig.eventTokens[e]);
 					}
 				}
 			});
