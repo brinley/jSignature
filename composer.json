@@ -1,7 +1,10 @@
 {
     "name": "brinley/jsignature",
     "description": "Signature For Javascript",
-    "keywords": ["signature","jquery"],
+    "keywords": [
+        "signature",
+        "jquery"
+    ],
     "homepage": "http://www.unbolt.net/jSignature",
     "license": "MIT",
     "authors": [
@@ -10,9 +13,14 @@
             "role": "Developer"
         }
     ],
+    "autoload": {
+        "classmap": [
+            "extras/SignatureDataConversion_PHP/core/"
+        ]
+    },
     "extra": {
-    "branch-alias": {
-      "dev-master": "master"
+        "branch-alias": {
+            "dev-master": "master"
+        }
     }
-  }
 }
