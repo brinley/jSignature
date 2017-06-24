@@ -1357,7 +1357,7 @@ var GlobalJSignatureObjectInitializer = function(window){
 						sig.$controlbarUpper.remove();
 						$(sig.canvas).remove();
 						for (var e in sig.eventTokens){
-							if (sig.eventTokens.hasOwnProperty(e){
+							if (sig.eventTokens.hasOwnProperty(e)){
 								globalEvents.unsubscribe(sig.eventTokens[e]);
 							}
 						}
