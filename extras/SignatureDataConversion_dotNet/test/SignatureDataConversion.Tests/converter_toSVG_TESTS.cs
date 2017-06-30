@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-
 using NUnit.Framework;
 
 /*
@@ -38,8 +34,6 @@ using NUnit.Framework;
 */
 namespace jSignature.Tools.Tests
 {
-    using jSignature.Tools;
-
     class PrivateMethodsAccessorForSVGConverter : jSignature.Tools.SVGConverter
     {
         public static string TestSegmentToCurve(int[][] stroke, int positionInStroke, int lineCurveThreshold)
@@ -110,9 +104,7 @@ namespace jSignature.Tools.Tests
 
             string actual = jSignature.Tools.SVGConverter.ToSVG(data);
 
-            // System.IO.File.WriteAllText(Common.SOURCE_PATH + "\\samples\\reference_svg_smoothed.svg", actual);
-
-            var sampleFilePath = Path.Combine(Common.SOURCE_PATH, "samples\\reference_svg_smoothed.svg");
+            var sampleFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "./samples/reference_svg_smoothed.svg");
 
             Assert.IsTrue(File.Exists(sampleFilePath), "Sample File not found!");
 
