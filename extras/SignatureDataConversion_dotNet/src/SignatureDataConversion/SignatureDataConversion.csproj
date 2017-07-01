@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>jSignature Tools</Description>
+    <Copyright>Copyright © 2017 by jSignature</Copyright>
+    <AssemblyTitle>SignatureDataConversion</AssemblyTitle>
+    <Version>2.1.0</Version>
+    <TargetFrameworks>netstandard1.0;net461</TargetFrameworks>
+  </PropertyGroup>
+
+</Project>

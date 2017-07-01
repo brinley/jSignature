@@ -38,27 +38,6 @@ using NUnit.Framework;
 */
 namespace jSignature.Tools.Tests
 {
-    public static class Common
-    {
-        // this normally resolves to something like: file:\C:\\path\to\proj\folder\bin\Debug
-        public static string EXECUTING_ASSEMBLY_PATH = Path.GetDirectoryName(typeof(Common).GetTypeInfo().Assembly.Location);
-        private static string _SOURCE_PATH = null;
-        public static string SOURCE_PATH
-        {
-            get
-            {
-                if (_SOURCE_PATH == null)
-                {
-                    //Regex r = new Regex(@"file:\\|bin\\Debug\\$|bin\\Release$");
-                    //_SOURCE_PATH = r.Replace(Common.EXECUTING_ASSEMBLY_PATH, "");
-                    _SOURCE_PATH = Directory.GetParent(Directory.GetParent(Directory.GetParent(EXECUTING_ASSEMBLY_PATH).FullName).FullName).FullName;
-                }
-                return _SOURCE_PATH;
-            }
-        }
-    }
-
-
     public class TestBase
     {
         public string compressedtestdata = "7UZ32232263353223222333242_3w546647c9b96646475765444_6uZ69647544533210Y33544a67585ba897757988676545444_4G10Z22433223545633322411111000Y11211100000Z121223_8G56676646432Z166878886543300Y136574a487464_6GZ11122223344510000Y224333466642223222120Z2_dyZ75546542Y3656536444Z1435465443_5v0112223431121344337442222223_gHZ3424245334653141200Y142345566645_2D5546489657db46b95976443321Z12322_ey76686686676_4y00000000000";
