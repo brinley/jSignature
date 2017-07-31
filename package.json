@@ -1,6 +1,6 @@
 {
   "name": "jsignature",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "jQuery plugin for handling digital signatures",
   "main": "libs/jSignature.min.js",
   "scripts": {},
@@ -20,4 +20,3 @@
   },
   "homepage": "https://github.com/brinley/jSignature"
 }
-
