@@ -1,5 +1,5 @@
 {
-  "name": "jSignature",
+  "name": "jsignature",
   "version": "2.1.1",
   "description": "jQuery plugin for handling digital signatures",
   "main": "libs/jSignature.min.js",
