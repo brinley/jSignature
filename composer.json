@@ -17,10 +17,5 @@
         "classmap": [
             "extras/SignatureDataConversion_PHP/core/"
         ]
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "master"
-        }
     }
 }
