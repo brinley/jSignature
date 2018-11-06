@@ -834,31 +834,31 @@ function jSignatureClass(parent, options, instanceExtensions) {
 		);
 
 		this.drawEndHandler = function(e) {
-		    if (!jSignatureInstance.settings.readOnly) {
-    			try { e.preventDefault(); } catch (ex) {}
-    			timer.clear();
-    			jSignatureInstance.dataEngine.endStroke();
-		    }
+			if (!jSignatureInstance.settings.readOnly) {
+				try { e.preventDefault(); } catch (ex) {}
+				timer.clear();
+				jSignatureInstance.dataEngine.endStroke();
+			}
 		};
 		this.drawStartHandler = function(e) {
-		    if (!jSignatureInstance.settings.readOnly) {
-		        e.preventDefault();
-    			// for performance we cache the offsets
-    			// we recalc these only at the beginning the stroke
-    			setStartValues();
-    			jSignatureInstance.dataEngine.startStroke( getPointFromEvent(e) );
-    			timer.kick();
-		    }
+			if (!jSignatureInstance.settings.readOnly) {
+				e.preventDefault();
+				// for performance we cache the offsets
+				// we recalc these only at the beginning the stroke
+				setStartValues();
+				jSignatureInstance.dataEngine.startStroke( getPointFromEvent(e) );
+				timer.kick();
+			}
 		};
 		this.drawMoveHandler = function(e) {
-		    if (!jSignatureInstance.settings.readOnly) {
-    			e.preventDefault();
-    			if (!jSignatureInstance.dataEngine.inStroke){
-    				return;
-    			}
-    			jSignatureInstance.dataEngine.addToStroke( getPointFromEvent(e) );
-    			timer.kick();
-		    }
+			if (!jSignatureInstance.settings.readOnly) {
+				e.preventDefault();
+				if (!jSignatureInstance.dataEngine.inStroke){
+					return;
+				}
+				jSignatureInstance.dataEngine.addToStroke( getPointFromEvent(e) );
+				timer.kick();
+			}
 		};
 
 		return this;
@@ -877,7 +877,8 @@ function jSignatureClass(parent, options, instanceExtensions) {
 			$canvas.bind('mouseup.'+apinamespace, drawEndHandler);
 			$canvas.bind('mousedown.'+apinamespace, drawStartHandler);
 		} else {
-			canvas.ontouchstart = function(e) {
+			var hasEventListener = typeof canvas.addEventListener === 'function';
+			this.ontouchstart = function(e) {
 				canvas.onmousedown = canvas.onmouseup = canvas.onmousemove = undef;
 
 				this.fatFingerCompensation = (
@@ -887,12 +888,29 @@ function jSignatureClass(parent, options, instanceExtensions) {
 
 				drawStartHandler(e);
 
-				canvas.ontouchend = drawEndHandler;
-				canvas.ontouchstart = drawStartHandler;
-				canvas.ontouchmove = drawMoveHandler;
+				if (hasEventListener) {
+					canvas.addEventListener('touchend', drawEndHandler);
+					canvas.addEventListener('touchstart', drawStartHandler);
+					canvas.addEventListener('touchmove', drawMoveHandler);
+				} else {
+					canvas.ontouchend = drawEndHandler;
+					canvas.ontouchstart = drawStartHandler;
+					canvas.ontouchmove = drawMoveHandler;
+				}
 			};
+
+			if (hasEventListener) {
+				canvas.addEventListener('touchstart', this.ontouchstart);
+			} else {
+				canvas.ontouchstart = ontouchstart;
+			}
+
 			canvas.onmousedown = function(e) {
-				canvas.ontouchstart = canvas.ontouchend = canvas.ontouchmove = undef;
+				if (hasEventListener) {
+					canvas.removeEventListener('touchstart', this.ontouchstart);
+				} else {
+					canvas.ontouchstart = canvas.ontouchend = canvas.ontouchmove = undef;
+				}
 
 				drawStartHandler(e);
 
@@ -1426,22 +1444,22 @@ var GlobalJSignatureObjectInitializer = function(window){
 		, 'setData' : _setDrawingData
 		// this is one and same instance for all jSignature.
 		, 'globalEvents' : function(){return globalEvents}
-        , 'disable' : function() {
-            this.find("input").attr("disabled", 1);
-            this.find('canvas.'+apinamespace)
-                .addClass("disabled")
-                .data(apinamespace+'.this')
-                .settings
-                .readOnly=true;
-        }
-        , 'enable' : function() {
-            this.find("input").removeAttr("disabled");
-            this.find('canvas.'+apinamespace)
-                .removeClass("disabled")
-                .data(apinamespace+'.this')
-                .settings
-                .readOnly=false;
-        }
+		, 'disable' : function() {
+			this.find("input").attr("disabled", 1);
+			this.find('canvas.'+apinamespace)
+				.addClass("disabled")
+				.data(apinamespace+'.this')
+				.settings
+				.readOnly=true;
+		}
+		, 'enable' : function() {
+			this.find("input").removeAttr("disabled");
+			this.find('canvas.'+apinamespace)
+				.removeClass("disabled")
+				.data(apinamespace+'.this')
+				.settings
+				.readOnly=false;
+		}
 		// there will be a separate one for each jSignature instance.
 		, 'events' : function() {
 			return this.find('canvas.'+apinamespace)
