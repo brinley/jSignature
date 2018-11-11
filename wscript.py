@@ -82,7 +82,7 @@ def compress_with_closure_compiler(code, compression_level = None):
 
     # Always use the following value for the Content-type header.
     headers = { "Content-type": "application/x-www-form-urlencoded" }
-    conn = httplib.HTTPConnection('closure-compiler.appspot.com')
+    conn = httplib.HTTPSConnection('closure-compiler.appspot.com')
     conn.request('POST', '/compile', params, headers)
     response = conn.getresponse()
 
@@ -111,4 +111,4 @@ def compress_with_closure_compiler(code, compression_level = None):
     return parts['compiledCode']
 
 if __name__ == '__main__':
-    print("This is a Wak build automation tool script. Please, get Wak on GitHub and run it against the folder containing this automation script.")
+    print("This is a Wak build automation tool script. Please, get Wak on GitHub and run it against the folder containing this automation script.")
