@@ -5,10 +5,12 @@ Copyright (c) 2010 Brinley Ang http://www.unbolt.net
 MIT License <http://www.opensource.org/licenses/mit-license.php>
 
 */
+
+
 ;(function() {
 
-var apinamespace = 'jSignature'
-
+var apinamespace = 'jSignature';
+var timeoutValue = 3;
 /**
 Allows one to delay certain eventual action by setting up a timer for it and allowing one to delay it
 by "kick"ing it. Sorta like "kick the can down the road"
@@ -31,7 +33,67 @@ var KickTimerClass = function(time, callback) {
 		clearTimeout(timer);
 	}
 	return this;
-}
+};
+
+
+var debugDraw = function(stroke){
+	if(stroke.length<1){
+		return
+	}
+
+	var ctx = this.canvasContext;
+
+	ctx.beginPath();
+	ctx.moveTo(stroke.x[0], stroke.y[0]);
+	for (var i = 1; i < stroke.x.length; i++) {
+		ctx.lineTo(stroke.x[i], stroke.y[i]);
+		ctx.moveTo(stroke.x[i], stroke.y[i]);
+	}
+	ctx.stroke();
+};
+
+var LightPromise = function(fnCallback){
+	this.fn = fnCallback;
+	this.children = [];
+	this.isResolved = false;
+
+	this.resolve = function(){
+		if(this.isResolved){
+			return;
+		}
+
+		if(this.fn){
+			var result = this.fn();
+			if(result instanceof LightPromise){
+				var self = this;
+				result.then(function(){
+					self._resolveChildren();
+				});
+				return;
+			}
+		}
+		this._resolveChildren();
+		return this;
+	};
+
+	this._resolveChildren = function(){
+		for (var i = 0; i < this.children.length; i++) {
+			this.children[i].resolve();
+		}
+		this.isResolved = true;
+	};
+
+	this.then = function(fnCallback){
+		var nextProm = new LightPromise(fnCallback);
+		this.children.push(nextProm);
+		if(this.isResolved){
+			nextProm.resolve();
+		}
+		return nextProm;
+	};
+};
+
+var timeoutQueue = new LightPromise().resolve();
 
 var PubSubClass = function(context){
 	'use strict'
@@ -302,9 +364,10 @@ function Vector(x,y){
 	};
 }
 
-function Point(x,y){
+function Point(x, y, id){
 	this.x = x;
 	this.y = y;
+    this.id = id || 0;
 
 	this.getVectorToCoordinates = function (x, y) {
 		return new Vector(x - this.x, y - this.y);
@@ -317,6 +380,9 @@ function Point(x,y){
 	};
 	this.getVectorFromPoint = function (point) {
 		return this.getVectorToPoint(point).reverse();
+	};
+    this.clone = function (xOff, yOff, id) {
+		return  new Point(this.x + xOff, this.y + yOff, id || this.id );
 	};
 }
 
@@ -379,77 +445,92 @@ function DataEngine(storageObject, context, startStrokeFn, addToStrokeFn, endStr
 	this.addToStrokeFn = addToStrokeFn;
 	this.endStrokeFn = endStrokeFn;
 
-	this.inStroke = false;
+	this.inStroke = 0;
 
-	this._lastPoint = null;
-	this._stroke = null;
-	this.startStroke = function(point){
-		if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
-			this._stroke = {'x':[point.x], 'y':[point.y]};
-			this.data.push(this._stroke);
-			this._lastPoint = point;
-			this.inStroke = true;
-			// 'this' does not work same inside setTimeout(
-			var stroke = this._stroke
-			, fn = this.startStrokeFn
-			, context = this.context;
-			setTimeout(
-				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn.call(context, stroke)}
-				, 3
-			);
-			return point;
-		} else {
-			return null;
-		}
+	this._lastPoint = {};
+	this._stroke = {};
+	this.startStroke = function(points){
+        for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+    		if(point && typeof(point.x) == "number" && typeof(point.y) == "number"){
+    			this._stroke[point.id] = {'x':[point.x], 'y':[point.y], 'id': point.id};
+    			this.data.push(this._stroke[point.id]);
+    			this._lastPoint[point.id] = point;
+    			this.inStroke = Object.keys(this._lastPoint).length;
+    			// 'this' does not work same inside setTimeout(
+                (function( stroke , fn , context ){
+					timeoutQueue = timeoutQueue.then(function(){
+						var lp = new LightPromise();
+	        			setTimeout(
+	        				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+	        				function() {fn.call(context, stroke); lp.resolve();}
+	        				, timeoutValue
+	        			);
+						return lp;
+					});
+				})(this._stroke[point.id], this.addToStrokeFn, this.context);
+    		}
+        }
 	};
 	// that "5" at the very end of this if is important to explain.
 	// we do NOT render links between two captured points (in the middle of the stroke) if the distance is shorter than that number.
 	// not only do we NOT render it, we also do NOT capture (add) these intermediate points to storage.
 	// when clustering of these is too tight, it produces noise on the line, which, because of smoothing, makes lines too curvy.
 	// maybe, later, we can expose this as a configurable setting of some sort.
-	this.addToStroke = function(point){
-		if (this.inStroke &&
-			typeof(point.x) === "number" &&
-			typeof(point.y) === "number" &&
-			// calculates absolute shift in diagonal pixels away from original point
-			(Math.abs(point.x - this._lastPoint.x) + Math.abs(point.y - this._lastPoint.y)) > 4
-		){
-			var positionInStroke = this._stroke.x.length;
-			this._stroke.x.push(point.x);
-			this._stroke.y.push(point.y);
-			this._lastPoint = point;
-
-			var stroke = this._stroke
-			, fn = this.addToStrokeFn
-			, context = this.context;
-			setTimeout(
-				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function() {fn.call(context, stroke, positionInStroke)}
-				, 3
-			);
-			return point;
-		} else {
-			return null;
+	this.addToStroke = function(points){
+		if (!Object.keys(this._lastPoint).length){
+			return;
 		}
+
+        for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+    		if (typeof(point.x) === "number" &&
+    			typeof(point.y) === "number" &&
+                this._lastPoint[point.id]!=null &&
+    			// calculates absolute shift in diagonal pixels away from original point
+    			(Math.abs(point.x - this._lastPoint[point.id].x) + Math.abs(point.y - this._lastPoint[point.id].y)) > 4
+    		){
+    			var positionInStroke = this._stroke[point.id].x.length;
+    			this._stroke[point.id].x.push(point.x);
+    			this._stroke[point.id].y.push(point.y);
+    			this._lastPoint[point.id] = point;
+
+				// debugDraw.call(this.context, this._stroke[point.id]);
+
+                (function(stroke, fn, context) {
+					timeoutQueue = timeoutQueue.then(function() {
+						var lp = new LightPromise();
+	        			setTimeout(
+	        				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+	        				function() {fn.call(context, stroke, positionInStroke); lp.resolve();}
+	        				, timeoutValue
+	        			);
+						return lp;
+					});
+                })(this._stroke[point.id], this.addToStrokeFn, this.context);
+    		}
+        }
 	};
-	this.endStroke = function(){
+	this.endStroke = function(id){
 		var c = this.inStroke;
-		this.inStroke = false;
-		this._lastPoint = null;
+		delete this._lastPoint[id];
+        this.inStroke = Object.keys(this._lastPoint).length;
 		if (c){
-			var stroke = this._stroke
-			, fn = this.endStrokeFn // 'this' does not work same inside setTimeout(
-			, context = this.context
-			, changedfn = this.changed;
-			setTimeout(
-				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
-				function(){
-					fn.call(context, stroke);
-					changedfn.call(context);
-				}
-				, 3
-			);
+            (function(stroke, fn, context, changedfn){
+				timeoutQueue = timeoutQueue.then(function(){
+					var lp = new LightPromise();
+	    			setTimeout(
+	    				// some IE's don't support passing args per setTimeout API. Have to create closure every time instead.
+	    				function(){
+	    					fn.call(context, stroke);
+	    					changedfn.call(context);
+							lp.resolve();
+	    				}
+	    				, timeoutValue
+	    			);
+					return lp;
+				});
+            })( this._stroke[id], this.endStrokeFn, this.context, this.changed);
 			return true;
 		} else {
 			return null;
@@ -803,6 +884,8 @@ function jSignatureClass(parent, options, instanceExtensions) {
 	// used for shifting the drawing point up on touch devices, so one can see the drawing above the finger.
 	this.fatFingerCompensation = 0;
 
+	var touchPointCache = {};
+
 	var movementHandlers = (function(jSignatureInstance) {
 
 		//================================
@@ -816,28 +899,59 @@ function jSignatureClass(parent, options, instanceExtensions) {
 			shiftX = tos.left * -1
 			shiftY = tos.top * -1
 		}
-		, getPointFromEvent = function(e) {
-			var firstEvent = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
-			// All devices i tried report correct coordinates in pageX,Y
-			// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
-			// Windows: Chrome, FF, IE9, Safari
-			// None of that scroll shift calc vs screenXY other sigs do is needed.
-			// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
-			return new Point(
-				Math.round(firstEvent.pageX + shiftX)
-				, Math.round(firstEvent.pageY + shiftY) + jSignatureInstance.fatFingerCompensation
-			);
+		, getPointsFromEvent = function(e, killDuplicates) {
+            if(e.changedTouches && e.changedTouches.length > 0) {
+                var resultPoints = [];
+                for (var i = 0; i < e.changedTouches.length; i++) {
+                    var event = e.changedTouches[i];
+					var x = event.pageX;
+					var y = event.pageY;
+					var id = event.identifier;
+
+					if(killDuplicates && touchPointCache[id]) {
+						// ignore slight movements, reduce function calls
+						if(Math.abs(touchPointCache[id].x - x)<2 &&
+							Math.abs(touchPointCache[id].y - y)<2) {
+							continue;
+						}
+					}
+					touchPointCache[id] = { x: x, y: y };
+
+                    // All devices i tried report correct coordinates in pageX,Y
+                    // Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
+                    // Windows: Chrome, FF, IE9, Safari
+                    // None of that scroll shift calc vs screenXY other sigs do is needed.
+                    // ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
+                    resultPoints.push(new Point(
+                        Math.round(event.pageX + shiftX),
+                        Math.round(event.pageY + shiftY) + jSignatureInstance.fatFingerCompensation,
+                        id + 1
+                    ));
+                }
+                return resultPoints;
+            } else {
+                return [new Point(
+    				Math.round(e.pageX + shiftX),
+    				Math.round(e.pageY + shiftY) + jSignatureInstance.fatFingerCompensation,
+                    0
+    			)];
+            }
 		}
-		, timer = new KickTimerClass(
-			750
-			, function() { jSignatureInstance.dataEngine.endStroke(); }
-		);
+		, timer = {};
 
 		this.drawEndHandler = function(e) {
 			if (!jSignatureInstance.settings.readOnly) {
 				try { e.preventDefault(); } catch (ex) {}
-				timer.clear();
-				jSignatureInstance.dataEngine.endStroke();
+
+				var points = getPointsFromEvent(e);
+				for (var i = 0; i < points.length; i++) {
+					var id = points[i].id;
+					if(timer[id]) {
+                    	timer[id].clear();
+						delete timer[id];
+					}
+    				jSignatureInstance.dataEngine.endStroke(id);
+				}
 			}
 		};
 		this.drawStartHandler = function(e) {
@@ -846,18 +960,37 @@ function jSignatureClass(parent, options, instanceExtensions) {
 				// for performance we cache the offsets
 				// we recalc these only at the beginning the stroke
 				setStartValues();
-				jSignatureInstance.dataEngine.startStroke( getPointFromEvent(e) );
-				timer.kick();
+                var points = getPointsFromEvent(e);
+				jSignatureInstance.dataEngine.startStroke( points );
+				for (var i = 0; i < points.length; i++) {
+					var id = points[i].id;
+					if(!timer[id]) {
+						timer[id] = (function(id) {
+							return new KickTimerClass(
+							   750
+							   , function() { jSignatureInstance.dataEngine.endStroke(id); }
+						   	);
+						})(id);
+					}
+					timer[id].kick();
+				}
 			}
 		};
 		this.drawMoveHandler = function(e) {
 			if (!jSignatureInstance.settings.readOnly) {
 				e.preventDefault();
-				if (!jSignatureInstance.dataEngine.inStroke){
+				if (jSignatureInstance.dataEngine.inStroke==0){
 					return;
 				}
-				jSignatureInstance.dataEngine.addToStroke( getPointFromEvent(e) );
-				timer.kick();
+                var points = getPointsFromEvent(e, true);
+                jSignatureInstance.dataEngine.addToStroke( points );
+
+				for (var i = 0; i < points.length; i++) {
+					var id = points[i].id;
+					if(timer[id]){
+						timer[id].kick();
+					}
+				}
 			}
 		};
 
@@ -1012,7 +1145,7 @@ jSignatureClass.prototype.resetCanvas = function(data, dontClear){
 			ctx.shadowBlur = 0;
 		}
 	}
-	
+
 	ctx.strokeStyle = settings.color;
 
 	// setting up new dataEngine
