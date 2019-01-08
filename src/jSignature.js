@@ -900,10 +900,10 @@ function jSignatureClass(parent, options, instanceExtensions) {
 			shiftY = tos.top * -1
 		}
 		, getPointsFromEvent = function(e, killDuplicates) {
-            if(e.changedTouches && e.changedTouches.length > 0) {
-                var resultPoints = [];
-                for (var i = 0; i < e.changedTouches.length; i++) {
-                    var event = e.changedTouches[i];
+			if(e && e.changedTouches && e.changedTouches.length > 0) {
+				var resultPoints = [];
+				for (var i = 0; i < e.changedTouches.length; i++) {
+					var event = e.changedTouches[i];
 					var x = event.pageX;
 					var y = event.pageY;
 					var id = event.identifier;
@@ -917,24 +917,26 @@ function jSignatureClass(parent, options, instanceExtensions) {
 					}
 					touchPointCache[id] = { x: x, y: y };
 
-                    // All devices i tried report correct coordinates in pageX,Y
-                    // Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
-                    // Windows: Chrome, FF, IE9, Safari
-                    // None of that scroll shift calc vs screenXY other sigs do is needed.
-                    // ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
-                    resultPoints.push(new Point(
-                        Math.round(event.pageX + shiftX),
-                        Math.round(event.pageY + shiftY) + jSignatureInstance.fatFingerCompensation,
-                        id + 1
-                    ));
-                }
-                return resultPoints;
-            } else {
-                return [new Point(
-    				Math.round(e.pageX + shiftX),
-    				Math.round(e.pageY + shiftY) + jSignatureInstance.fatFingerCompensation,
-                    0
-    			)];
+					// All devices i tried report correct coordinates in pageX,Y
+					// Android Chrome 2.3.x, 3.1, 3.2., Opera Mobile,  safari iOS 4.x,
+					// Windows: Chrome, FF, IE9, Safari
+					// None of that scroll shift calc vs screenXY other sigs do is needed.
+					// ... oh, yeah, the "fatFinger.." is for tablets so that people see what they draw.
+					resultPoints.push(new Point(
+						Math.round(event.pageX + shiftX),
+						Math.round(event.pageY + shiftY) + jSignatureInstance.fatFingerCompensation,
+						id + 1
+					));
+				}
+				return resultPoints;
+			} else if(e) {
+				return [new Point(
+					Math.round(e.pageX + shiftX),
+					Math.round(e.pageY + shiftY) + jSignatureInstance.fatFingerCompensation,
+					0
+				)];
+			} else {
+                return [];
             }
 		}
 		, timer = {};
@@ -947,10 +949,10 @@ function jSignatureClass(parent, options, instanceExtensions) {
 				for (var i = 0; i < points.length; i++) {
 					var id = points[i].id;
 					if(timer[id]) {
-                    	timer[id].clear();
+						timer[id].clear();
 						delete timer[id];
 					}
-    				jSignatureInstance.dataEngine.endStroke(id);
+					jSignatureInstance.dataEngine.endStroke(id);
 				}
 			}
 		};
@@ -960,7 +962,7 @@ function jSignatureClass(parent, options, instanceExtensions) {
 				// for performance we cache the offsets
 				// we recalc these only at the beginning the stroke
 				setStartValues();
-                var points = getPointsFromEvent(e);
+				var points = getPointsFromEvent(e);
 				jSignatureInstance.dataEngine.startStroke( points );
 				for (var i = 0; i < points.length; i++) {
 					var id = points[i].id;
@@ -982,8 +984,8 @@ function jSignatureClass(parent, options, instanceExtensions) {
 				if (jSignatureInstance.dataEngine.inStroke==0){
 					return;
 				}
-                var points = getPointsFromEvent(e, true);
-                jSignatureInstance.dataEngine.addToStroke( points );
+				var points = getPointsFromEvent(e, true);
+				jSignatureInstance.dataEngine.addToStroke( points );
 
 				for (var i = 0; i < points.length; i++) {
 					var id = points[i].id;
