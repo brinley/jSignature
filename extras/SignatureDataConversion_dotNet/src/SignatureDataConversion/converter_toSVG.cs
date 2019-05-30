@@ -176,6 +176,7 @@ namespace jSignature.Tools
 			    // returing curve for BC segment
 			    // all coords are vectors against Bpoint
 			    return String.Format(
+					CultureInfo.InvariantCulture, 
                     curvetemplate
 				    , Math.Round( BtoCP1vector.x, rounding )
 				    , Math.Round( BtoCP1vector.y, rounding )
@@ -186,6 +187,7 @@ namespace jSignature.Tools
 			    );
 		    } else {
 			    return String.Format(
+					CultureInfo.InvariantCulture, 
                     linetemplate
 				    , Math.Round( BCvector.x, rounding )
 				    , Math.Round( BCvector.y, rounding )
@@ -232,6 +234,7 @@ namespace jSignature.Tools
 			    );
     			
 			    return String.Format(
+					CultureInfo.InvariantCulture, 
                     curvetemplate
 				    , Math.Round( BtoCP1vector.x, rounding )
 				    , Math.Round( BtoCP1vector.y, rounding )
@@ -243,6 +246,7 @@ namespace jSignature.Tools
 		    } else {
 			    // Since there is no AB leg, there is no curve to draw. This is just line
 			    return String.Format(
+					CultureInfo.InvariantCulture, 
                     linetemplate
 				    , Math.Round( BCvector.x, rounding )
 				    , Math.Round( BCvector.y, rounding )
@@ -281,6 +285,7 @@ namespace jSignature.Tools
                     pathfragments.Add(lastSegmentToCurve(stroke, lineCurveThreshold));
                 }
                 paths.Add(String.Format(
+					CultureInfo.InvariantCulture, 
                     pathtemplate
                     , stroke[0][0] + shiftx // moveto x, starting point
                     , stroke[0][1] + shifty // moveto y, starting point
@@ -308,6 +313,7 @@ namespace jSignature.Tools
 </svg>".Replace('\'', '"');
 
             return String.Format(
+				CultureInfo.InvariantCulture, 
                 outersvgtemplate
                 , contentsize[0] // width
                 , contentsize[1] // height
