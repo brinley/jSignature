@@ -407,6 +407,10 @@ function base30_to_svg (
   
 begin
 
+  if p_base30_string is null or p_base30_string = '' then
+    return null;
+  end if;  
+
   l_result_json := jsignature_pkg.base30_to_json(p_base30_string);
 
   -- Parse the JSON, determine how many array entries
