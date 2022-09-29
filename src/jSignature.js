@@ -467,14 +467,12 @@ var basicDot = function(ctx, x, y, size){
 	ctx.beginPath();
 	ctx.moveTo(startx, starty);
 	ctx.lineTo(endx, endy);
-	ctx.closePath();
 	ctx.stroke();
 }
 , basicCurve = function(ctx, startx, starty, endx, endy, cp1x, cp1y, cp2x, cp2y){
 	ctx.beginPath();
 	ctx.moveTo(startx, starty);
 	ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy);
-	ctx.closePath();
 	ctx.stroke();
 }
 , strokeStartCallback = function(stroke) {
