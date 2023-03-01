@@ -699,7 +699,15 @@ var basicDot = function(ctx, x, y, size){
 				);
 			}
 		}
-	}
+	} else if(positionInStroke == 0){
+        var Cpoint = new Point(stroke.x[positionInStroke], stroke.y[positionInStroke]);
+        basicDot(
+            this.canvasContext
+            , Cpoint.x
+            , Cpoint.y
+            , 4
+        );
+    }
 }
 
 
